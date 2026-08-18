@@ -1,0 +1,11 @@
+/* ============================================================
+   ARCHIE S. BOISER — PURE MONOCHROME MINIMALIST APP STYLES
+   ============================================================ */
+
+.main-container {
+  max-width: 54rem; /* max-w-4xl */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}

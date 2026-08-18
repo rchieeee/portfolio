@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/* ── Class-based Dark Mode for Tailwind v4 ── */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+}
+
+/* ── Light Mode Base ── */
+:root {
+  --bg: #ffffff;
+  --ink: #0a0a0a;
+  color-scheme: light;
+}
+
+/* ── Dark Mode Base (Matte Black) ── */
+html.dark,
+:root[data-theme='dark'] {
+  --bg: #0c0d0e;
+  --ink: #f5f5f7;
+  color-scheme: dark;
+}
+
+/* ── Global Styles ── */
+html {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  line-height: 1.5;
+}
+
+::selection {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
+html.dark ::selection {
+  background: #ffffff;
+  color: #0a0a0a;
+}
+
+
+
+/* ── Shutter Curtain View Transitions ── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 99999;
+}
+
+/* ── Smooth Crossfade Fallback ── */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease !important;
+}
+
+/* ── Entrance Animations ── */
+@keyframes fadeUpReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  opacity: 0;
+  animation: fadeUpReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.d1 { animation-delay: 0.02s; }
+.d2 { animation-delay: 0.06s; }
+.d3 { animation-delay: 0.10s; }
+.d4 { animation-delay: 0.14s; }
+.d5 { animation-delay: 0.18s; }
+
+button, a {
+  transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, opacity 0.18s ease, transform 0.18s ease;
+}
