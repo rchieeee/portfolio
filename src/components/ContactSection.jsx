@@ -64,11 +64,13 @@ export default function ContactSection() {
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a
-              href={`mailto:${profile.email}`}
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${profile.email}`}
+              target="_blank"
+              rel="noreferrer"
               onClick={() => sounds.play('press')}
               className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-6 py-3.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200"
             >
-              <span>send an email ↗</span>
+              <span>send an email (Gmail) ↗</span>
             </a>
 
             <button
@@ -96,7 +98,9 @@ export default function ContactSection() {
             <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Did you have fun? Feel free to reach out at{' '}
               <a
-                href={`mailto:${profile.email}`}
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=${profile.email}`}
+                target="_blank"
+                rel="noreferrer"
                 className="font-mono text-gray-950 underline underline-offset-4 hover:opacity-75 dark:text-white"
               >
                 {profile.email}

@@ -77,14 +77,6 @@ export default function Hero({ onOpenTerminal, theme }) {
           <span className="font-bold text-gray-950 dark:text-white">$</span>
           <span>Open Interactive CLI</span>
         </button>
-
-        <a
-          href={`mailto:${profile.email}`}
-          onClick={() => sounds.play('tick')}
-          className="inline-flex items-center gap-1.5 px-4 py-3 font-mono text-[13px] text-gray-500 hover:text-gray-950 hover:underline dark:text-gray-400 dark:hover:text-white"
-        >
-          <span>email me ↗</span>
-        </a>
       </div>
 
       {/* Clean Editorial Links */}

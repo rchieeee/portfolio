@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { codeSnippets, harnessStages, profile } from '../portfolioData'
 import { sounds } from '../utils/audio'
+import GithubActivityCard from './GithubActivityCard'
 import SpotlightCard from './SpotlightCard'
 
 export default function BentoGrid() {
@@ -233,6 +234,9 @@ export default function BentoGrid() {
             })}
           </div>
         </SpotlightCard>
+
+        {/* Bento 4: Minimalist GitHub Contribution Activity Heatmap */}
+        <GithubActivityCard />
       </div>
     </section>
   )

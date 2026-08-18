@@ -24,7 +24,7 @@ export const socials = [
   { label: 'GitHub', username: '@rchieeee', url: 'https://github.com/rchieeee' },
   { label: 'LinkedIn', username: 'Archie Boiser', url: 'https://www.linkedin.com/in/archie-boiser-552548344/' },
   { label: 'Facebook', username: 'Archie Boiser', url: 'https://www.facebook.com/rchieaa/' },
-  { label: 'Email', username: profile.email, url: `mailto:${profile.email}` },
+  { label: 'Email', username: profile.email, url: 'https://mail.google.com/mail/?view=cm&fs=1&to=archie.boiser05@gmail.com' },
 ]
 
 export const keyMetrics = [
