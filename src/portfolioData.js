@@ -292,6 +292,7 @@ export const testimonials = [
 export const terminalCommands = {
   help: `Available commands:
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
+  • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
   • projects    - List featured full-stack & AI projects
   • stack       - Inspect full technical toolchain
@@ -300,6 +301,24 @@ export const terminalCommands = {
   • time        - Check live Manila timezone & node status
   • clear       - Clear terminal history`,
   play: `Launching Archie Cyber Arcade [Multiplayer Arena]...`,
+  coffee: `☕ Archie's Pang-Token & Kape Fund:
+"Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
+
+• GCash Number: +639635272862 (09635272862)
+• Recipient: Archie S. Boiser
+Daghan kaayong salamat sa support bai! 🚀`,
+  donate: `☕ Archie's Pang-Token & Kape Fund:
+"Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
+
+• GCash Number: +639635272862 (09635272862)
+• Recipient: Archie S. Boiser
+Daghan kaayong salamat sa support bai! 🚀`,
+  tip: `☕ Archie's Pang-Token & Kape Fund:
+"Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
+
+• GCash Number: +639635272862 (09635272862)
+• Recipient: Archie S. Boiser
+Daghan kaayong salamat sa support bai! 🚀`,
   about: `Archie S. Boiser — Generative Full-Stack AI Engineer
 Based in Lupon, Davao Oriental, Philippines (UTC+8).
 Architecting complete systems with AI, generative product development, scalable React/Next.js/Node backends, and deterministic LLM harnesses.`,

@@ -23,10 +23,21 @@ export default function ContactSection() {
     return () => clearInterval(timer)
   }, [])
 
+  const [gcashCopied, setGcashCopied] = useState(false)
+
+  const handleCopyGcash = () => {
+    try {
+      navigator.clipboard.writeText('+639635272862')
+    } catch {}
+    sounds.play('success')
+    setGcashCopied(true)
+    setTimeout(() => setGcashCopied(false), 2500)
+  }
+
   const handleCopyEmail = () => {
-    if (navigator.clipboard) {
+    try {
       navigator.clipboard.writeText(profile.email)
-    }
+    } catch {}
     sounds.play('success')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -48,7 +59,7 @@ export default function ContactSection() {
             let&apos;s build something great together.
           </h2>
           <p className="mt-3 text-base leading-relaxed text-gray-600 dark:text-gray-300">
-            Whether you need a complete !full-stack web application, an automated AI workflow, or an experienced developer to join your team—my inbox is always open.
+            Whether you need a full-stack web application, an automated AI workflow, or an experienced developer to join your team—my inbox is always open.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -63,9 +74,18 @@ export default function ContactSection() {
             <button
               type="button"
               onClick={handleCopyEmail}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer"
             >
-              <span>{copied ? '✓ Copied to clipboard' : 'copy email address'}</span>
+              <span>{copied ? '✓ Email Copied' : 'copy email address'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyGcash}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer"
+              title="Copy GCash Number: +639635272862"
+            >
+              <span>{gcashCopied ? '✓ GCash Copied (+639635272862)' : '☕ Pang-Token Fund (GCash)'}</span>
             </button>
           </div>
         </div>
