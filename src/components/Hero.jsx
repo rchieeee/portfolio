@@ -16,9 +16,7 @@ export default function Hero({ onOpenTerminal, theme }) {
         <InteractiveAvatar />
         <div className="space-y-0.5">
           <div className="flex items-center gap-2 font-mono text-xs text-gray-500 dark:text-gray-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="text-gray-800 dark:text-gray-200">Available for projects</span>
-            <span className="text-gray-300 dark:text-gray-700">/</span>
+            <span className="text-gray-300 dark:text-gray-700">|</span>
             <span>{profile.location} · UTC+8</span>
           </div>
           <div className="font-mono text-xs text-gray-400 dark:text-gray-500">
