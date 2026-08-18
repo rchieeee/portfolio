@@ -5,6 +5,7 @@ import CaseStudyModal from './components/CaseStudyModal'
 import ContactSection from './components/ContactSection'
 import CyberArcadeModal from './components/CyberArcadeModal'
 import ExperienceTimeline from './components/ExperienceTimeline'
+import GithubActivityCard from './components/GithubActivityCard'
 import HeaderNav from './components/HeaderNav'
 import Hero from './components/Hero'
 import InteractiveHeroCanvas from './components/InteractiveHeroCanvas'
@@ -169,6 +170,8 @@ export default function App() {
         <TechRadar />
         <ExperienceTimeline />
         <TestimonialsSection />
+        {/* Real-time GitHub Public Contributions Matrix */}
+        <GithubActivityCard />
         <ContactSection />
       </main>
 
