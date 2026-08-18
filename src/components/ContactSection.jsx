@@ -49,7 +49,7 @@ export default function ContactSection() {
   }
 
   return (
-    <section id="contact" className="border-t border-gray-200 pt-16 pb-20 dark:border-gray-800">
+    <section id="contact" className="pt-6 pb-20 sm:pt-10">
       <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-2xs sm:p-12 dark:border-gray-800 dark:bg-[#121216]">
         <div className="max-w-2xl">
           <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
