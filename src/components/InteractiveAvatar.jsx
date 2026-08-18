@@ -11,18 +11,18 @@ export default function InteractiveAvatar() {
 
   // Naturally Varied Bisdak AI Token Expressions (Varied Placement, No Emojis)
   const greetings = [
-    "Hapit na gyud mahurot akong yawa nga token",
-    "Peste, 429 na sad ang rate limit",
-    "Gamay na lang token nahabilin sa context atay",
-    "Mahalag credits sa OpenAI oy, pisting yawa gyud",
-    "Dali-a ra mahurot sa token oy, giatay na",
-    "Wa pa gani nahuman ang code, pesteha nahurot na ang quota",
+    "hapit na gyud mahurot akong bosit nga token",
+    "pistot, 429 na sad ang rate limit",
+    "gamay nlang token nabilin sa context ataya",
+    "mahalag credits sa OpenAI oy, boshit boshit",
+    "dalia ra mahurot sa token oy, nayati najud ni",
+    "wapa gani nahuman kahuman sa isa ka feature, hurot nang token",
     "Nag-hallucinate na sad ning yawa nga model",
-    "Ataya oy, na-zero na pud akong API key",
-    "Sige pa mog generate diha, pisting yawa ma-max out na ta",
-    "Kape na lang gyud intawon nahabilin ani yawa",
-    "Paspasa mahurot sa giatay nga credits oy",
-    "Gamay na lang gyud kaayong token nahabilin, peste",
+    "ataya oy, na-zero na pud akong API key",
+    "sige pa mog generate diha, nayati nani pa-max out na ta",
+    "amigas nalang jud sa kape tawon ang nabilin kesa token",
+    "paspasa mahurot sa giatay nga credits oy",
+    "isa ka adlaw nagpaabot, isa ka prompt-an rasad",
   ]
 
   const handleMouseMove = (e) => {

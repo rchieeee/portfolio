@@ -59,7 +59,7 @@ export default function ScrambleHeadlineText() {
       onMouseLeave={() => setIsHovered(false)}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className="inline-block cursor-pointer font-mono text-gray-950 underline decoration-gray-300 underline-offset-8 transition-colors select-none hover:decoration-gray-900 dark:text-white dark:decoration-gray-700 dark:hover:decoration-white"
+      className="inline-block cursor-pointer font-mono text-gray-950 decoration-gray-300 transition-colors select-none hover:decoration-gray-900 dark:text-white dark:decoration-gray-700 dark:hover:decoration-white"
       title="Hover over me!"
     >
       {displayText}
