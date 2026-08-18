@@ -81,17 +81,17 @@ export default function GithubActivityCard() {
         else if (w === 13 && d === 1) { count = 3; level = 2 } // May Mon
         else if (w === 9 && d === 3) { count = 2; level = 1 } // Jun Wed
         else if (w === 8 && d === 5) { count = 1; level = 1 } // Jun Fri
-        else if (w === 1 && d === 1) { count = 3; level = 2 } // Mon
-        else if (w === 1 && d === 2) { count = 2; level = 2 } // Tue
-        else if (w === 1 && d === 3) { count = 2; level = 1 } // Wed
-        else if (w === 1 && d === 4) { count = 2; level = 1 } // Thu
-        else if (w === 0 && d === 0) { count = 5; level = 3 } // Sun
-        else if (w === 0 && d === 1) { count = 4; level = 2 } // Mon
-        else if (w === 0 && d === 2) { count = 16; level = 4 } // Tue
-        else if (w === 0 && d === 3) { count = 2; level = 2 } // Wed
-        else if (w === 0 && d === 4) { count = 1; level = 1 } // Thu
-        else if (w === 0 && d === 5) { count = 12; level = 4 } // Fri
-        else if (w === 0 && d === 6) { count = 5; level = 3 } // Sat
+
+        // Exact August 3-Column Pattern (w: 2, 1, 0)
+        else if (w === 2 && d === 1) { count = 2; level = 1 } // Aug Mon
+        else if (w === 2 && d === 2) { count = 3; level = 2 } // Aug Tue
+        else if (w === 2 && d === 3) { count = 2; level = 1 } // Aug Wed
+        else if (w === 1 && d === 1) { count = 3; level = 2 } // Aug Mon
+        else if (w === 1 && d === 4) { count = 2; level = 1 } // Aug Thu
+        else if (w === 1 && d === 5) { count = 16; level = 4 } // Aug Fri (bright)
+        else if (w === 1 && d === 6) { count = 4; level = 2 } // Aug Sat
+        else if (w === 0 && d === 0) { count = 3; level = 2 } // Aug Sun
+        else if (w === 0 && d === 2) { count = 12; level = 4 } // Aug Tue (bright)
 
         week.push({ date: dateStr, count, level })
       }
@@ -105,19 +105,10 @@ export default function GithubActivityCard() {
   const todayStr = new Date().toISOString().split('T')[0]
 
   return (
-    <section className="my-14 sm:my-20">
-      <SpotlightCard className="p-6 sm:p-10 border border-gray-200/80 bg-white/60 dark:border-gray-800/80 dark:bg-[#0f1015]/80 backdrop-blur-xl" tilt={false}>
+    <section className="my-10 sm:my-16">
+      <SpotlightCard className="p-6 sm:p-8 border border-gray-200/80 bg-white/60 dark:border-gray-800/80 dark:bg-[#0f1015]/80 backdrop-blur-xl" tilt={false}>
         {/* Top Header */}
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-gray-200 pb-5 dark:border-gray-800/90">
-          <div>
-            <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              06 — open source activity
-            </span>
-            <h3 className="mt-1 text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
-              {totalCount.toLocaleString()} contributions in the last year.
-            </h3>
-          </div>
-
+        <div className="flex items-center justify-end pb-4 border-b border-gray-200 dark:border-gray-800/80">
           <a
             href="https://github.com/rchieeee"
             target="_blank"
@@ -130,9 +121,9 @@ export default function GithubActivityCard() {
           </a>
         </div>
 
-        {/* Heatmap Matrix: Clean Single-Layered Surface */}
-        <div className="mt-8 pt-2">
-          {/* Month Labels Row */}
+        {/* Heatmap Matrix Surface */}
+        <div className="mt-5">
+          {/* Month Names Row */}
           <div className="flex justify-between pl-8 pr-1 font-mono text-[11px] text-gray-400 dark:text-gray-500 mb-3 select-none">
             {MONTHS.map((m, idx) => (
               <span key={idx}>{m}</span>
@@ -155,7 +146,7 @@ export default function GithubActivityCard() {
                   {week.map((day, dIdx) => {
                     const isToday = day.date === todayStr
 
-                    // Cool High-Contrast Monochrome / Velvet Theme
+                    // Sleek Monochrome / Dark Theme
                     let tileClass = 'bg-gray-200/70 dark:bg-[#181922]'
                     if (day.level === 1 || (day.count > 0 && day.count < 3)) {
                       tileClass = 'bg-gray-400 dark:bg-[#363a45]'
@@ -183,9 +174,9 @@ export default function GithubActivityCard() {
             </div>
           </div>
 
-          {/* Footer Intensity Legend */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200/80 pt-4 font-mono text-xs text-gray-500 dark:border-gray-800/80 dark:text-gray-400">
-            <span className="text-[11px]">Daily commit logs automatically synced from GitHub</span>
+          {/* Footer Intensity Legend with requested typography */}
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200/80 pt-4 font-mono text-[11px] text-gray-500 dark:border-gray-800/80 dark:text-gray-400">
+            <span>{totalCount.toLocaleString()} contributions in the last year.</span>
 
             <div className="flex items-center gap-2 text-[11px]">
               <span>Less</span>
