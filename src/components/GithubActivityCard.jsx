@@ -5,9 +5,7 @@ import SpotlightCard from './SpotlightCard'
 const MONTHS = ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
 
 export default function GithubActivityCard() {
-  const [hoveredDay, setHoveredDay] = useState(null)
   const [liveData, setLiveData] = useState(null)
-  const [lastSynced, setLastSynced] = useState('')
 
   // Real-time live fetch with no-cache to guarantee fresh daily commits
   useEffect(() => {
@@ -32,7 +30,6 @@ export default function GithubActivityCard() {
           const total = Math.max(apiTotal, 111)
 
           setLiveData({ total, weeks: weeksArr })
-          setLastSynced(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
         }
       } catch {}
     }
@@ -124,11 +121,6 @@ export default function GithubActivityCard() {
             <span className="text-base font-bold text-gray-950 dark:text-white">
               {totalCount.toLocaleString()} contributions in the last year
             </span>
-            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">·</span>
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Synced {lastSynced ? `(${lastSynced})` : ''}
-            </span>
           </div>
 
           <a
@@ -166,7 +158,6 @@ export default function GithubActivityCard() {
               {displayData.weeks.map((week, wIdx) => (
                 <div key={wIdx} className="flex flex-col gap-[3.5px]">
                   {week.map((day, dIdx) => {
-                    const isHovered = hoveredDay?.date === day.date
                     const isToday = day.date === todayStr
 
                     // Sleek GitHub-inspired emerald/monochrome levels matching the portfolio
@@ -184,14 +175,11 @@ export default function GithubActivityCard() {
                     return (
                       <div
                         key={dIdx}
-                        onMouseEnter={() => {
-                          sounds.play('tick')
-                          setHoveredDay(day)
-                        }}
-                        onMouseLeave={() => setHoveredDay(null)}
+                        onMouseEnter={() => sounds.play('tick')}
+                        title={`${day.count > 0 ? `${day.count} contribution${day.count !== 1 ? 's' : ''}` : 'No contributions'} on ${day.date}`}
                         className={`h-[10.5px] w-[10.5px] rounded-[2.5px] transition-transform duration-100 cursor-pointer ${tileClass} ${
                           isToday ? 'ring-1 ring-white/90' : ''
-                        } ${isHovered ? 'scale-150 ring-2 ring-white z-20 shadow-md' : ''}`}
+                        } hover:scale-150 hover:ring-2 hover:ring-white hover:z-20 hover:shadow-md`}
                       />
                     )
                   })}
@@ -200,29 +188,9 @@ export default function GithubActivityCard() {
             </div>
           </div>
 
-          {/* Interactive Date & Commit Tooltip */}
-          {hoveredDay && (
-            <div className="pointer-events-none mt-3 flex items-center justify-center">
-              <div className="rounded-lg border border-gray-700 bg-gray-900/95 px-3 py-1.5 font-mono text-[11px] text-white shadow-xl backdrop-blur-md">
-                <span className="font-bold text-emerald-400">
-                  {hoveredDay.count > 0 ? `${hoveredDay.count} contribution${hoveredDay.count !== 1 ? 's' : ''}` : 'No contributions'}
-                </span>{' '}
-                on{' '}
-                <span className="text-gray-300">
-                  {new Date(hoveredDay.date).toLocaleDateString('en-US', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-              </div>
-            </div>
-          )}
-
           {/* Footer Intensity Legend */}
           <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-gray-200/60 pt-3 font-mono text-[11px] text-gray-400 dark:border-gray-800/60 dark:text-gray-500">
-            <span>Live daily updates from GitHub API</span>
+            <span>Contributions in the last year</span>
 
             <div className="flex items-center gap-1.5">
               <span>Less</span>
