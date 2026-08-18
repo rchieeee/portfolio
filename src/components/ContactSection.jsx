@@ -70,26 +70,25 @@ export default function ContactSection() {
           </div>
         </div>
 
-        {/* Footer & Live Node Info */}
-        <div className="mt-14 flex flex-col gap-4 border-t border-gray-200 pt-8 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
-          <div className="flex items-center gap-3">
-            <img
-              src={profile.avatar}
-              alt={profile.name}
-              className="h-10 w-10 rounded-xl object-cover object-top border border-gray-300 dark:border-gray-700 shadow-2xs"
-            />
-            <div className="space-y-0.5 font-mono text-xs text-gray-500 dark:text-gray-400">
-              <div className="font-bold text-gray-950 dark:text-white">
-                {profile.name}
-              </div>
-              <div className="text-[11px] text-gray-400">
-                {profile.location} · <span className="text-gray-950 dark:text-gray-200">{manilaTime}</span> (UTC+8)
-              </div>
+        {/* Subtle Bottom Footer */}
+        <div className="mt-16 flex flex-col gap-6 border-t border-gray-200 pt-8 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+          <div className="space-y-1">
+            <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Did you have fun? Feel free to reach out at{' '}
+              <a
+                href={`mailto:${profile.email}`}
+                className="font-mono text-gray-950 underline underline-offset-4 hover:opacity-75 dark:text-white"
+              >
+                {profile.email}
+              </a>
+            </div>
+            <div className="font-mono text-xs text-gray-400 dark:text-gray-500">
+              © {new Date().getFullYear()} {profile.name} · Lupon, Davao Oriental · {manilaTime} (UTC+8) · All rights reserved.
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 font-mono text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-4 sm:gap-6">
+            <div className="flex flex-wrap items-center gap-3.5 font-mono text-xs text-gray-500 dark:text-gray-400">
               {socials.map((s) => (
                 <a
                   key={s.label}
@@ -106,7 +105,7 @@ export default function ContactSection() {
             <button
               type="button"
               onClick={scrollToTop}
-              className="rounded-lg p-2 font-mono text-xs text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+              className="font-mono text-xs text-gray-400 hover:text-gray-950 dark:hover:text-white cursor-pointer"
               title="Back to top"
             >
               ↑ Top

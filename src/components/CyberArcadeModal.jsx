@@ -2,45 +2,70 @@ import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { sounds } from '../utils/audio'
 
-// Shared Global Room ID for real-time multiplayer across all portfolio tabs & visitors
-const ROOM_CHANNEL = 'archie_cyber_sumo_3d_real'
+// Shared Global Room Channel
+const ROOM_CHANNEL = 'archie_cyber_sumo_bw_v1'
 const ARENA_RADIUS = 11.5
+const LOCAL_STORAGE_NAME_KEY = 'archie_cyber_sumo_player_name'
+const LOCAL_STORAGE_COLOR_KEY = 'archie_cyber_sumo_player_color'
 
-const PLAYER_COLORS = [0x22c55e, 0x38bdf8, 0xa855f7, 0xfb923c, 0xec4899, 0xfacc15]
+const CHARACTER_COLORS = [
+  { id: 'green', name: 'Mint Green', hex: 0x22c55e, css: '#22c55e' },
+  { id: 'cyan', name: 'Sky Cyan', hex: 0x38bdf8, css: '#38bdf8' },
+  { id: 'purple', name: 'Soft Lavender', hex: 0xa855f7, css: '#a855f7' },
+  { id: 'orange', name: 'Coral Orange', hex: 0xfb923c, css: '#fb923c' },
+  { id: 'pink', name: 'Ruby Pink', hex: 0xf43f5e, css: '#f43f5e' },
+  { id: 'yellow', name: 'Golden Amber', hex: 0xfacc15, css: '#facc15' },
+]
 
 export default function CyberArcadeModal({ isOpen, onClose }) {
   const mountRef = useRef(null)
-  const [playerId] = useState(() => 'player_' + Math.floor(1000 + Math.random() * 9000))
-  const [playerName, setPlayerName] = useState(() => 'Player_' + Math.floor(100 + Math.random() * 900))
-  const [playerColor] = useState(() => PLAYER_COLORS[Math.floor(Math.random() * PLAYER_COLORS.length)])
-  const [isEditingName, setIsEditingName] = useState(false)
+  const chatBottomRef = useRef(null)
+  const [playerId] = useState(() => 'usr_' + Math.floor(1000 + Math.random() * 9000))
+  const [playerName, setPlayerName] = useState(() => {
+    try {
+      return localStorage.getItem(LOCAL_STORAGE_NAME_KEY) || ''
+    } catch {
+      return ''
+    }
+  })
+  const [colorIdx, setColorIdx] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_COLOR_KEY)
+      const parsed = parseInt(saved, 10)
+      return !isNaN(parsed) && parsed >= 0 && parsed < CHARACTER_COLORS.length ? parsed : 0
+    } catch {
+      return 0
+    }
+  })
+  const [hasJoined, setHasJoined] = useState(false)
   const [chatInput, setChatInput] = useState('')
   const [chatMessages, setChatMessages] = useState([
-    { sender: 'System', text: 'Multiplayer Arena Ready! Open another tab to test 1v1 on localhost.', time: '00:00' },
+    { sender: 'System', text: 'Cyber Sumo Arena Ready. Ram opponents off the ring!', time: '00:00' },
   ])
   const [scores, setScores] = useState({})
   const [onlineCount, setOnlineCount] = useState(1)
 
-  // Mutable Game Loop State
+  const selectedColor = CHARACTER_COLORS[colorIdx] || CHARACTER_COLORS[0]
+
+  // Local game state refs
   const gameRef = useRef({
     myPos: {
-      x: (Math.random() - 0.5) * 6,
+      x: (Math.random() - 0.5) * 4,
       y: 0,
-      z: (Math.random() - 0.5) * 6,
+      z: (Math.random() - 0.5) * 4,
       vx: 0,
       vz: 0,
       rotY: 0,
       score: 0,
       isFalling: false,
       isHeavy: false,
-      hasShield: false,
       lastBumperId: null,
+      lastBumperName: null,
     },
-    remotePlayers: {}, // { id: { name, x, y, z, vx, vz, rotY, score, color, isFalling, lastSeen } }
+    remotePlayers: {}, // { id: { name, x, y, z, vx, vz, rotY, score, colorHex, isFalling, lastSeen } }
     powerups: [
       { id: 1, type: 'coffee', x: -5, z: -4, active: true },
       { id: 2, type: 'nitro', x: 5, z: 4, active: true },
-      { id: 3, type: 'shield', x: -4, z: 5, active: true },
     ],
     keys: {},
     chatBubbles: {}, // { id: { text, timer } }
@@ -49,12 +74,35 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     camera: null,
     renderer: null,
     meshMap: {}, // id -> THREE.Group
+    indicatorMesh: null,
     powerupMeshes: [],
   })
 
-  // 1. Networking (BroadcastChannel for Pure Real-Human Multiplayer)
+  // Auto-scroll chat to bottom on new messages
   useEffect(() => {
-    if (!isOpen) return
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatMessages])
+
+  // Setup join state on modal open
+  useEffect(() => {
+    if (isOpen) {
+      setHasJoined(false)
+      try {
+        const saved = localStorage.getItem(LOCAL_STORAGE_NAME_KEY)
+        if (saved) {
+          setPlayerName(saved)
+        } else {
+          setPlayerName(`Player_${Math.floor(100 + Math.random() * 900)}`)
+        }
+      } catch {
+        setPlayerName(`Player_${Math.floor(100 + Math.random() * 900)}`)
+      }
+    }
+  }, [isOpen])
+
+  // 1. Networking (BroadcastChannel Real-Time Sync)
+  useEffect(() => {
+    if (!isOpen || !hasJoined) return
 
     let bc = null
     try {
@@ -72,32 +120,42 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 lastSeen: Date.now(),
               }
             }
-          } else if (type === 'BUMP_EVENT') {
+          } else if (type === 'BUMP_IMPULSE') {
             if (payload.targetId === playerId) {
-              // We were bumped by another real player! Apply knockback
               sounds.play('press')
               gameRef.current.myPos.vx += payload.impulseX
               gameRef.current.myPos.vz += payload.impulseZ
               gameRef.current.myPos.lastBumperId = payload.sourceId
+              gameRef.current.myPos.lastBumperName = payload.sourceName
             }
-          } else if (type === 'PLAYER_KO') {
+          } else if (type === 'PLAYER_KNOCKED_OUT') {
             sounds.play('success')
             if (payload.killerId === playerId) {
               gameRef.current.myPos.score += 1
             }
+            if (gameRef.current.remotePlayers[payload.killerId]) {
+              gameRef.current.remotePlayers[payload.killerId].score =
+                (gameRef.current.remotePlayers[payload.killerId].score || 0) + 1
+            }
+
+            const alertText = `${payload.victimName} was knocked off by ${payload.killerName}!`
+            setChatMessages((prev) => [
+              ...prev.slice(-25),
+              { sender: 'System', text: alertText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+            ])
           } else if (type === 'CHAT_MESSAGE') {
             sounds.play('tick')
-            setChatMessages((prev) => [...prev.slice(-20), payload])
+            setChatMessages((prev) => [...prev.slice(-25), payload])
             gameRef.current.chatBubbles[payload.id] = {
               text: payload.text,
-              timer: Date.now() + 4000,
+              timer: Date.now() + 4500,
             }
           }
         }
       }
     } catch {}
 
-    // Periodic Heartbeat & Disconnection Cleaner
+    // Periodic Heartbeat
     const hbInterval = setInterval(() => {
       if (bc) {
         bc.postMessage({
@@ -105,6 +163,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           payload: {
             id: playerId,
             name: playerName,
+            colorHex: selectedColor.hex,
             x: gameRef.current.myPos.x,
             y: gameRef.current.myPos.y,
             z: gameRef.current.myPos.z,
@@ -112,12 +171,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             vz: gameRef.current.myPos.vz,
             rotY: gameRef.current.myPos.rotY,
             score: gameRef.current.myPos.score,
-            color: playerColor,
           },
         })
       }
 
-      // Remove inactive players who closed tab
+      // Cleanup disconnected players
       const now = Date.now()
       const remotes = gameRef.current.remotePlayers
       const scene = gameRef.current.scene
@@ -125,7 +183,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
       let count = 1
       Object.keys(remotes).forEach((k) => {
-        if (now - remotes[k].lastSeen > 4500) {
+        if (now - remotes[k].lastSeen > 4000) {
           if (meshMap[k] && scene) {
             scene.remove(meshMap[k])
             delete meshMap[k]
@@ -142,11 +200,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       clearInterval(hbInterval)
       if (bc) bc.close()
     }
-  }, [isOpen, playerId, playerName, playerColor])
+  }, [isOpen, hasJoined, playerId, playerName, selectedColor])
 
-  // 2. Keyboard Event Handlers
+  // 2. Keyboard Handlers
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || !hasJoined) return
 
     const onKeyDown = (e) => {
       if (document.activeElement?.tagName === 'INPUT') return
@@ -166,11 +224,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup', onKeyUp)
     }
-  }, [isOpen])
+  }, [isOpen, hasJoined])
 
-  // 3. Three.js 3D WebGL Scene & Game Loop
+  // 3. Three.js Minimalist Black & White Scene & Physics Loop
   useEffect(() => {
-    if (!isOpen || !mountRef.current) return
+    if (!isOpen || !hasJoined || !mountRef.current) return
 
     const container = mountRef.current
     const width = container.clientWidth || 600
@@ -178,8 +236,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
     // Scene & Camera
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0c0d12)
-    scene.fog = new THREE.FogExp2(0x0c0d12, 0.02)
+    scene.background = new THREE.Color(0x0a0a0c)
+    scene.fog = new THREE.FogExp2(0x0a0a0c, 0.02)
     gameRef.current.scene = scene
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
@@ -197,44 +255,52 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     gameRef.current.renderer = renderer
 
     // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85)
     scene.add(ambientLight)
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.3)
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.4)
     dirLight.position.set(12, 24, 12)
     dirLight.castShadow = true
     scene.add(dirLight)
 
-    // Floating Circular Sumo Platform (3D Cylindrical Island)
-    const islandGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS + 0.5, 1.5, 48)
+    // Floating Circular Sumo Platform (Matte Black with Crisp White Perimeter Ring)
+    const islandGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS + 0.5, 1.4, 64)
     const islandMat = new THREE.MeshStandardMaterial({
-      color: 0x141620,
-      roughness: 0.7,
-      metalness: 0.2,
+      color: 0x111114,
+      roughness: 0.85,
+      metalness: 0.1,
     })
     const island = new THREE.Mesh(islandGeo, islandMat)
-    island.position.y = -0.75
+    island.position.y = -0.7
     island.receiveShadow = true
     scene.add(island)
 
-    // Platform Glowing Outer Neon Ring
-    const ringGeo = new THREE.RingGeometry(ARENA_RADIUS - 0.2, ARENA_RADIUS, 48)
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x22c55e, side: THREE.DoubleSide })
+    // Crisp White Ring Boundary
+    const ringGeo = new THREE.RingGeometry(ARENA_RADIUS - 0.18, ARENA_RADIUS, 64)
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
     const ring = new THREE.Mesh(ringGeo, ringMat)
     ring.rotation.x = -Math.PI / 2
     ring.position.y = 0.02
     scene.add(ring)
 
-    // Helper: Build Cute 3D Minimalist Cartoon Character
-    const createCartoonCharacter = (colorHex) => {
+    // Center marker ring
+    const centerGeo = new THREE.RingGeometry(1.8, 1.9, 32)
+    const centerMat = new THREE.MeshBasicMaterial({ color: 0x333338, side: THREE.DoubleSide })
+    const centerRing = new THREE.Mesh(centerGeo, centerMat)
+    centerRing.rotation.x = -Math.PI / 2
+    centerRing.position.y = 0.02
+    scene.add(centerRing)
+
+    // Helper: Build Minimalist Colored Cartoon Character
+    const createCartoonCharacter = (colorHex, isLocal) => {
       const group = new THREE.Group()
 
       // Cute Rounded Chibi Body
-      const bodyGeo = new THREE.SphereGeometry(0.85, 20, 20)
+      const bodyGeo = new THREE.SphereGeometry(0.85, 24, 24)
       bodyGeo.scale(1, 1.15, 1)
       const bodyMat = new THREE.MeshStandardMaterial({
         color: colorHex,
-        roughness: 0.2,
+        roughness: 0.25,
         metalness: 0.1,
       })
       const body = new THREE.Mesh(bodyGeo, bodyMat)
@@ -243,10 +309,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       group.add(body)
 
       // Expressive Cartoon Left Eye
-      const eyeGeo = new THREE.SphereGeometry(0.2, 12, 12)
+      const eyeGeo = new THREE.SphereGeometry(0.2, 16, 16)
       eyeGeo.scale(1, 1.3, 0.6)
-      const eyeWhiteMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-      const eyeL = new THREE.Mesh(eyeGeo, eyeWhiteMat)
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+      const eyeL = new THREE.Mesh(eyeGeo, eyeMat)
       eyeL.position.set(-0.3, 1.1, 0.75)
       group.add(eyeL)
 
@@ -258,7 +324,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       group.add(pupilL)
 
       // Expressive Cartoon Right Eye
-      const eyeR = new THREE.Mesh(eyeGeo, eyeWhiteMat)
+      const eyeR = new THREE.Mesh(eyeGeo, eyeMat)
       eyeR.position.set(0.3, 1.1, 0.75)
       group.add(eyeR)
 
@@ -267,40 +333,37 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       pupilR.position.set(0.3, 1.1, 0.88)
       group.add(pupilR)
 
-      // Cute Cheeks / Blush
-      const blushGeo = new THREE.CircleGeometry(0.12, 12)
-      const blushMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e, transparent: true, opacity: 0.6 })
-      const blushL = new THREE.Mesh(blushGeo, blushMat)
-      blushL.position.set(-0.48, 0.85, 0.76)
-      blushL.rotation.y = -0.3
-      group.add(blushL)
-
-      const blushR = new THREE.Mesh(blushGeo, blushMat)
-      blushR.position.set(0.48, 0.85, 0.76)
-      blushR.rotation.y = 0.3
-      group.add(blushR)
+      // Overhead "YOU" Identification Arrow Pointer (Local Player Only)
+      if (isLocal) {
+        const arrowGeo = new THREE.ConeGeometry(0.22, 0.45, 8)
+        arrowGeo.rotateX(Math.PI)
+        const arrowMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
+        const arrow = new THREE.Mesh(arrowGeo, arrowMat)
+        arrow.position.y = 2.4
+        group.add(arrow)
+        gameRef.current.indicatorMesh = arrow
+      }
 
       return group
     }
 
-    // Create Local Player Cartoon Mesh
-    const localMesh = createCartoonCharacter(playerColor)
+    // Local Player Mesh with chosen color
+    const localMesh = createCartoonCharacter(selectedColor.hex, true)
     scene.add(localMesh)
     gameRef.current.meshMap[playerId] = localMesh
 
-    // Create 3D Powerup Meshes
+    // 3D Colored Power-ups (Coffee Mug & Nitro Crystal)
     const pMeshes = []
     gameRef.current.powerups.forEach((pu) => {
       const geo = pu.type === 'coffee'
         ? new THREE.CylinderGeometry(0.38, 0.3, 0.6, 16)
-        : pu.type === 'nitro'
-        ? new THREE.ConeGeometry(0.4, 0.8, 12)
-        : new THREE.SphereGeometry(0.45, 16, 16)
+        : new THREE.OctahedronGeometry(0.42)
 
       const mat = new THREE.MeshStandardMaterial({
-        color: pu.type === 'coffee' ? 0xf59e0b : pu.type === 'nitro' ? 0xef4444 : 0x38bdf8,
-        emissive: pu.type === 'coffee' ? 0xb45309 : pu.type === 'nitro' ? 0x991b1b : 0x0369a1,
-        emissiveIntensity: 0.6,
+        color: pu.type === 'coffee' ? 0xf59e0b : 0x38bdf8,
+        emissive: pu.type === 'coffee' ? 0xb45309 : 0x0284c7,
+        emissiveIntensity: 0.55,
+        roughness: 0.25,
       })
       const mesh = new THREE.Mesh(geo, mat)
       mesh.position.set(pu.x, 0.6, pu.z)
@@ -309,7 +372,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     })
     gameRef.current.powerupMeshes = pMeshes
 
-    // Resize Handler
+    // Resize
     const handleResize = () => {
       if (!container) return
       const w = container.clientWidth
@@ -320,12 +383,12 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
     window.addEventListener('resize', handleResize)
 
-    // ── 60FPS Physics & Elastic Collision Game Loop ──
+    // ── 60FPS Game Physics Loop ──
     let reqId
     const loop = () => {
-      const { myPos, keys, remotePlayers, channel, meshMap } = gameRef.current
+      const { myPos, keys, remotePlayers, channel, meshMap, indicatorMesh } = gameRef.current
 
-      // 1. Local Player Movement & Acceleration
+      // 1. Local Player Acceleration & Friction
       const accel = myPos.isHeavy ? 0.018 : 0.024
       const maxSpeed = myPos.isHeavy ? 0.18 : 0.22
 
@@ -335,51 +398,48 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         if (keys['a'] || keys['arrowleft'] || keys['KeyA']) myPos.vx -= accel
         if (keys['d'] || keys['arrowright'] || keys['KeyD']) myPos.vx += accel
 
-        // Clamp speed
         const speed = Math.hypot(myPos.vx, myPos.vz)
         if (speed > maxSpeed) {
           myPos.vx = (myPos.vx / speed) * maxSpeed
           myPos.vz = (myPos.vz / speed) * maxSpeed
         }
 
-        // Apply friction
         myPos.vx *= 0.94
         myPos.vz *= 0.94
-
         myPos.x += myPos.vx
         myPos.z += myPos.vz
 
-        // Calculate rotation angle towards movement
         if (Math.hypot(myPos.vx, myPos.vz) > 0.01) {
           myPos.rotY = Math.atan2(myPos.vx, myPos.vz)
         }
 
-        // Check if Fallen Off Edge of Floating Sumo Platform
-        const distFromCenter = Math.hypot(myPos.x, myPos.z)
-        if (distFromCenter > ARENA_RADIUS) {
+        // Falling off edge
+        const dist = Math.hypot(myPos.x, myPos.z)
+        if (dist > ARENA_RADIUS) {
           myPos.isFalling = true
           sounds.play('droplet')
 
-          // Bisdak quip when falling
-          setChatMessages((prev) => [
-            ...prev.slice(-20),
-            { sender: playerName, text: 'Yawa nahagbong ko! 😂', time: '00:00' },
-          ])
-
-          if (myPos.lastBumperId && channel) {
-            channel.postMessage({
-              type: 'PLAYER_KO',
-              payload: { killerId: myPos.lastBumperId, victimId: playerId },
-            })
+          if (channel) {
+            // Record KO to the killer
+            if (myPos.lastBumperId) {
+              channel.postMessage({
+                type: 'PLAYER_KNOCKED_OUT',
+                payload: {
+                  victimId: playerId,
+                  victimName: playerName,
+                  killerId: myPos.lastBumperId,
+                  killerName: myPos.lastBumperName || 'Opponent',
+                },
+              })
+            }
           }
         }
       } else {
-        // Falling animation down into the void
+        // Fall down into void
         myPos.y -= 0.35
         myPos.rotY += 0.15
 
         if (myPos.y < -16) {
-          // Respawn in center
           myPos.x = (Math.random() - 0.5) * 4
           myPos.z = (Math.random() - 0.5) * 4
           myPos.y = 0
@@ -387,27 +447,32 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           myPos.vz = 0
           myPos.isFalling = false
           myPos.lastBumperId = null
+          myPos.lastBumperName = null
         }
       }
 
-      // Update Local 3D Mesh
+      // Update Local Mesh & Floating Indicator
       if (localMesh) {
         localMesh.position.set(myPos.x, myPos.y, myPos.z)
         localMesh.rotation.y = myPos.rotY
 
-        // Cute Bouncy Squash & Stretch
-        const moveMagnitude = Math.hypot(myPos.vx, myPos.vz)
-        const bounce = 1 + Math.sin(Date.now() * 0.015) * moveMagnitude * 2
-        localMesh.scale.set(myPos.isHeavy ? 1.4 : 1, myPos.isHeavy ? 1.4 : bounce, myPos.isHeavy ? 1.4 : 1)
+        const moveMag = Math.hypot(myPos.vx, myPos.vz)
+        const bounce = 1 + Math.sin(Date.now() * 0.015) * moveMag * 2
+        localMesh.scale.set(myPos.isHeavy ? 1.35 : 1, myPos.isHeavy ? 1.35 : bounce, myPos.isHeavy ? 1.35 : 1)
       }
 
-      // Broadcast Movement
+      if (indicatorMesh) {
+        indicatorMesh.position.y = 2.4 + Math.sin(Date.now() * 0.006) * 0.15
+      }
+
+      // Broadcast Local State
       if (channel) {
         channel.postMessage({
           type: 'PLAYER_STATE',
           payload: {
             id: playerId,
             name: playerName,
+            colorHex: selectedColor.hex,
             x: myPos.x,
             y: myPos.y,
             z: myPos.z,
@@ -415,29 +480,27 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             vz: myPos.vz,
             rotY: myPos.rotY,
             score: myPos.score,
-            color: playerColor,
             isFalling: myPos.isFalling,
           },
         })
       }
 
-      // 2. Render & Sync Real Remote Players (From other localhost tabs / live visitors)
+      // 2. Render Remote Players with their chosen colors
       Object.values(remotePlayers).forEach((other) => {
         if (!meshMap[other.id]) {
-          const rMesh = createCartoonCharacter(other.color || 0x38bdf8)
+          const rMesh = createCartoonCharacter(other.colorHex || 0x38bdf8, false)
           scene.add(rMesh)
           meshMap[other.id] = rMesh
         }
 
         const rMesh = meshMap[other.id]
         if (rMesh) {
-          // Smooth interpolation towards received position
           rMesh.position.lerp(new THREE.Vector3(other.x, other.y || 0, other.z), 0.35)
           rMesh.rotation.y = other.rotY || 0
         }
       })
 
-      // 3. Elastic Bumper Momentum Collisions (Ramming Mechanics with Real Players)
+      // 3. Elastic Collisions (Ramming Real Players)
       Object.values(remotePlayers).forEach((other) => {
         if (myPos.isFalling || other.isFalling) return
         const dist = Math.hypot(myPos.x - other.x, myPos.z - other.z)
@@ -447,20 +510,18 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           sounds.play('press')
           const dx = (myPos.x - other.x) / (dist || 1)
           const dz = (myPos.z - other.z) / (dist || 1)
+          const force = myPos.isHeavy ? 0.44 : 0.25
 
-          const force = myPos.isHeavy ? 0.45 : 0.26
-
-          // Apply recoil to You
           myPos.vx += dx * (force * 0.7)
           myPos.vz += dz * (force * 0.7)
 
-          // Send knockback impulse packet to the other real player's tab
           if (channel) {
             channel.postMessage({
-              type: 'BUMP_EVENT',
+              type: 'BUMP_IMPULSE',
               payload: {
                 targetId: other.id,
                 sourceId: playerId,
+                sourceName: playerName,
                 impulseX: -dx * force,
                 impulseZ: -dz * force,
               },
@@ -469,13 +530,12 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         }
       })
 
-      // 4. Power-Up Pickups & Floating Rotations
+      // 4. Power-up Pickups
       const now = Date.now()
       pMeshes.forEach(({ mesh, data }) => {
         mesh.rotation.y += 0.04
         mesh.position.y = 0.6 + Math.sin(now * 0.004 + data.id) * 0.15
 
-        // Check local pickup
         const dist = Math.hypot(myPos.x - data.x, myPos.z - data.z)
         if (dist < 1.3 && data.active && !myPos.isFalling) {
           sounds.play('success')
@@ -486,8 +546,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             myPos.isHeavy = true
             setTimeout(() => (myPos.isHeavy = false), 6000)
           } else if (data.type === 'nitro') {
-            myPos.vx *= 2.5
-            myPos.vz *= 2.5
+            myPos.vx *= 2.4
+            myPos.vz *= 2.4
           }
 
           setTimeout(() => {
@@ -502,7 +562,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         }
       })
 
-      // Update Live Scoreboard
+      // Live Scoreboard
       const currentScores = { [playerName]: myPos.score }
       Object.values(remotePlayers).forEach((p) => {
         currentScores[p.name || p.id] = p.score || 0
@@ -520,9 +580,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       window.removeEventListener('resize', handleResize)
       renderer.dispose()
     }
-  }, [isOpen, playerId, playerName, playerColor])
+  }, [isOpen, hasJoined, playerId, playerName, selectedColor])
 
-  // Send In-Game Chat Message
+  // In-Game Chat Send
   const handleSendChat = (e) => {
     e?.preventDefault()
     const trimmed = chatInput.trim()
@@ -537,10 +597,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       time: timeStr,
     }
 
-    setChatMessages((prev) => [...prev.slice(-20), msgObj])
+    setChatMessages((prev) => [...prev.slice(-25), msgObj])
     gameRef.current.chatBubbles[playerId] = {
       text: trimmed,
-      timer: Date.now() + 4000,
+      timer: Date.now() + 4500,
     }
 
     if (gameRef.current.channel) {
@@ -553,13 +613,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     setChatInput('')
   }
 
-  // Quick Bisdak Reaction Buttons
   const handleQuickChat = (text) => {
     setChatInput(text)
-    setTimeout(() => handleSendChat(), 40)
+    setTimeout(() => handleSendChat(), 30)
   }
 
-  // Mobile Touch Controls
   const handleTouchMove = (direction) => {
     const { myPos } = gameRef.current
     const step = 0.18
@@ -567,6 +625,31 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     if (direction === 'down') myPos.vz += step
     if (direction === 'left') myPos.vx -= step
     if (direction === 'right') myPos.vx += step
+  }
+
+  const handleJoinArena = (e) => {
+    e?.preventDefault()
+    const name = playerName.trim() || `Player_${Math.floor(100 + Math.random() * 900)}`
+    setPlayerName(name)
+    try {
+      localStorage.setItem(LOCAL_STORAGE_NAME_KEY, name)
+      localStorage.setItem(LOCAL_STORAGE_COLOR_KEY, String(colorIdx))
+    } catch {}
+    setHasJoined(true)
+    sounds.play('chime')
+
+    // Broadcast join announcement
+    if (gameRef.current.channel) {
+      gameRef.current.channel.postMessage({
+        type: 'CHAT_MESSAGE',
+        payload: {
+          id: playerId,
+          sender: 'System',
+          text: `${name} entered the arena.`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      })
+    }
   }
 
   if (!isOpen) return null
@@ -579,181 +662,252 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
-      {/* Main 3D Arcade Modal Frame */}
-      <div className="relative z-10 flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-gray-800 bg-[#0c0d12] shadow-2xl text-gray-200">
-        {/* Top Header Bar */}
-        <div className="flex items-center justify-between border-b border-gray-800 px-5 py-3.5 bg-[#12131a]">
-          <div className="flex items-center gap-3">
-            <span className="flex h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-mono text-sm font-bold tracking-tight text-white">
-              CYBER SUMO 3D <span className="text-emerald-400 font-normal text-xs">[Multiplayer Bumper 🤼‍♂️]</span>
-            </span>
+      {/* ── Name & Character Color Selection Modal ── */}
+      {!hasJoined ? (
+        <div className="relative z-20 w-full max-w-md rounded-3xl border border-gray-800 bg-[#0c0d12] p-6 text-white shadow-2xl">
+          <div className="text-center">
+            <div className="font-mono text-xs uppercase tracking-widest text-gray-400">
+              Multiplayer Arena
+            </div>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
+              CYBER SUMO 3D
+            </h2>
+            <p className="mt-2 text-xs text-gray-400">
+              Pick your callsign and avatar color. Saved permanently on this device.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-xs">
-            {isEditingName ? (
+          <form onSubmit={handleJoinArena} className="mt-6 space-y-4">
+            <div>
+              <label className="block font-mono text-xs text-gray-400 mb-1.5">
+                Callsign / Name:
+              </label>
               <input
                 type="text"
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
-                onBlur={() => setIsEditingName(false)}
-                onKeyDown={(e) => e.key === 'Enter' && setIsEditingName(false)}
-                className="rounded border border-emerald-500 bg-gray-900 px-2 py-0.5 text-xs text-white font-mono focus:outline-none"
-                maxLength={14}
+                placeholder="Your callsign..."
+                className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 font-mono text-sm text-white placeholder:text-gray-500 focus:border-white focus:outline-none"
+                maxLength={15}
                 autoFocus
               />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsEditingName(true)}
-                className="hidden sm:inline font-mono text-xs text-gray-300 hover:text-emerald-400"
-                title="Click to rename your cartoon avatar"
-              >
-                🎮 {playerName} <span className="text-[10px] text-gray-500">(edit)</span>
-              </button>
-            )}
+            </div>
 
-            <span className="rounded-md border border-emerald-900 bg-emerald-950/60 px-2 py-0.5 text-emerald-400">
-              ● {onlineCount} Real Player{onlineCount > 1 ? 's' : ''} in Arena
-            </span>
+            {/* Avatar Color Picker */}
+            <div>
+              <label className="block font-mono text-xs text-gray-400 mb-2">
+                Choose Avatar Color:
+              </label>
+              <div className="flex items-center justify-center gap-3">
+                {CHARACTER_COLORS.map((c, idx) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      sounds.play('tick')
+                      setColorIdx(idx)
+                    }}
+                    style={{ backgroundColor: c.css }}
+                    className={`h-8 w-8 rounded-full transition-transform cursor-pointer ${
+                      colorIdx === idx
+                        ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-110'
+                        : 'opacity-70 hover:opacity-100'
+                    }`}
+                    title={c.name}
+                  />
+                ))}
+              </div>
+              <div className="mt-1.5 text-center font-mono text-[11px] text-gray-400">
+                Selected: <span style={{ color: selectedColor.css }} className="font-bold">{selectedColor.name}</span>
+              </div>
+            </div>
 
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-white py-3 font-mono text-sm font-bold text-black transition-all hover:bg-gray-200 active:scale-95 cursor-pointer mt-2"
+            >
+              Enter Arena →
+            </button>
+          </form>
+
+          <div className="mt-4 text-center">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1 text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer"
+              className="font-mono text-xs text-gray-500 hover:text-gray-300"
             >
-              ✕ Close
+              Cancel
             </button>
           </div>
         </div>
-
-        {/* Game Layout: 3D Canvas (Left) + Live Chat & Scores (Right) */}
-        <div className="grid grid-cols-1 gap-4 p-4 lg:grid-cols-12 overflow-y-auto">
-          {/* 3D WebGL Sumo Viewport (8 Cols) */}
-          <div className="flex flex-col items-center justify-center lg:col-span-8">
-            <div className="relative w-full overflow-hidden rounded-2xl border border-gray-800 bg-black shadow-inner">
-              <div
-                ref={mountRef}
-                className="h-[340px] sm:h-[400px] w-full block cursor-grab active:cursor-grabbing"
+      ) : (
+        /* ── Main Minimalist Black & White Frame with Colored Characters ── */
+        <div className="relative z-10 flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-gray-800 bg-[#0c0d12] shadow-2xl text-gray-200">
+          {/* Top Header Bar */}
+          <div className="flex flex-wrap items-center justify-between border-b border-gray-800 px-4 py-3 sm:px-5 sm:py-3.5 bg-[#101116] gap-2">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span
+                style={{ backgroundColor: selectedColor.css }}
+                className="h-2.5 w-2.5 rounded-full animate-pulse shadow-sm"
               />
-
-              {/* In-Game Objective Toast */}
-              <div className="absolute top-2.5 left-2.5 rounded-lg bg-black/80 px-3 py-1.5 font-mono text-[11px] text-gray-300 backdrop-blur-md border border-gray-800 space-y-0.5">
-                <div>
-                  <span className="text-emerald-400 font-bold">You (Your Avatar)</span> | Move: <span className="text-white font-bold">WASD / Arrows</span>
-                </div>
-                <div className="text-[10px] text-amber-400">
-                  ⚡ Open a 2nd tab to test 1v1 | Bump opponent off the edge!
-                </div>
-              </div>
+              <span className="font-mono text-xs sm:text-sm font-bold tracking-tight text-white">
+                CYBER SUMO <span className="text-gray-400 font-normal text-[10px] sm:text-xs">[3D Multiplayer]</span>
+              </span>
             </div>
 
-            {/* Mobile Touch D-Pad Controls */}
-            <div className="mt-3 flex items-center gap-2 sm:hidden">
+            <div className="flex items-center gap-2 sm:gap-3 font-mono text-[11px] sm:text-xs">
+              <span className="flex items-center gap-1.5 text-gray-300 truncate max-w-[120px] sm:max-w-[160px]">
+                <span style={{ backgroundColor: selectedColor.css }} className="inline-block h-2 w-2 rounded-full" />
+                {playerName}
+              </span>
+              <span className="text-gray-600">|</span>
+              <span className="rounded-md border border-gray-800 bg-gray-900 px-1.5 py-0.5 text-gray-300 text-[10px] sm:text-xs">
+                ● {onlineCount} In Arena
+              </span>
               <button
                 type="button"
-                onClick={() => handleTouchMove('left')}
-                className="h-10 w-10 rounded-lg bg-gray-800 text-white active:bg-emerald-600 font-bold"
+                onClick={onClose}
+                className="rounded-lg p-1 text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer text-xs"
               >
-                ←
-              </button>
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleTouchMove('up')}
-                  className="h-10 w-10 rounded-lg bg-gray-800 text-white active:bg-emerald-600 font-bold"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTouchMove('down')}
-                  className="h-10 w-10 rounded-lg bg-gray-800 text-white active:bg-emerald-600 font-bold"
-                >
-                  ↓
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleTouchMove('right')}
-                className="h-10 w-10 rounded-lg bg-gray-800 text-white active:bg-emerald-600 font-bold"
-              >
-                →
+                ✕ Close
               </button>
             </div>
           </div>
 
-          {/* Live In-Game Chat & Scoreboard (4 Cols) */}
-          <div className="flex flex-col justify-between rounded-2xl border border-gray-800 bg-[#111218] p-3.5 lg:col-span-4 h-[400px]">
-            {/* Live Scoreboard */}
-            <div>
-              <div className="font-mono text-xs font-bold uppercase tracking-wider text-gray-400 pb-2 border-b border-gray-800">
-                🏆 Sumo K.O. Leaderboard
-              </div>
-              <div className="mt-2 space-y-1 font-mono text-xs max-h-24 overflow-y-auto">
-                {Object.entries(scores)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([name, sc], idx) => (
-                    <div key={name} className="flex items-center justify-between text-gray-300">
-                      <span className="truncate max-w-[130px]">
-                        {idx === 0 ? '👑 ' : `${idx + 1}. `}
-                        {name} {name === playerName ? '(You)' : ''}
-                      </span>
-                      <span className="font-bold text-emerald-400">{sc} KOs</span>
-                    </div>
-                  ))}
-              </div>
-            </div>
+          {/* Game Layout: 3D Canvas (Left) + Live Chat & Scores (Right) */}
+          <div className="grid grid-cols-1 gap-4 p-3 sm:p-4 lg:grid-cols-12 overflow-y-auto">
+            {/* 3D WebGL Sumo Viewport */}
+            <div className="flex flex-col items-center justify-center lg:col-span-8">
+              <div className="relative w-full overflow-hidden rounded-2xl border border-gray-800 bg-black shadow-inner">
+                <div
+                  ref={mountRef}
+                  className="h-[250px] sm:h-[380px] w-full block cursor-grab active:cursor-grabbing"
+                />
 
-            {/* Live Room Chat Feed */}
-            <div className="mt-3 flex-1 overflow-y-auto border-t border-gray-800 pt-2 font-mono text-[11px] space-y-1.5">
-              <div className="font-bold text-gray-500 uppercase text-[10px]">Live Arena Chat:</div>
-              {chatMessages.map((msg, idx) => (
-                <div key={idx} className="leading-snug">
-                  <span className="font-bold text-emerald-400">{msg.sender}: </span>
-                  <span className="text-gray-300">{msg.text}</span>
+                {/* In-Game Objective Toast */}
+                <div className="absolute top-2 left-2 rounded-lg bg-black/80 px-2.5 py-1 sm:px-3 sm:py-1.5 font-mono text-[10px] sm:text-[11px] text-gray-300 backdrop-blur-md border border-gray-800 space-y-0.5">
+                  <div>
+                    <span style={{ color: selectedColor.css }} className="font-bold">
+                      You ({selectedColor.name} ▼)
+                    </span>{' '}
+                    | Move: <span className="text-white font-bold">WASD / Arrows</span>
+                  </div>
+                  <div className="text-[9.5px] sm:text-[10px] text-gray-400">
+                    Bump opponents off the platform into the void
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* Quick Bisdak / Gaming Reaction Chips */}
-            <div className="mt-2 flex flex-wrap gap-1 border-t border-gray-800 pt-2 font-mono text-[10px]">
-              {['🤼‍♂️ BOING!', '☕ Kape Heavy!', 'Yawa nahagbong ko! 😂', 'GGs bai! 🚀'].map((chip) => (
+              {/* Mobile Touch D-Pad */}
+              <div className="mt-3 flex items-center justify-center gap-3 sm:hidden select-none">
                 <button
-                  key={chip}
                   type="button"
-                  onClick={() => handleQuickChat(chip)}
-                  className="rounded border border-gray-700 bg-gray-800/80 px-2 py-0.5 text-gray-300 hover:text-white hover:border-emerald-500 cursor-pointer"
+                  onClick={() => handleTouchMove('left')}
+                  className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
                 >
-                  {chip}
+                  ←
                 </button>
-              ))}
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTouchMove('up')}
+                    className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTouchMove('down')}
+                    className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
+                  >
+                    ↓
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTouchMove('right')}
+                  className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
+                >
+                  →
+                </button>
+              </div>
             </div>
 
-            {/* In-Game Chat Input */}
-            <form onSubmit={handleSendChat} className="mt-2 flex items-center gap-1.5">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Say something in the 3D sumo arena..."
-                className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1.5 font-mono text-xs text-white placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none"
-                maxLength={45}
-              />
-              <button
-                type="submit"
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 font-mono text-xs font-semibold text-white hover:bg-emerald-500 active:scale-95 cursor-pointer"
-              >
-                Send
-              </button>
-            </form>
+            {/* Live In-Game Chat & Scoreboard */}
+            <div className="flex flex-col justify-between rounded-2xl border border-gray-800 bg-[#111218] p-3 sm:p-3.5 lg:col-span-4 h-auto min-h-[300px] lg:h-[380px]">
+              {/* Live Scoreboard */}
+              <div>
+                <div className="font-mono text-xs font-bold uppercase tracking-wider text-gray-400 pb-2 border-b border-gray-800">
+                  Leaderboard
+                </div>
+                <div className="mt-2 space-y-1 font-mono text-xs max-h-24 overflow-y-auto">
+                  {Object.entries(scores)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([name, sc], idx) => (
+                      <div key={name} className="flex items-center justify-between text-gray-300">
+                        <span className="truncate max-w-[130px]">
+                          {`${idx + 1}. `}
+                          {name} {name === playerName ? '(You)' : ''}
+                        </span>
+                        <span className="font-bold text-white">{sc} KOs</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Live Room Chat Feed */}
+              <div className="mt-3 flex-1 overflow-y-auto border-t border-gray-800 pt-2 font-mono text-[11px] space-y-1.5 max-h-[160px]">
+                <div className="font-bold text-gray-500 uppercase text-[10px]">Arena Chat:</div>
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className="leading-snug">
+                    <span className={`font-bold ${msg.sender === 'System' ? 'text-gray-400 italic' : 'text-white'}`}>
+                      {msg.sender}:{' '}
+                    </span>
+                    <span className="text-gray-300">{msg.text}</span>
+                  </div>
+                ))}
+                <div ref={chatBottomRef} />
+              </div>
+
+              {/* Quick Monochrome Reaction Chips (Zero Emojis) */}
+              <div className="mt-2 flex flex-wrap gap-1 border-t border-gray-800 pt-2 font-mono text-[10px]">
+                {['BOING!', 'Coffee Boost', 'Yawa nahagbong ko!', 'GGs!'].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => handleQuickChat(chip)}
+                    className="rounded border border-gray-700 bg-gray-900 px-2 py-0.5 text-gray-300 hover:text-white hover:border-gray-500 cursor-pointer"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+
+              {/* In-Game Chat Input */}
+              <form onSubmit={handleSendChat} className="mt-2 flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Type a message to all visitors..."
+                  className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1.5 font-mono text-xs text-white placeholder:text-gray-500 focus:border-white focus:outline-none"
+                  maxLength={45}
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-white px-3 py-1.5 font-mono text-xs font-semibold text-black hover:bg-gray-200 active:scale-95 cursor-pointer"
+                >
+                  Send
+                </button>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

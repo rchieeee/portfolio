@@ -11,14 +11,17 @@ export default function Hero({ onOpenTerminal, theme }) {
       {/* ── Interactive Particle Constellation Canvas ── */}
       <InteractiveHeroCanvas theme={theme} />
 
-      {/* ── Interactive 3D Avatar & Location Badges ── */}
+      {/* ── Interactive 3D Avatar & Clean Location Status ── */}
       <div className="reveal d1 relative z-10 mb-6 flex items-center gap-4">
         <InteractiveAvatar />
-        <div className="space-y-1">
-          <span className="inline-flex items-center rounded-full border border-gray-200 bg-white/80 px-3 py-1 font-mono text-[11px] font-medium text-gray-700 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300">
-            {profile.location} · UTC+8
-          </span>
-          <div className="font-mono text-[11px] text-gray-400 dark:text-gray-500">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="text-gray-800 dark:text-gray-200">Available for projects</span>
+            <span className="text-gray-300 dark:text-gray-700">/</span>
+            <span>{profile.location} · UTC+8</span>
+          </div>
+          <div className="font-mono text-xs text-gray-400 dark:text-gray-500">
             {profile.role}
           </div>
         </div>
@@ -34,7 +37,7 @@ export default function Hero({ onOpenTerminal, theme }) {
       {/* Engaging & Entertaining Bio */}
       <div className="reveal d3 relative z-10 mt-6 max-w-2xl space-y-3">
         <p className="text-base leading-relaxed text-gray-600 sm:text-lg dark:text-gray-300">
-          Hi, I&apos;m <b className="text-gray-950 dark:text-white">{profile.name}</b> — a full-stack developer and generative AI builder from the Philippines. I love turning wild ideas into fast, responsive web apps and building smart AI tools that actually get things done.
+          wazzupp... i&apos;m <b className="text-gray-950 dark:text-white">{profile.name}</b> — a full-stack developer and generative AI builder from the Philippines. I love turning wild ideas into fast, responsive web apps and building smart AI tools that actually get things done.
         </p>
         <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
           When I&apos;m not writing code with React, Node, or Python, you&apos;ll find me experimenting with generative models, tweaking UI details, or exploring new tech. Feel free to check out my work below, test the interactive code inspector, or open the{' '}
