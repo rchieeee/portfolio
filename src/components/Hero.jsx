@@ -87,8 +87,9 @@ export default function Hero({ onOpenTerminal, theme }) {
         </a>
       </div>
 
-      {/* Social Badges Row */}
-      <div className="reveal d5 relative z-10 mt-8 flex flex-wrap items-center gap-3 font-mono text-[12px] text-gray-500 dark:text-gray-400">
+      {/* Clean Editorial Links */}
+      <div className="reveal d5 relative z-10 mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-gray-400 dark:text-gray-600">connect /</span>
         {socials.map((s) => (
           <a
             key={s.label}
@@ -96,10 +97,10 @@ export default function Hero({ onOpenTerminal, theme }) {
             target="_blank"
             rel="noreferrer"
             onClick={() => sounds.play('tick')}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white/70 px-2.5 py-1 backdrop-blur-md transition-all hover:border-gray-400 hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:hover:border-gray-600 dark:hover:text-white hover:-translate-y-0.5"
+            className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-950 underline underline-offset-4 decoration-gray-300 dark:text-gray-400 dark:hover:text-white dark:decoration-gray-700 hover:decoration-current"
           >
-            <span>{s.label}</span>
-            <span className="text-gray-400 dark:text-gray-500">{s.username}</span>
+            <span>{s.label.toLowerCase()}</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500">↗</span>
           </a>
         ))}
       </div>
