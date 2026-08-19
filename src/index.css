@@ -57,7 +57,7 @@ html.dark ::selection {
 
 
 
-/* ── Circular Theme Compression View Transitions ── */
+/* ── Shutter Curtain View Transitions ── */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -65,11 +65,11 @@ html.dark ::selection {
 }
 
 ::view-transition-old(root) {
-  z-index: 9999;
+  z-index: 1;
 }
 
 ::view-transition-new(root) {
-  z-index: 1;
+  z-index: 99999;
 }
 
 /* ── Smooth Crossfade Fallback ── */
