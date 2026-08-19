@@ -49,14 +49,64 @@ export default function App() {
     }
   }
 
-  // Handle instant theme change
+  // Handle animated theme change compressing into profile picture
   const handleSetTheme = (newTheme) => {
     sounds.play('toggle')
-    setTheme(newTheme)
-    try {
-      localStorage.setItem('theme', newTheme)
-    } catch {}
-    applyTheme(newTheme)
+
+    // Find center coordinates of profile avatar
+    const avatarEl = document.getElementById('profile-avatar-card')
+    let x = window.innerWidth / 2
+    let y = 160
+    if (avatarEl) {
+      const rect = avatarEl.getBoundingClientRect()
+      x = rect.left + rect.width / 2
+      y = rect.top + rect.height / 2
+    }
+
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    )
+
+    // Notify avatar to trigger interactive bounce/pulse effect
+    window.dispatchEvent(new CustomEvent('theme-compress'))
+
+    if (typeof document !== 'undefined' && document.startViewTransition && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const transition = document.startViewTransition(() => {
+        setTheme(newTheme)
+        try {
+          localStorage.setItem('theme', newTheme)
+        } catch {}
+        applyTheme(newTheme)
+      })
+
+      transition.ready.then(() => {
+        // Compress old theme into profile avatar, smoothly revealing the new theme
+        document.documentElement.animate(
+          {
+            clipPath: [
+              `circle(${endRadius}px at ${x}px ${y}px)`,
+              `circle(0px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 650,
+            easing: 'cubic-bezier(0.32, 0, 0.24, 1)',
+            pseudoElement: '::view-transition-old(root)',
+          }
+        )
+      })
+    } else {
+      // Fallback crossfade
+      const root = document.documentElement
+      root.classList.add('theme-transitioning')
+      setTheme(newTheme)
+      try {
+        localStorage.setItem('theme', newTheme)
+      } catch {}
+      applyTheme(newTheme)
+      setTimeout(() => root.classList.remove('theme-transitioning'), 400)
+    }
   }
 
   // Sound toggle

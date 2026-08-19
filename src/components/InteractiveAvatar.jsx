@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { profile } from '../portfolioData'
 import { sounds } from '../utils/audio'
 
@@ -8,6 +8,17 @@ export default function InteractiveAvatar() {
   const [isHovered, setIsHovered] = useState(false)
   const [isBouncing, setIsBouncing] = useState(false)
   const [quoteIndex, setQuoteIndex] = useState(0)
+
+  // Listen for theme compression effect
+  useEffect(() => {
+    const handleThemeCompress = () => {
+      setIsBouncing(true)
+      setTimeout(() => setIsBouncing(false), 700)
+    }
+
+    window.addEventListener('theme-compress', handleThemeCompress)
+    return () => window.removeEventListener('theme-compress', handleThemeCompress)
+  }, [])
 
   // Naturally Varied Bisdak AI Token Expressions (Varied Placement, No Emojis)
   const greetings = [
@@ -75,6 +86,7 @@ export default function InteractiveAvatar() {
 
       {/* ── 3D Interactive Portrait Card ── */}
       <div
+        id="profile-avatar-card"
         ref={cardRef}
         onClick={handleClick}
         onMouseMove={handleMouseMove}
@@ -85,7 +97,7 @@ export default function InteractiveAvatar() {
           transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)',
         }}
         className={`group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-gray-300 bg-white shadow-md transition-all duration-200 dark:border-gray-700 dark:bg-[#121318] ${
-          isBouncing ? 'animate-bounce' : ''
+          isBouncing ? 'animate-bounce scale-105' : ''
         }`}
         title="I-click ko bai!"
       >
