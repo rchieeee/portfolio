@@ -239,6 +239,7 @@ export const projects = [
     accent: 'from-amber-500/20 via-emerald-500/10 to-teal-500/5',
     badge: 'Flagship Enterprise App',
     heroImage: '/project-images/kaban/1.jpg',
+    images: kabanScreenshots,
     tools: [
       'Next.js 14 (App Router)',
       'TypeScript',

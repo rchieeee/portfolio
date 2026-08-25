@@ -19,7 +19,7 @@ function ProjectImageLoop({ images, heroImage, title, onClick }) {
 
     const interval = setInterval(() => {
       setCurrentIdx((prev) => (prev + 1) % imageList.length)
-    }, 3500) // smooth 3.5s cycle
+    }, 2500) // smooth 2.5s cycle
 
     return () => clearInterval(interval)
   }, [imageList.length])
@@ -37,7 +37,7 @@ function ProjectImageLoop({ images, heroImage, title, onClick }) {
           key={src}
           src={src}
           alt={`${title} preview ${idx + 1}`}
-          className={`absolute inset-0 h-full w-full object-cover object-top transition-all duration-1000 ease-in-out group-hover:scale-103 ${
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-all duration-800 ease-in-out group-hover:scale-103 ${
             currentIdx === idx
               ? 'opacity-100 scale-100 z-10'
               : 'opacity-0 scale-[0.99] z-0 pointer-events-none'
@@ -52,8 +52,8 @@ function ProjectImageLoop({ images, heroImage, title, onClick }) {
             {imageList.slice(0, 8).map((_, dotIdx) => (
               <span
                 key={dotIdx}
-                className={`h-1 rounded-full transition-all duration-700 ${
-                  currentIdx === dotIdx ? 'w-4 bg-white' : 'w-1 bg-white/40'
+                className={`h-1 rounded-full transition-all duration-500 ${
+                  currentIdx % 8 === dotIdx ? 'w-4 bg-white' : 'w-1 bg-white/40'
                 }`}
               />
             ))}
