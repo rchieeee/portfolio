@@ -82,14 +82,19 @@ export default function CaseStudyModal({ slug, onClose }) {
           {/* ── Minimal Image Gallery ── */}
           {isKaban && screenshots.length > 0 && activeScreenshot && (
             <div className="space-y-2.5">
-              {/* Main Image Frame */}
+              {/* Main Image Frame with Smooth Crossfade */}
               <div className="relative group overflow-hidden rounded-xl border border-gray-200 bg-gray-950 aspect-16/9 shadow-sm dark:border-gray-800">
-                <img
-                  src={activeScreenshot.src}
-                  alt={activeScreenshot.title}
-                  className="h-full w-full object-cover object-top cursor-zoom-in"
-                  onClick={() => setLightboxOpen(true)}
-                />
+                {screenshots.map((scr, idx) => (
+                  <img
+                    key={scr.id}
+                    src={scr.src}
+                    alt={scr.title}
+                    className={`absolute inset-0 h-full w-full object-cover object-top cursor-zoom-in transition-opacity duration-500 ease-in-out ${
+                      selectedScreenIdx === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                    }`}
+                    onClick={() => setLightboxOpen(true)}
+                  />
+                ))}
 
                 {/* Subtle Hover Arrows */}
                 <button

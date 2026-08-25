@@ -1,6 +1,68 @@
+import { useEffect, useState } from 'react'
 import { projects } from '../portfolioData'
 import { sounds } from '../utils/audio'
 import SpotlightCard from './SpotlightCard'
+
+function ProjectImageLoop({ images, heroImage, title, onClick }) {
+  const [currentIdx, setCurrentIdx] = useState(0)
+
+  // Curate key preview images if images array exists, or fallback to heroImage
+  const imageList =
+    images && images.length > 0
+      ? images.map((img) => (typeof img === 'string' ? img : img.src))
+      : heroImage
+      ? [heroImage]
+      : []
+
+  useEffect(() => {
+    if (imageList.length <= 1) return
+
+    const interval = setInterval(() => {
+      setCurrentIdx((prev) => (prev + 1) % imageList.length)
+    }, 3500) // smooth 3.5s cycle
+
+    return () => clearInterval(interval)
+  }, [imageList.length])
+
+  if (imageList.length === 0) return null
+
+  return (
+    <div
+      onClick={onClick}
+      className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 aspect-16/10 cursor-pointer dark:border-gray-800 select-none"
+    >
+      {/* Stitched Smooth Crossfading Image Stack */}
+      {imageList.map((src, idx) => (
+        <img
+          key={src}
+          src={src}
+          alt={`${title} preview ${idx + 1}`}
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-all duration-1000 ease-in-out group-hover:scale-103 ${
+            currentIdx === idx
+              ? 'opacity-100 scale-100 z-10'
+              : 'opacity-0 scale-[0.99] z-0 pointer-events-none'
+          }`}
+        />
+      ))}
+
+      {/* Subtle bottom gradient & minimal loop progress indicator */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center justify-between p-3.5 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
+        {imageList.length > 1 && (
+          <div className="flex items-center gap-1.5">
+            {imageList.slice(0, 8).map((_, dotIdx) => (
+              <span
+                key={dotIdx}
+                className={`h-1 rounded-full transition-all duration-700 ${
+                  currentIdx === dotIdx ? 'w-4 bg-white' : 'w-1 bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function ProjectShowcase({ onOpenCaseStudy }) {
   return (
@@ -19,7 +81,7 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
         </span>
       </div>
 
-      {/* Grid of Projects with 3D Spotlight Tilt (Minimal Clean Layout) */}
+      {/* Grid of Projects with 3D Spotlight Tilt */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {projects.map((project) => (
           <SpotlightCard
@@ -27,24 +89,16 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
             className="group flex flex-col justify-between overflow-hidden p-0"
           >
             <div>
-              {/* ── Minimal Image Preview (No Cluttered Overlays) ── */}
-              {project.heroImage ? (
-                <div
-                  onClick={() => {
-                    sounds.play('tick')
-                    onOpenCaseStudy(project.slug)
-                  }}
-                  className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 aspect-16/10 cursor-pointer dark:border-gray-800"
-                >
-                  <img
-                    src={project.heroImage}
-                    alt={project.name}
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-103"
-                  />
-                  {/* Subtle hover gradient */}
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40 group-hover:opacity-20 transition-opacity" />
-                </div>
-              ) : null}
+              {/* ── Smooth Looping Image Preview ── */}
+              <ProjectImageLoop
+                images={project.images}
+                heroImage={project.heroImage}
+                title={project.name}
+                onClick={() => {
+                  sounds.play('tick')
+                  onOpenCaseStudy(project.slug)
+                }}
+              />
 
               {/* ── Card Content ── */}
               <div className="p-6 sm:p-7">
