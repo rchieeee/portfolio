@@ -48,8 +48,8 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
         </span>
       </div>
 
-      {/* Grid of Projects with 3D Spotlight Tilt */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Grid of Projects (2-Column Formation) */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {projects.map((project) => (
           <SpotlightCard
             key={project.id}
