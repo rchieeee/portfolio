@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { projects } from '../portfolioData'
 import { sounds } from '../utils/audio'
 
@@ -6,14 +6,11 @@ export default function CaseStudyModal({ slug, onClose }) {
   const [selectedScreenIdx, setSelectedScreenIdx] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
 
-  if (!slug) return null
   const project = projects.find((p) => p.slug === slug)
-  if (!project) return null
-
-  const isKaban = project.id === 'kaban'
-  const isPnp = project.id === 'pnp-ccacgi'
-  const isCloudzone = project.id === 'cloudzone-pos'
-  const screenshots = project.images || []
+  const isKaban = project?.id === 'kaban'
+  const isPnp = project?.id === 'pnp-ccacgi'
+  const isCloudzone = project?.id === 'cloudzone-pos'
+  const screenshots = project?.images || []
   const activeScreenshot = screenshots[selectedScreenIdx] || screenshots[0]
 
   const handlePrevImg = () => {
@@ -25,6 +22,28 @@ export default function CaseStudyModal({ slug, onClose }) {
     sounds.play('tick')
     setSelectedScreenIdx((prev) => (prev < screenshots.length - 1 ? prev + 1 : 0))
   }
+
+  // Keyboard navigation: ArrowLeft, ArrowRight, Escape
+  useEffect(() => {
+    if (!slug || !project) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (lightboxOpen) setLightboxOpen(false)
+        else onClose()
+      } else if (e.key === 'ArrowLeft') {
+        sounds.play('tick')
+        setSelectedScreenIdx((prev) => (prev > 0 ? prev - 1 : screenshots.length - 1))
+      } else if (e.key === 'ArrowRight') {
+        sounds.play('tick')
+        setSelectedScreenIdx((prev) => (prev < screenshots.length - 1 ? prev + 1 : 0))
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [slug, project, screenshots.length, lightboxOpen, onClose])
+
+  if (!slug || !project) return null
 
   const getHostname = (url) => {
     try {
@@ -73,10 +92,11 @@ export default function CaseStudyModal({ slug, onClose }) {
               </a>
             )}
 
+            {/* Quick Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-950 dark:hover:bg-gray-800 dark:hover:text-white transition-colors cursor-pointer"
+              className="rounded-lg border border-gray-200 p-1.5 text-gray-400 hover:border-gray-300 hover:text-gray-700 dark:border-gray-800 dark:text-gray-500 dark:hover:border-gray-700 dark:hover:text-gray-300 cursor-pointer"
               title="Close modal"
             >
               <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
@@ -119,62 +139,69 @@ export default function CaseStudyModal({ slug, onClose }) {
                   </div>
                 ))}
 
-                {/* Subtle Hover Arrows */}
+                {/* ── Visible & Prominent Left Arrow Button ── */}
                 <button
                   type="button"
                   onClick={handlePrevImg}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black transition-opacity opacity-0 group-hover:opacity-100 backdrop-blur-md cursor-pointer"
-                  title="Previous image"
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 rounded-full bg-black/75 hover:bg-black p-3 text-white border border-white/20 shadow-xl backdrop-blur-md cursor-pointer transition-all hover:scale-108 active:scale-95 z-20 flex items-center justify-center"
+                  title="Previous screenshot (←)"
+                  aria-label="Previous screenshot"
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
+
+                {/* ── Visible & Prominent Right Arrow Button ── */}
                 <button
                   type="button"
                   onClick={handleNextImg}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full bg-black/60 p-2 text-white hover:bg-black transition-opacity opacity-0 group-hover:opacity-100 backdrop-blur-md cursor-pointer"
-                  title="Next image"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-black/75 hover:bg-black p-3 text-white border border-white/20 shadow-xl backdrop-blur-md cursor-pointer transition-all hover:scale-108 active:scale-95 z-20 flex items-center justify-center"
+                  title="Next screenshot (→)"
+                  aria-label="Next screenshot"
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </div>
 
               {/* Minimal Caption & Navigation Row */}
-              <div className="flex items-center justify-between font-mono text-[11px] text-gray-500 dark:text-gray-400">
-                <div>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+              <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
                     {String(selectedScreenIdx + 1).padStart(2, '0')} / {screenshots.length}
                   </span>
-                  <span className="mx-1.5">·</span>
-                  <span>{activeScreenshot.title}</span>
+                  <span className="text-gray-700 dark:text-gray-300 font-medium">
+                    {activeScreenshot.title}
+                  </span>
                 </div>
 
+                {/* Interactive Next & Prev Pill Buttons */}
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePrevImg}
-                    className="hover:text-gray-950 dark:hover:text-white cursor-pointer"
+                    className="flex items-center gap-1 px-3 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#15161c] text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#1e2028] hover:text-gray-950 dark:hover:text-white cursor-pointer transition-colors shadow-xs"
+                    title="Previous screenshot"
                   >
-                    ← prev
+                    <span>← Prev</span>
                   </button>
-                  <span>/</span>
                   <button
                     type="button"
                     onClick={handleNextImg}
-                    className="hover:text-gray-950 dark:hover:text-white cursor-pointer"
+                    className="flex items-center gap-1 px-3 py-1 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-950 text-white dark:bg-white dark:text-gray-950 hover:bg-gray-800 dark:hover:bg-gray-200 cursor-pointer transition-colors shadow-xs font-semibold"
+                    title="Next screenshot"
                   >
-                    next →
+                    <span>Next →</span>
                   </button>
-                  <span>·</span>
                   <button
                     type="button"
                     onClick={() => setLightboxOpen(true)}
-                    className="hover:text-gray-950 dark:hover:text-white cursor-pointer"
+                    className="flex items-center gap-1 px-2.5 py-1 rounded-md border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/60 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-950 dark:hover:text-white cursor-pointer transition-colors"
+                    title="Zoom full screen"
                   >
-                    zoom ⤢
+                    <span>Zoom ⤢</span>
                   </button>
                 </div>
               </div>
@@ -310,38 +337,46 @@ export default function CaseStudyModal({ slug, onClose }) {
               </ul>
             </div>
 
-            {/* Technologies */}
+            {/* Full Technologies Used */}
             <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
               <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
-                Technologies
+                Technologies Used ({project.tools.length})
               </h4>
-              <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-xs">
-                {project.tools.map((t) => (
+              <div className="mt-2.5 flex flex-wrap gap-1.5 font-mono text-xs">
+                {project.tools.map((tool) => (
                   <span
-                    key={t}
-                    className="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 text-gray-700 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300"
+                    key={tool}
+                    className="rounded border border-gray-200 bg-gray-50 px-2.5 py-1 text-gray-800 dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-200"
                   >
-                    {t}
+                    {tool}
                   </span>
                 ))}
               </div>
             </div>
 
-            {/* Credits */}
-            {project.developer && (
-              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80 font-mono text-xs text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-between gap-2">
+            {/* Developer Credits */}
+            <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+              <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-xs text-gray-500 dark:text-gray-400">
                 <div>
-                  Developer: <span className="text-gray-900 dark:text-white">{project.developer}</span>
+                  <span className="font-semibold text-gray-950 dark:text-white">
+                    {isKaban
+                      ? 'Developers: Archie S. Boiser & Rico Alentijo'
+                      : `Developer: ${project.developer || 'Archie S. Boiser'}`}
+                  </span>
+                  {project.organization && (
+                    <span className="block text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+                      {project.organization}
+                    </span>
+                  )}
                 </div>
-                <span>{project.organization || `Production System · ${project.year}`}</span>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* ── Minimal Fixed Bottom Bar ── */}
-        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-3.5 dark:border-gray-800/80 font-mono text-xs">
-          <div className="flex items-center gap-3">
+        {/* ── Footer Link Bar ── */}
+        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/80 px-6 py-3.5 font-mono text-xs dark:border-gray-800/80 dark:bg-[#121318]">
+          <div className="flex items-center gap-4">
             {project.liveUrl && (
               <a
                 href={project.liveUrl}
@@ -376,20 +411,49 @@ export default function CaseStudyModal({ slug, onClose }) {
         </div>
       </div>
 
-      {/* ── Fullscreen Lightbox Zoom Modal ── */}
+      {/* ── Fullscreen Lightbox Zoom Modal with Previous & Next Arrows ── */}
       {lightboxOpen && activeScreenshot && (
         <div
           className="fixed inset-0 z-60 flex items-center justify-center bg-black/95 p-4 sm:p-8 backdrop-blur-xl"
           onClick={() => setLightboxOpen(false)}
         >
-          <div className="relative max-h-full max-w-5xl w-full flex flex-col items-center">
+          <div
+            className="relative max-h-full max-w-5xl w-full flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Lightbox */}
             <button
               type="button"
               onClick={() => setLightboxOpen(false)}
               className="absolute -top-10 right-0 rounded-full bg-white/20 p-2 text-white hover:bg-white/40 cursor-pointer"
+              title="Close fullscreen"
             >
               <svg className="h-5 w-5" viewBox="0 0 16 16" fill="none">
                 <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+
+            {/* Left arrow in lightbox */}
+            <button
+              type="button"
+              onClick={handlePrevImg}
+              className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-3 text-white hover:bg-black border border-white/20 shadow-xl cursor-pointer"
+              title="Previous image (←)"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {/* Right arrow in lightbox */}
+            <button
+              type="button"
+              onClick={handleNextImg}
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/70 p-3 text-white hover:bg-black border border-white/20 shadow-xl cursor-pointer"
+              title="Next image (→)"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
