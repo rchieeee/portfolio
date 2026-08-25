@@ -105,7 +105,185 @@ export const harnessStages = [
   },
 ]
 
+export const kabanScreenshots = [
+  {
+    id: 'dashboard-dark',
+    title: 'Treasury Overview & Analytics (Dark Mode)',
+    category: 'Analytics',
+    src: '/project-images/kaban/1.jpg',
+    desc: 'Real-time financial analytics, live cashflow trend chart, period filters, and multi-admin sync.',
+  },
+  {
+    id: 'dashboard-light',
+    title: 'Treasury Overview & Analytics (Light Mode)',
+    category: 'Analytics',
+    src: '/project-images/kaban/2.jpg',
+    desc: 'Clean light mode interface designed for high-visibility daytime treasury office operations.',
+  },
+  {
+    id: 'login-3fa',
+    title: '3-Factor Auth — Factor 1: Salted Hash & Bot Shield',
+    category: 'Security (3FA)',
+    src: '/project-images/kaban/14.jpg',
+    desc: 'Factor 1: Salted SHA-256 Web Crypto hashing with Cloudflare Turnstile bot shielding.',
+  },
+  {
+    id: 'login-otp',
+    title: '3-Factor Auth — Factor 2: Gmail OTP Verification',
+    category: 'Security (3FA)',
+    src: '/project-images/kaban/15.jpg',
+    desc: 'Factor 2: 6-digit Gmail OTP via Supabase SMTP with 120-second countdown and 3-attempt lockout.',
+  },
+  {
+    id: 'login-pin',
+    title: '3-Factor Auth — Factor 3: Security PIN & Account Freeze',
+    category: 'Security (3FA)',
+    src: '/project-images/kaban/16.jpg',
+    desc: 'Factor 3: Master Security PIN with 24-hour automatic account freeze upon 3 failed attempts.',
+  },
+  {
+    id: 'payables-grid',
+    title: 'Payables & Dues Management Grid',
+    category: 'Treasury Ops',
+    src: '/project-images/kaban/7.jpg',
+    desc: 'Active payable events, collection turnouts, target pools, and due date trackers.',
+  },
+  {
+    id: 'scope-engine',
+    title: 'Dynamic Fee Scope Targeting Engine',
+    category: 'Treasury Ops',
+    src: '/project-images/kaban/8.jpg',
+    desc: 'Automated fee assignment targeting specific courses, year levels, or sections.',
+  },
+  {
+    id: 'payment-cashier',
+    title: 'Payment Collection & Realtime Cashier',
+    category: 'Treasury Ops',
+    src: '/project-images/kaban/5.jpg',
+    desc: 'Instant student search, fee checklist, cashier change calculator, and auto-generated receipt IDs.',
+  },
+  {
+    id: 'receipt-pdf',
+    title: 'Official Receipt PDF & Print View',
+    category: 'Treasury Ops',
+    src: '/project-images/kaban/6.jpg',
+    desc: 'High-fidelity printable student payment receipt with QR verification and audit signature.',
+  },
+  {
+    id: 'expenses-log',
+    title: 'Purchases & Expense Disbursements',
+    category: 'Treasury Ops',
+    src: '/project-images/kaban/9.jpg',
+    desc: 'Council expense tracker with receipt attachments and pending-to-disbursed workflow.',
+  },
+  {
+    id: 'transparency-portal',
+    title: 'Public Transparency Portal & Ledger',
+    category: 'Transparency',
+    src: '/project-images/kaban/17.jpg',
+    desc: 'Zero-friction student ledger and public fund summary with rate-limited scraping protection.',
+  },
+  {
+    id: 'transparency-guide',
+    title: 'Student Manual & Visual Walkthrough',
+    category: 'Transparency',
+    src: '/project-images/kaban/13.jpg',
+    desc: 'Public onboarding guide showing students how to verify their dues in 4 simple steps.',
+  },
+  {
+    id: 'student-directory',
+    title: 'Student Roster Directory & Batch Actions',
+    category: 'Students',
+    src: '/project-images/kaban/3.jpg',
+    desc: 'Comprehensive student registry with CSV batch import and filtering.',
+  },
+  {
+    id: 'student-ledger',
+    title: 'Individual Student Balance Ledger',
+    category: 'Students',
+    src: '/project-images/kaban/4.jpg',
+    desc: 'Per-student financial ledger detailing assessed payables, payment records, and unsettled balance.',
+  },
+  {
+    id: 'officer-rbac',
+    title: 'Officer Accounts & Role-Based Access',
+    category: 'Governance',
+    src: '/project-images/kaban/10.jpg',
+    desc: 'Multi-role officer management (Admin, Treasurer, Auditor) with granular permissions.',
+  },
+  {
+    id: 'audit-trail',
+    title: 'Immutable Audit Trail Activity Logs',
+    category: 'Governance',
+    src: '/project-images/kaban/11.jpg',
+    desc: 'Timestamped event logs recording every financial mutation with officer signatures.',
+  },
+  {
+    id: 'settings-reset',
+    title: 'System Config & 3FA Reset Safety Gate',
+    category: 'Governance',
+    src: '/project-images/kaban/12.jpg',
+    desc: 'Academic period switcher and double-gated emergency system reset.',
+  },
+]
+
 export const projects = [
+  {
+    id: 'kaban',
+    slug: 'kaban',
+    name: 'KABAN — Student Council Treasury System',
+    category: 'Enterprise Fintech & Public Transparency',
+    tagline: 'Production financial management platform & public transparency portal built for a real university student council.',
+    year: '2026',
+    featured: true,
+    accent: 'from-amber-500/20 via-emerald-500/10 to-teal-500/5',
+    badge: 'Flagship Enterprise App',
+    heroImage: '/project-images/kaban/1.jpg',
+    images: kabanScreenshots,
+    tools: [
+      'Next.js 14',
+      'TypeScript',
+      'Supabase (PostgreSQL)',
+      'Tailwind CSS',
+      '3-Factor Auth (Web Crypto)',
+      'Cloudflare Turnstile',
+      'Realtime Channels',
+      'Offline-First Sync',
+      'Vercel Edge',
+    ],
+    stats: [
+      { label: 'Security Model', value: '3-Factor Auth' },
+      { label: 'Data Sync', value: 'Offline-First + Realtime' },
+      { label: 'DB Architecture', value: '9 RLS Tables' },
+      { label: 'Production Status', value: 'Active Council Use' },
+    ],
+    summary:
+      'A full-stack, enterprise-grade financial management platform and public transparency portal built for a real Student Council Treasury Office to manage hundreds of student records, collections, and disbursements.',
+    overview:
+      'KABAN (Tagalog for "treasury/vault") digitizes and secures the entire financial workflow of a university student council. It eliminates manual paper spreadsheets with automated fee assignment, cashier collection with printable receipts, expense tracking with receipt attachments, multi-admin live synchronization, and a zero-friction public transparency portal.',
+    challenge:
+      'Student councils often face severe auditing discrepancies, paper receipts loss, slow manual fee collection, and lack of fiscal transparency. Furthermore, erratic campus Wi-Fi causes data loss during heavy enrollment rushes, while handling sensitive funds demands bank-grade authentication without relying on expensive SaaS identity subscriptions.',
+    solution:
+      'Engineered a dual-layer Offline-First architecture combining Supabase PostgreSQL (source of truth) with LocalStorage cache fallback, real-time multi-admin sync via Supabase Channels, an automated fee scope targeting engine, and a proprietary zero-dependency 3-Factor Authentication system (Salted SHA-256 + Gmail OTP + 24h Freeze PIN).',
+    architecture: [
+      'Edge Layer: Cloudflare WAF + Turnstile bot protection + Next.js 14 Middleware with HMAC-SHA256 session token verification.',
+      'Data Layer: Supabase PostgreSQL with strict Row-Level Security (RLS) policies across 9 relational tables.',
+      'Offline-First Engine: Dual-sync storage layer caching mutations in LocalStorage and syncing on network recovery.',
+      'Real-Time Bus: Supabase Realtime WebSocket channels broadcasting instant collection and disbursement updates across all active admins.',
+      'Public Ledger: Sliding-window rate-limited transparency portal allowing students to verify dues via 8-digit student ID without account friction.',
+    ],
+    highlights: [
+      'Custom 3-Factor Authentication without third-party auth bloat (Web Crypto SHA-256, Gmail OTP, 24h Lockout PIN)',
+      'Offline-First hybrid sync supporting intermittent campus network conditions',
+      'Multi-admin live WebSocket synchronization via Supabase Realtime Channels',
+      'Dynamic Fee Scope Engine targeting specific programs, year levels, or sections',
+      'Frictionless Public Student Transparency Ledger with anti-scraping rate limiting',
+      'High-fidelity printable official receipts (PDF-ready with verification stamps)',
+      'Comprehensive audit trail logging every financial transaction with officer signatures',
+    ],
+    githubUrl: 'https://github.com/XeinQt/treasurerSystem',
+    liveUrl: 'https://treasurer-system.vercel.app',
+  },
   {
     id: 'pollen',
     slug: 'pollen',
@@ -291,6 +469,7 @@ export const testimonials = [
 
 export const terminalCommands = {
   help: `Available commands:
+  • kaban       - Inspect KABAN Student Council Treasury System (Flagship)
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
@@ -300,6 +479,18 @@ export const terminalCommands = {
   • contact     - Get direct communication links
   • time        - Check live Manila timezone & node status
   • clear       - Clear terminal history`,
+  kaban: `🏦 KABAN — Student Council Treasury System [Flagship Enterprise App]
+• Type: Full-Stack Treasury & Transparency Platform (Real Council Production)
+• Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime
+• Live Demo: https://treasurer-system.vercel.app
+• GitHub: https://github.com/XeinQt/treasurerSystem
+• Developers: Archie S. Boiser (Lead) & Rico Alentijo (Co-Dev)`,
+  treasury: `🏦 KABAN — Student Council Treasury System [Flagship Enterprise App]
+• Type: Full-Stack Treasury & Transparency Platform (Real Council Production)
+• Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime
+• Live Demo: https://treasurer-system.vercel.app
+• GitHub: https://github.com/XeinQt/treasurerSystem
+• Developers: Archie S. Boiser (Lead) & Rico Alentijo (Co-Dev)`,
   play: `Launching Archie Cyber Arcade [Multiplayer Arena]...`,
   coffee: `☕ Archie's Pang-Token & Kape Fund:
 "Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
@@ -323,13 +514,15 @@ Daghan kaayong salamat sa support bai! 🚀`,
 Based in Lupon, Davao Oriental, Philippines (UTC+8).
 Architecting complete systems with AI, generative product development, scalable React/Next.js/Node backends, and deterministic LLM harnesses.`,
   projects: `Featured Projects:
-1. Pollen Workspace — Team Momentum & Planning Space (React + Node.js)
-2. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
-3. Common Ground — Realtime Community & Event Platform (React + WebSockets)
-4. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
+1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA) [Flagship]
+2. Pollen Workspace — Team Momentum & Planning Space (React + Node.js)
+3. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
+4. Common Ground — Realtime Community & Event Platform (React + WebSockets)
+5. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
   stack: `Tech Stack:
-• Frontend: React 19, Next.js, TypeScript, Tailwind CSS, Vite
+• Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase
+• Security & Realtime: Web Crypto 3FA, Cloudflare Turnstile, Supabase Realtime
 • AI Systems: Claude API, OpenAI API, Guardrails, Deterministic Harnesses`,
   experience: `Timeline:
 • 2025 - Present: Generative Full-Stack AI Engineer (Remote)
