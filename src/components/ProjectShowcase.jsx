@@ -31,18 +31,30 @@ function ProjectImageLoop({ images, heroImage, title, onClick }) {
       onClick={onClick}
       className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 h-36 sm:h-40 cursor-pointer dark:border-gray-800 select-none"
     >
-      {/* Stitched Smooth Crossfading Image Stack */}
+      {/* Stitched Smooth Crossfading Image Stack with Ambient Backdrop */}
       {imageList.map((src, idx) => (
-        <img
+        <div
           key={src}
-          src={src}
-          alt={`${title} preview ${idx + 1}`}
-          className={`absolute inset-0 h-full w-full object-cover object-top transition-all duration-800 ease-in-out group-hover:scale-103 ${
+          className={`absolute inset-0 flex items-center justify-center transition-all duration-800 ease-in-out ${
             currentIdx === idx
               ? 'opacity-100 scale-100 z-10'
               : 'opacity-0 scale-[0.99] z-0 pointer-events-none'
           }`}
-        />
+        >
+          {/* Ambient blurred backdrop glow */}
+          <img
+            src={src}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover blur-xl opacity-20 scale-110 pointer-events-none"
+          />
+          {/* Main uncropped image */}
+          <img
+            src={src}
+            alt={`${title} preview ${idx + 1}`}
+            className="relative z-10 h-full w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-103"
+          />
+        </div>
       ))}
 
       {/* Subtle bottom gradient & minimal loop progress indicator */}

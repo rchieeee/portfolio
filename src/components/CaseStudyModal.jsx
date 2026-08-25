@@ -92,18 +92,31 @@ export default function CaseStudyModal({ slug, onClose }) {
           {/* ── Minimal Image Gallery ── */}
           {screenshots.length > 0 && activeScreenshot && (
             <div className="space-y-2.5">
-              {/* Main Image Frame with Smooth Crossfade */}
-              <div className="relative group overflow-hidden rounded-xl border border-gray-200 bg-gray-950 aspect-16/9 shadow-sm dark:border-gray-800">
+              {/* Main Image Frame with Uncropped Display & Ambient Backdrop */}
+              <div className="relative group overflow-hidden rounded-xl border border-gray-200 bg-[#07080c] h-[360px] sm:h-[460px] md:h-[500px] flex items-center justify-center shadow-sm dark:border-gray-800">
                 {screenshots.map((scr, idx) => (
-                  <img
+                  <div
                     key={scr.id}
-                    src={scr.src}
-                    alt={scr.title}
-                    className={`absolute inset-0 h-full w-full object-cover object-top cursor-zoom-in transition-opacity duration-500 ease-in-out ${
+                    className={`absolute inset-0 flex items-center justify-center p-2 transition-opacity duration-500 ease-in-out ${
                       selectedScreenIdx === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
                     }`}
-                    onClick={() => setLightboxOpen(true)}
-                  />
+                  >
+                    {/* Ambient blurred backdrop glow */}
+                    <img
+                      src={scr.src}
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 h-full w-full object-cover blur-2xl opacity-15 scale-110 pointer-events-none"
+                    />
+
+                    {/* Uncropped Full-Fidelity Screenshot */}
+                    <img
+                      src={scr.src}
+                      alt={scr.title}
+                      className="relative z-10 max-h-full max-w-full h-auto w-auto object-contain cursor-zoom-in rounded-lg shadow-lg"
+                      onClick={() => setLightboxOpen(true)}
+                    />
+                  </div>
                 ))}
 
                 {/* Subtle Hover Arrows */}
