@@ -546,87 +546,6 @@ export const projects = [
     githubUrl: 'https://github.com/rchieeee',
     liveUrl: 'https://pnp-ccacgi.vercel.app/',
   },
-  {
-    id: 'kanso',
-    slug: 'kanso',
-    name: 'Kanso Studio',
-    category: 'E-Commerce & Digital Flagship',
-    tagline: 'Minimalist editorial commerce built around honest craftsmanship.',
-    year: '2025',
-    featured: true,
-    accent: 'from-amber-500/20 to-stone-500/5',
-    badge: 'Digital Commerce',
-    tools: ['Next.js', 'TypeScript', 'Tailwind CSS', 'Stripe API'],
-    summary:
-      'An editorial storefront designed for high visual fidelity, seamless checkout flows, and sub-second page transitions.',
-    overview:
-      'Kanso is a digital flagship for an artisanal brand where materials and design details take center stage.',
-    challenge:
-      'Balancing high-resolution photography and editorial storytelling with lightning-fast Core Web Vitals and frictionless cart checkout.',
-    solution:
-      'Built with Next.js App Router, image optimization pipelines, and a headless checkout integration.',
-    highlights: [
-      '100/100 Lighthouse Performance score',
-      'Instant fluid page transitions',
-      'Accessible responsive cart drawer',
-    ],
-    githubUrl: 'https://github.com/rchieeee',
-    liveUrl: 'https://github.com/rchieeee',
-  },
-  {
-    id: 'common-ground',
-    slug: 'common-ground',
-    name: 'Common Ground',
-    category: 'Community & Event Platform',
-    tagline: 'Modular platform connecting builders, thinkers, and tech communities.',
-    year: '2025',
-    featured: true,
-    accent: 'from-blue-500/20 to-indigo-500/5',
-    badge: 'Community Hub',
-    tools: ['React', 'Express', 'Tailwind CSS', 'WebSockets'],
-    summary:
-      'An event platform and community forum facilitating live tech meetups and collaborative initiatives.',
-    overview:
-      'Common Ground unites tech builders around events, shared workshops, and community-led open-source projects.',
-    challenge:
-      'Delivering real-time attendee interactions and calendar coordination across multiple regional chapters.',
-    solution:
-      'Implemented WebSockets for live chat streams, automated RSVP reminders, and modular community spaces.',
-    highlights: [
-      'Live discussion feeds with WebSockets',
-      'Timezone-aware event scheduling',
-      'Custom role-based permissions',
-    ],
-    githubUrl: 'https://github.com/rchieeee',
-    liveUrl: 'https://github.com/rchieeee',
-  },
-  {
-    id: 'synapse-ai',
-    slug: 'synapse-ai',
-    name: 'Synapse AI Engine',
-    category: 'AI Tooling & Automation',
-    tagline: 'Developer harness for automated code transformations and verification.',
-    year: '2025',
-    featured: false,
-    accent: 'from-purple-500/20 to-pink-500/5',
-    badge: 'AI Harness',
-    tools: ['Python', 'FastAPI', 'Claude API', 'React'],
-    summary:
-      'An intelligent harness connecting LLMs to code repositories with strict AST validation and test execution.',
-    overview:
-      'Synapse enables developers to run multi-file code refactors safely with automated test validation before changes are applied.',
-    challenge:
-      'Raw LLM code generation often hallucinate APIs or break syntax in large codebases.',
-    solution:
-      'Engineered an execution harness that parses AST diffs and runs sandbox tests before staging code.',
-    highlights: [
-      'Automated AST syntax checking',
-      'Visual before/after diff generator',
-      'Sandbox test verification runner',
-    ],
-    githubUrl: 'https://github.com/rchieeee',
-    liveUrl: 'https://github.com/rchieeee',
-  },
 ]
 
 export const experience = [
@@ -779,10 +698,7 @@ Architecting complete systems with AI, generative product development, scalable 
   projects: `Featured Projects:
 1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA)
 2. CloudZone POS — Multi-Device Retail System (Flutter + Firestore + SQLite)
-3. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)
-4. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
-5. Common Ground — Realtime Community & Event Platform (React + WebSockets)
-6. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
+3. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)`,
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase
