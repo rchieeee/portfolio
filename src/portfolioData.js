@@ -286,6 +286,93 @@ export const pnpScreenshots = [
   },
 ]
 
+export const cloudzoneScreenshots = [
+  {
+    id: 'cz-admin-dash',
+    title: 'Admin Command Dashboard & Live KPIs',
+    category: 'Admin Oversight',
+    src: '/project-images/cloudzone/admin1.jpg',
+    desc: 'Real-time sales revenue KPIs, 7-day revenue charts, live transaction marquee, and top debtors monitor.',
+  },
+  {
+    id: 'cz-admin-dash-2',
+    title: 'Dashboard Analytics & Debt Breakdown',
+    category: 'Admin Oversight',
+    src: '/project-images/cloudzone/admin1.1.jpg',
+    desc: 'Expanded business health metrics, recent debtor repayment logs, and quick action navigation shortcuts.',
+  },
+  {
+    id: 'cz-pos-checkout',
+    title: 'Point of Sale (POS) & Cart Engine',
+    category: 'POS & Cashier',
+    src: '/project-images/cloudzone/admin2.jpg',
+    desc: 'Barcode scanning, product search, cart quantity editing, and dual discount modes (% percentage or fixed ₱).',
+  },
+  {
+    id: 'cz-checkout-cash',
+    title: 'Cash Payment & Change Calculator',
+    category: 'Checkout & Sales',
+    src: '/project-images/cloudzone/admin6(cash).jpg',
+    desc: 'Quick cash denomination buttons with instant change calculation and transaction reference generation.',
+  },
+  {
+    id: 'cz-checkout-credit',
+    title: 'Credit Sales & Debt Tracking',
+    category: 'Checkout & Sales',
+    src: '/project-images/cloudzone/admin5(credit).jpg',
+    desc: 'Searchable customer selector for on-account credit sales with running balance and payment terms.',
+  },
+  {
+    id: 'cz-receipt-print',
+    title: 'Thermal Printable PDF Receipts',
+    category: 'Checkout & Sales',
+    src: '/project-images/cloudzone/admin7(receipt).jpg',
+    desc: 'Thermal-formatted 58mm/80mm PDF receipt generation with native sharing support and business header.',
+  },
+  {
+    id: 'cz-inventory',
+    title: 'Real-Time Inventory & Stock Alerts',
+    category: 'Inventory Management',
+    src: '/project-images/cloudzone/admin3.jpg',
+    desc: 'Live stock monitoring with configurable low-stock threshold badges (In Stock / Low / Out of Stock).',
+  },
+  {
+    id: 'cz-sales-history',
+    title: 'Auditable Sales History Ledger',
+    category: 'Sales Audit',
+    src: '/project-images/cloudzone/admin8.jpg',
+    desc: 'Complete transaction history with unique reference IDs, date range filters, return processing, and CSV export.',
+  },
+  {
+    id: 'cz-customer-mgmt',
+    title: 'Customer Directory & Credit Balances',
+    category: 'Customer CRM',
+    src: '/project-images/cloudzone/admin9(customers).jpg',
+    desc: 'Customer profiles with debt isolation: cashiers manage own sales; admin views organization-wide outstanding ledger.',
+  },
+  {
+    id: 'cz-user-roles',
+    title: 'Multi-Cashier & Role Access Control',
+    category: 'Security & Roles',
+    src: '/project-images/cloudzone/admin10(users).jpg',
+    desc: 'Role-based access (Admin vs Cashier) with SHA-256 password hashing and remote multi-device session sync.',
+  },
+  {
+    id: 'cz-expenses',
+    title: 'Business Expense Tracking & P&L',
+    category: 'Financial Tracking',
+    src: '/project-images/cloudzone/admin11(expenses).jpg',
+    desc: 'Admin expense logging categorized by operating costs for automated net profit calculation.',
+  },
+  {
+    id: 'cz-cashier-pos',
+    title: 'Cashier POS Terminal & Quick Cart',
+    category: 'POS & Cashier',
+    src: '/project-images/cloudzone/cashier3.jpg',
+    desc: 'Dedicated cashier checkout interface with zero-latency SQLite writes and real-time background cloud drainage.',
+  },
+]
+
 export const projects = [
   {
     id: 'kaban',
@@ -347,6 +434,60 @@ export const projects = [
     ],
     githubUrl: 'https://github.com/XeinQt/treasurerSystem',
     liveUrl: 'https://treasurer-system.vercel.app',
+  },
+  {
+    id: 'cloudzone-pos',
+    slug: 'cloudzone-pos',
+    name: 'CloudZone POS — Multi-Device System',
+    category: 'Mobile Fintech & Distributed Systems',
+    tagline: 'Production-ready multi-device Point of Sale mobile system built with Flutter & Firebase for real-time multi-cashier sync and offline SQLite resilience.',
+    year: '2026',
+    featured: true,
+    accent: 'from-sky-500/20 via-blue-500/10 to-indigo-500/5',
+    badge: 'Production Mobile System',
+    heroImage: '/project-images/cloudzone/admin1.jpg',
+    images: cloudzoneScreenshots,
+    tools: [
+      'Flutter 3',
+      'Dart',
+      'Firebase Firestore',
+      'SQLite (sqflite)',
+      'Firebase Auth',
+      'Dart Streams & Reactive Sync',
+      'SHA-256 Cryptography',
+      'PDF & Thermal Printing Engine',
+      'fl_chart Visual Analytics',
+      'Connectivity Plus',
+      'Shared Preferences',
+      'FK-Safe Cross-Device Sync Engine',
+      'Remote Factory Reset Signal',
+    ],
+    stats: [
+      { label: 'Local Engine', value: 'SQLite (Zero-Latency Offline)' },
+      { label: 'Cloud Backbone', value: 'Firebase Firestore Streams' },
+      { label: 'Sync Architecture', value: 'Bidirectional Stream DAG' },
+      { label: 'Receipt Output', value: 'Thermal PDF Printable' },
+    ],
+    summary:
+      'A production-ready mobile POS system engineered for multi-cashier retail with bidirectional Firestore sync and instant offline SQLite performance.',
+    overview:
+      'CloudZone POS is a distributed, production-grade Point of Sale mobile application built with Flutter, SQLite, and Firebase. Designed for multi-cashier retail businesses without expensive centralized server hardware, the system couples a fast local SQLite database with real-time Firebase Firestore snapshot streams. Stock deductions on one cashier device propagate across all connected terminals within seconds, while queued offline mutations guarantee zero lost transactions during internet outages.',
+    challenge:
+      'Small to medium retail businesses frequently run multiple cashier terminals simultaneously, but lack the budget or infrastructure for dedicated on-premise servers. Common solutions suffer from sync collisions, silent SQLite foreign key constraint failures during cross-device document merges, and complete operational failure during network blackouts.',
+    solution:
+      'Architected a resilient dual-layer data pipeline: local SQLite handles instant sub-millisecond writes, a persistent SyncEngine drains transactions to Firestore via Dart streams, and dynamic PRAGMA FK-safe upserts ensure seamless document reconciliation across terminals. Included an instant remote factory reset signal that can wipe and log out all connected cashier devices simultaneously from the master admin console.',
+    highlights: [
+      'Bidirectional Real-Time Sync: Firestore snapshots() listeners sync stock and sales across devices in seconds without manual refresh',
+      'Offline-First Local SQLite: Cashiers can process checkouts with zero connectivity; SyncEngine drains the queue upon reconnect',
+      'FK-Safe Conflict-Free Merging: Solves SQLite foreign-key constraint conflicts during cross-terminal data replication',
+      'Remote Factory Reset Protocol: Master admin can remotely wipe local SQLite databases and force-logout cashier sessions',
+      'Dual Payment & Credit Tracking: Supports cash with change calculation and per-customer credit debt ledgers with cashier debt isolation',
+      'Thermal PDF Receipt Engine: Generates printable 58mm/80mm receipts with native sharing and transaction reference IDs',
+    ],
+    developer: 'Archie S. Boiser',
+    organization: 'Retail Production System · Philippines 🇵🇭',
+    githubUrl: 'https://github.com/rchieeee',
+    liveUrl: 'https://github.com/rchieeee',
   },
   {
     id: 'pnp-ccacgi',
@@ -561,6 +702,7 @@ export const testimonials = [
 export const terminalCommands = {
   help: `Available commands:
   • kaban       - Inspect KABAN Student Council Treasury System (Flagship)
+  • cloudzone   - Inspect CloudZone POS Multi-Device Retail System (Flutter)
   • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
@@ -583,6 +725,18 @@ export const terminalCommands = {
 • Live Demo: https://treasurer-system.vercel.app
 • GitHub: https://github.com/XeinQt/treasurerSystem
 • Developers: Archie S. Boiser & Rico Alentijo`,
+  cloudzone: `☁️ CloudZone POS — Multi-Device Retail System [Mobile Distributed POS]
+• Type: Multi-Cashier Production Retail Mobile Application
+• Stack: Flutter 3, Dart, Firebase Firestore, SQLite (Offline), Dart Streams
+• Key Tech: Bidirectional Stream Sync, FK-Safe Replication, Remote Factory Reset
+• Output: Thermal-printable PDF receipts & CSV sales export
+• Developer: Archie S. Boiser`,
+  pos: `☁️ CloudZone POS — Multi-Device Retail System [Mobile Distributed POS]
+• Type: Multi-Cashier Production Retail Mobile Application
+• Stack: Flutter 3, Dart, Firebase Firestore, SQLite (Offline), Dart Streams
+• Key Tech: Bidirectional Stream Sync, FK-Safe Replication, Remote Factory Reset
+• Output: Thermal-printable PDF receipts & CSV sales export
+• Developer: Archie S. Boiser`,
   pnp: `🛡️ PNP-CCACGI — Personnel Registry & Attendance System [Civic Platform]
 • Client: PNP COMMEL Auxiliary Cobra Civic Group Inc. (Camp Capt. Domingo E. Leonor, Davao City)
 • Stack: React 19, TypeScript, Google Cloud Firestore, Firebase Auth, ExcelJS
@@ -621,10 +775,11 @@ Based in Lupon, Davao Oriental, Philippines (UTC+8).
 Architecting complete systems with AI, generative product development, scalable React/Next.js/Node backends, and deterministic LLM harnesses.`,
   projects: `Featured Projects:
 1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA)
-2. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)
-3. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
-4. Common Ground — Realtime Community & Event Platform (React + WebSockets)
-5. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
+2. CloudZone POS — Multi-Device Retail System (Flutter + Firestore + SQLite)
+3. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)
+4. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
+5. Common Ground — Realtime Community & Event Platform (React + WebSockets)
+6. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase

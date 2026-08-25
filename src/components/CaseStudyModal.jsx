@@ -12,6 +12,7 @@ export default function CaseStudyModal({ slug, onClose }) {
 
   const isKaban = project.id === 'kaban'
   const isPnp = project.id === 'pnp-ccacgi'
+  const isCloudzone = project.id === 'cloudzone-pos'
   const screenshots = project.images || []
   const activeScreenshot = screenshots[selectedScreenIdx] || screenshots[0]
 
@@ -256,6 +257,30 @@ export default function CaseStudyModal({ slug, onClose }) {
                 </h4>
                 <p className="mt-1.5">
                   To ensure only authorized volunteers display organizational vehicle decals at PNP checkpoints, the system enforces a strict 3-stage warning workflow (1st Warning Inactivity → 2nd Impending Removal → 3rd Revocation &amp; Flagging). The system generates official dispatch memorandums formatted with dual organizational crests and dual command signatories (Secretariat &amp; Commander) ready for official print archiving.
+                </p>
+              </div>
+            )}
+
+            {/* CloudZone POS Specific: Bidirectional Reactive Sync & Offline Queue */}
+            {isCloudzone && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  Bidirectional Stream Sync &amp; Offline SQLite Queue
+                </h4>
+                <p className="mt-1.5">
+                  Instead of polling or relying on a single cloud dependency, CloudZone uses persistent <code>snapshots()</code> listeners on every cashier device. When a cashier rings up a sale, local SQLite writes occur in <b>&lt;1ms (zero-latency)</b>. Mutations queue into an SQLite <code>sync_queue</code> table and drain to Firestore asynchronously. All other connected terminals receive the stream event and update their local databases in seconds.
+                </p>
+              </div>
+            )}
+
+            {/* CloudZone POS Specific: FK-Safe Conflict Resolution & Remote Reset */}
+            {isCloudzone && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  FK-Safe Cross-Device Merging &amp; Remote Wipe Signal
+                </h4>
+                <p className="mt-1.5">
+                  To prevent silent SQLite foreign key constraint failures during cross-device document merges, the SyncEngine dynamically toggles <code>PRAGMA foreign_keys = OFF</code> during listener-driven upserts. Furthermore, the master admin console features an instant <b>Remote Factory Reset Signal</b>: writing a timestamp to Firestore triggers active cashier listeners to atomically wipe all local SQLite tables and fire an <code>onForceLogout</code> stream, instantly kicking unauthorized terminals back to login.
                 </p>
               </div>
             )}
