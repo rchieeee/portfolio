@@ -231,8 +231,8 @@ export const projects = [
   {
     id: 'kaban',
     slug: 'kaban',
-    name: 'KABAN — Student Council Treasury System',
-    category: 'Enterprise Fintech & Public Transparency',
+    name: 'KABAN — Treasury System',
+    category: 'Fintech & Public Transparency',
     tagline: 'Production financial management platform & public transparency portal built for a real university student council.',
     year: '2026',
     featured: true,
@@ -240,17 +240,7 @@ export const projects = [
     badge: 'Flagship Enterprise App',
     heroImage: '/project-images/kaban/1.jpg',
     images: kabanScreenshots,
-    tools: [
-      'Next.js 14',
-      'TypeScript',
-      'Supabase (PostgreSQL)',
-      'Tailwind CSS',
-      '3-Factor Auth (Web Crypto)',
-      'Cloudflare Turnstile',
-      'Realtime Channels',
-      'Offline-First Sync',
-      'Vercel Edge',
-    ],
+    tools: ['Next.js 14', 'TypeScript', 'Supabase', 'Tailwind CSS', '3-Factor Auth'],
     stats: [
       { label: 'Security Model', value: '3-Factor Auth' },
       { label: 'Data Sync', value: 'Offline-First + Realtime' },
@@ -258,7 +248,7 @@ export const projects = [
       { label: 'Production Status', value: 'Active Council Use' },
     ],
     summary:
-      'A full-stack, enterprise-grade financial management platform and public transparency portal built for a real Student Council Treasury Office to manage hundreds of student records, collections, and disbursements.',
+      'A production-ready financial management platform and public transparency portal built for a university student council with custom 3FA security and offline sync.',
     overview:
       'KABAN (Tagalog for "treasury/vault") digitizes and secures the entire financial workflow of a university student council. It eliminates manual paper spreadsheets with automated fee assignment, cashier collection with printable receipts, expense tracking with receipt attachments, multi-admin live synchronization, and a zero-friction public transparency portal.',
     challenge:

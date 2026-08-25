@@ -29,7 +29,7 @@ function ProjectImageLoop({ images, heroImage, title, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 aspect-16/10 cursor-pointer dark:border-gray-800 select-none"
+      className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 h-36 sm:h-40 cursor-pointer dark:border-gray-800 select-none"
     >
       {/* Stitched Smooth Crossfading Image Stack */}
       {imageList.map((src, idx) => (
