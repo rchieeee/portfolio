@@ -57,7 +57,7 @@ export default function App() {
     setThemeCooldown(true)
     setTimeout(() => {
       setThemeCooldown(false)
-    }, 1000)
+    }, 800)
 
     sounds.play('toggle')
     setTheme(newTheme)

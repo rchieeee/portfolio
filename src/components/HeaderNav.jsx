@@ -97,7 +97,7 @@ export default function HeaderNav({
             type="button"
             onClick={toggleThemeMode}
             disabled={themeCooldown}
-            className="group relative flex h-7 w-13 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="group relative flex h-7 w-13 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
             title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
             aria-label="Toggle Theme Mode"
           >
@@ -212,7 +212,7 @@ export default function HeaderNav({
                 type="button"
                 onClick={toggleThemeMode}
                 disabled={themeCooldown}
-                className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-bold text-gray-950 dark:border-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-bold text-gray-950 dark:border-gray-700 dark:text-white cursor-pointer"
               >
                 Switch to {isDark ? 'Light' : 'Dark'}
               </button>
