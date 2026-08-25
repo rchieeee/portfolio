@@ -257,7 +257,7 @@ export default function CaseStudyModal({ slug, onClose }) {
             {isKaban && (
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80 font-mono text-xs text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  Lead Developer: <span className="text-gray-900 dark:text-white">Archie S. Boiser</span> · Co-Developer: <span className="text-gray-900 dark:text-white">Rico Alentijo</span>
+                  Developers: <span className="text-gray-900 dark:text-white">Archie S. Boiser</span> &amp; <span className="text-gray-900 dark:text-white">Rico Alentijo</span>
                 </div>
                 <span>Student Council Treasury · A.Y. 2026–2027</span>
               </div>

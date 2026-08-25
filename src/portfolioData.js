@@ -457,13 +457,13 @@ export const terminalCommands = {
 • Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime
 • Live Demo: https://treasurer-system.vercel.app
 • GitHub: https://github.com/XeinQt/treasurerSystem
-• Developers: Archie S. Boiser (Lead) & Rico Alentijo (Co-Dev)`,
+• Developers: Archie S. Boiser & Rico Alentijo`,
   treasury: `🏦 KABAN — Student Council Treasury System [Flagship Enterprise App]
 • Type: Full-Stack Treasury & Transparency Platform (Real Council Production)
 • Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime
 • Live Demo: https://treasurer-system.vercel.app
 • GitHub: https://github.com/XeinQt/treasurerSystem
-• Developers: Archie S. Boiser (Lead) & Rico Alentijo (Co-Dev)`,
+• Developers: Archie S. Boiser & Rico Alentijo`,
   play: `Launching Archie Cyber Arcade [Multiplayer Arena]...`,
   coffee: `☕ Archie's Pang-Token & Kape Fund:
 "Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
@@ -487,11 +487,10 @@ Daghan kaayong salamat sa support bai! 🚀`,
 Based in Lupon, Davao Oriental, Philippines (UTC+8).
 Architecting complete systems with AI, generative product development, scalable React/Next.js/Node backends, and deterministic LLM harnesses.`,
   projects: `Featured Projects:
-1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA) [Flagship]
-2. Pollen Workspace — Team Momentum & Planning Space (React + Node.js)
-3. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
-4. Common Ground — Realtime Community & Event Platform (React + WebSockets)
-5. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
+1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA)
+2. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
+3. Common Ground — Realtime Community & Event Platform (React + WebSockets)
+4. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase

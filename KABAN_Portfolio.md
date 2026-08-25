@@ -256,10 +256,8 @@ SESSION_SECRET_KEY=your_custom_hmac_secret
 
 ## 👨‍💻 Developers
 
-| Role | Name |
-| :--- | :--- |
-| Lead Developer & Designer | **Archie S. Boiser** |
-| Co-Developer | **Rico Alentijo** |
+- **Archie S. Boiser**
+- **Rico Alentijo**
 
 ---
 
