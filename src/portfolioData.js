@@ -227,6 +227,65 @@ export const kabanScreenshots = [
   },
 ]
 
+export const pnpScreenshots = [
+  {
+    id: 'pnp-landing',
+    title: 'Executive Landing Hub',
+    category: 'Public Hub',
+    src: '/project-images/pnp/1.png',
+    desc: 'Commanding landing portal with dual organizational crests, creed of honor, and secure member access gate.',
+  },
+  {
+    id: 'pnp-orientation',
+    title: 'Orientation Guide & Core Services',
+    category: 'Public Hub',
+    src: '/project-images/pnp/2.png',
+    desc: 'Interactive 4-step user guide detailing the 8-digit ID format, roll call attendance rules, and disciplinary levels.',
+  },
+  {
+    id: 'pnp-portal-terminal',
+    title: 'Member Access Terminal (8-Digit OTP)',
+    category: 'Member Portal',
+    src: '/project-images/pnp/3.png',
+    desc: 'Auto-advancing 8-digit OTP ID verification terminal with clipboard paste and cooldown rate-limiting.',
+  },
+  {
+    id: 'pnp-credential-card',
+    title: 'Digital Credential Card & Call-Sign',
+    category: 'Member Portal',
+    src: '/project-images/pnp/4.png',
+    desc: 'Live verified member digital ID card with photo, rank, chapter assignment, and radio call-sign for PNP checkpoint verification.',
+  },
+  {
+    id: 'pnp-weekly-attendance',
+    title: 'Weekly Attendance History Ledger',
+    category: 'Member Portal',
+    src: '/project-images/pnp/5.png',
+    desc: 'Segmented weekly attendance roll call logs with verified Present/Absent badges and automated timestamps.',
+  },
+  {
+    id: 'pnp-admin-dashboard',
+    title: 'Command Center & 1-Tap Roll Call',
+    category: 'Command Center',
+    src: '/project-images/pnp/6.png',
+    desc: 'HQ administrative dashboard with 1-tap Present/Absent attendance marking, search filters, and active roster management.',
+  },
+  {
+    id: 'pnp-memorandum',
+    title: 'Official Warning Memorandum Dispatch',
+    category: 'Disciplinary Engine',
+    src: '/project-images/pnp/7.png',
+    desc: '3-stage disciplinary escalation engine generating print-ready official memorandums with dual command signatories.',
+  },
+  {
+    id: 'pnp-settings',
+    title: 'Chapter Settings & Organization Config',
+    category: 'Command Center',
+    src: '/project-images/pnp/8.png',
+    desc: 'Management panel for regional municipal chapters, official signatories, and instant portal link sharing.',
+  },
+]
+
 export const projects = [
   {
     id: 'kaban',
@@ -288,6 +347,60 @@ export const projects = [
     ],
     githubUrl: 'https://github.com/XeinQt/treasurerSystem',
     liveUrl: 'https://treasurer-system.vercel.app',
+  },
+  {
+    id: 'pnp-ccacgi',
+    slug: 'pnp-ccacgi',
+    name: 'PNP-CCACGI — Personnel & Attendance System',
+    category: 'Civic Operations & Security Platform',
+    tagline: 'Real-time cloud-synced auxiliary personnel registry, 1-tap roll call attendance, automated warning memos, and field-ready offline resiliency.',
+    year: '2026',
+    featured: true,
+    accent: 'from-blue-500/20 via-indigo-500/10 to-sky-500/5',
+    badge: 'Civic Operations Platform',
+    heroImage: '/project-images/pnp/1.png',
+    images: pnpScreenshots,
+    tools: [
+      'React 19',
+      'TypeScript',
+      'Google Cloud Firestore',
+      'Firebase Auth',
+      'Vite',
+      'Tailwind CSS',
+      'shadcn/ui',
+      'HTML5 Canvas Compression (~30KB)',
+      'ExcelJS Spreadsheet Engine',
+      'IndexedDB Offline Persistence',
+      'Granular Security Rules v2',
+      'Lucide Icons',
+      'Vercel Edge Network',
+    ],
+    stats: [
+      { label: 'Cloud Database', value: 'Google Firestore' },
+      { label: 'Image Compression', value: '99.6% Reduction (~30KB)' },
+      { label: 'Field Resiliency', value: 'IndexedDB Offline Cache' },
+      { label: 'Security Model', value: 'Role-Based Firestore Rules' },
+    ],
+    summary:
+      'A real-time, cloud-synced civic operations platform engineered for verified personnel identification, 1-tap roll call attendance, and field-ready offline resiliency.',
+    overview:
+      'The Philippine National Police Communications & Electronics Auxiliary (PNP-CCACGI) operates across regional municipal chapters in Davao Region assisting law enforcement with emergency radio communications and patrols. This system digitizes field assemblies, verifies checkpoint credentials in under 1.5 seconds, compresses member photos by 99.6% directly in-browser, and automates a 3-stage disciplinary warning escalation pipeline with official print-ready memorandums.',
+    challenge:
+      'Manual paper roll calls were frequently misplaced or difficult to audit during provincial field assemblies. Checkpoint personnel needed instant verification of active volunteers and vehicle decals. Spotty cellular reception in remote areas caused data drops, and tracking consecutive absences for disciplinary enforcement was burdensome.',
+    solution:
+      'Engineered a responsive React + Firestore cloud architecture with IndexedDB offline persistence, client-side HTML5 Canvas photo compression (allowing 25,000+ members on free tiers), an 8-digit OTP access terminal, 1-tap roll call attendance with ExcelJS export, and automated dual-signatory memorandum generation.',
+    highlights: [
+      '1-Tap Roll Call Attendance with automatic timestamps and ExcelJS (.xlsx) export',
+      'Client-side Canvas image optimization reducing 10MB phone uploads to ~30KB WebP (99.6% savings)',
+      'Frictionless 8-digit OTP member terminal for sub-1.5s credential and call-sign verification',
+      'Automated 3-stage disciplinary escalation engine with dual-crest print-ready memorandums',
+      'IndexedDB persistent offline buffer ensuring zero data loss during provincial cellular blackouts',
+      'Granular Firestore Security Rules v2 enforcing strict role-based access isolation',
+    ],
+    developer: 'Archie S. Boiser',
+    organization: 'PNP COMMEL Auxiliary — Cobra Civic Group Inc. (Camp Capt. Domingo E. Leonor, Davao City)',
+    githubUrl: 'https://github.com/rchieeee',
+    liveUrl: 'https://pnp-ccacgi.vercel.app/',
   },
   {
     id: 'kanso',
@@ -448,6 +561,7 @@ export const testimonials = [
 export const terminalCommands = {
   help: `Available commands:
   • kaban       - Inspect KABAN Student Council Treasury System (Flagship)
+  • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
@@ -469,6 +583,20 @@ export const terminalCommands = {
 • Live Demo: https://treasurer-system.vercel.app
 • GitHub: https://github.com/XeinQt/treasurerSystem
 • Developers: Archie S. Boiser & Rico Alentijo`,
+  pnp: `🛡️ PNP-CCACGI — Personnel Registry & Attendance System [Civic Platform]
+• Client: PNP COMMEL Auxiliary Cobra Civic Group Inc. (Camp Capt. Domingo E. Leonor, Davao City)
+• Stack: React 19, TypeScript, Google Cloud Firestore, Firebase Auth, ExcelJS
+• Live Demo: https://pnp-ccacgi.vercel.app/
+• GitHub: https://github.com/rchieeee
+• Key Tech: 1-Tap Roll Call, ~30KB Canvas Compression, 8-Digit OTP, 3-Stage Memos
+• Developer: Archie S. Boiser`,
+  ccacgi: `🛡️ PNP-CCACGI — Personnel Registry & Attendance System [Civic Platform]
+• Client: PNP COMMEL Auxiliary Cobra Civic Group Inc. (Camp Capt. Domingo E. Leonor, Davao City)
+• Stack: React 19, TypeScript, Google Cloud Firestore, Firebase Auth, ExcelJS
+• Live Demo: https://pnp-ccacgi.vercel.app/
+• GitHub: https://github.com/rchieeee
+• Key Tech: 1-Tap Roll Call, ~30KB Canvas Compression, 8-Digit OTP, 3-Stage Memos
+• Developer: Archie S. Boiser`,
   play: `Launching Archie Cyber Arcade [Multiplayer Arena]...`,
   coffee: `☕ Archie's Pang-Token & Kape Fund:
 "Tabangi intawon si Archie mupalit ug OpenAI credits kay hapit na mahurot ang token!"
@@ -493,9 +621,10 @@ Based in Lupon, Davao Oriental, Philippines (UTC+8).
 Architecting complete systems with AI, generative product development, scalable React/Next.js/Node backends, and deterministic LLM harnesses.`,
   projects: `Featured Projects:
 1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA)
-2. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
-3. Common Ground — Realtime Community & Event Platform (React + WebSockets)
-4. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
+2. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)
+3. Kanso Studio — Modern Editorial Commerce Flagship (Next.js + Stripe)
+4. Common Ground — Realtime Community & Event Platform (React + WebSockets)
+5. Synapse AI Engine — Automated Code Refactor & Verification Harness`,
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase

@@ -11,6 +11,7 @@ export default function CaseStudyModal({ slug, onClose }) {
   if (!project) return null
 
   const isKaban = project.id === 'kaban'
+  const isPnp = project.id === 'pnp-ccacgi'
   const screenshots = project.images || []
   const activeScreenshot = screenshots[selectedScreenIdx] || screenshots[0]
 
@@ -22,6 +23,14 @@ export default function CaseStudyModal({ slug, onClose }) {
   const handleNextImg = () => {
     sounds.play('tick')
     setSelectedScreenIdx((prev) => (prev < screenshots.length - 1 ? prev + 1 : 0))
+  }
+
+  const getHostname = (url) => {
+    try {
+      return new URL(url).hostname
+    } catch {
+      return 'Live app'
+    }
   }
 
   return (
@@ -80,7 +89,7 @@ export default function CaseStudyModal({ slug, onClose }) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 [scrollbar-width:thin]">
 
           {/* ── Minimal Image Gallery ── */}
-          {isKaban && screenshots.length > 0 && activeScreenshot && (
+          {screenshots.length > 0 && activeScreenshot && (
             <div className="space-y-2.5">
               {/* Main Image Frame with Smooth Crossfade */}
               <div className="relative group overflow-hidden rounded-xl border border-gray-200 bg-gray-950 aspect-16/9 shadow-sm dark:border-gray-800">
@@ -189,7 +198,7 @@ export default function CaseStudyModal({ slug, onClose }) {
               <p className="mt-1.5">{project.overview}</p>
             </div>
 
-            {/* Security & 3FA */}
+            {/* KABAN Security & 3FA */}
             {isKaban && (
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
                 <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
@@ -212,7 +221,7 @@ export default function CaseStudyModal({ slug, onClose }) {
               </div>
             )}
 
-            {/* Architecture & Offline-First Sync */}
+            {/* KABAN Architecture & Offline-First Sync */}
             {isKaban && (
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
                 <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
@@ -220,6 +229,33 @@ export default function CaseStudyModal({ slug, onClose }) {
                 </h4>
                 <p className="mt-1.5">
                   To prevent lost collections during campus Wi-Fi blackouts, KABAN employs a dual-layer sync model: Supabase PostgreSQL acts as cloud source of truth, backed by a LocalStorage offline queue and SWR cache layer. Realtime WebSocket channels instantly sync transactions across multiple concurrent treasurers.
+                </p>
+              </div>
+            )}
+
+            {/* PNP-CCACGI Specific: Canvas Compression & Field Resiliency */}
+            {isPnp && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  Client-Side Image Optimization &amp; Field Resiliency
+                </h4>
+                <p className="mt-1.5">
+                  Volunteer member photos captured on mobile cameras (5MB–10MB) are automatically downsampled and compressed via HTML5 Canvas into ultra-compact ~30KB WebP files directly in-browser. This achieves a <b>99.6% reduction in storage and bandwidth</b>, allowing over 25,000 active member profiles to operate within free-tier cloud limits.
+                </p>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                  During remote provincial radio nets, IndexedDB persistent offline caching buffers all roll call attendance writes locally, auto-synchronizing to Google Cloud Firestore the moment cellular data is restored.
+                </p>
+              </div>
+            )}
+
+            {/* PNP-CCACGI Specific: Disciplinary Escalation & Checkpoint Verification */}
+            {isPnp && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  3-Stage Disciplinary Escalation &amp; Checkpoint Verification
+                </h4>
+                <p className="mt-1.5">
+                  To ensure only authorized volunteers display organizational vehicle decals at PNP checkpoints, the system enforces a strict 3-stage warning workflow (1st Warning Inactivity → 2nd Impending Removal → 3rd Revocation &amp; Flagging). The system generates official dispatch memorandums formatted with dual organizational crests and dual command signatories (Secretariat &amp; Commander) ready for official print archiving.
                 </p>
               </div>
             )}
@@ -254,12 +290,12 @@ export default function CaseStudyModal({ slug, onClose }) {
             </div>
 
             {/* Credits */}
-            {isKaban && (
+            {project.developer && (
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80 font-mono text-xs text-gray-400 dark:text-gray-500 flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  Developers: <span className="text-gray-900 dark:text-white">Archie S. Boiser</span> &amp; <span className="text-gray-900 dark:text-white">Rico Alentijo</span>
+                  Developer: <span className="text-gray-900 dark:text-white">{project.developer}</span>
                 </div>
-                <span>Student Council Treasury · A.Y. 2026–2027</span>
+                <span>{project.organization || `Production System · ${project.year}`}</span>
               </div>
             )}
           </div>
@@ -276,7 +312,7 @@ export default function CaseStudyModal({ slug, onClose }) {
                 onClick={() => sounds.play('tick')}
                 className="text-gray-950 hover:underline dark:text-white font-medium"
               >
-                treasurer-system.vercel.app ↗
+                {getHostname(project.liveUrl)} ↗
               </a>
             )}
             {project.githubUrl && (
