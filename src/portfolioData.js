@@ -384,7 +384,8 @@ export const projects = [
     featured: true,
     accent: 'from-amber-500/20 via-emerald-500/10 to-teal-500/5',
     badge: 'Flagship Enterprise App',
-    heroImage: '/project-images/kaban/1.jpg',
+    heroImage: '/project-images/covers/kaban.png',
+    displayImage: '/project-images/covers/kaban.png',
     images: kabanScreenshots,
     tools: [
       'Next.js 14 (App Router)',
@@ -445,7 +446,8 @@ export const projects = [
     featured: true,
     accent: 'from-sky-500/20 via-blue-500/10 to-indigo-500/5',
     badge: 'Production Mobile System',
-    heroImage: '/project-images/cloudzone/admin1.jpg',
+    heroImage: '/project-images/covers/cloudzone_pos.jpg',
+    displayImage: '/project-images/covers/cloudzone_pos.jpg',
     images: cloudzoneScreenshots,
     tools: [
       'Flutter 3',
@@ -499,7 +501,8 @@ export const projects = [
     featured: true,
     accent: 'from-blue-500/20 via-indigo-500/10 to-sky-500/5',
     badge: 'Civic Operations Platform',
-    heroImage: '/project-images/pnp/1.png',
+    heroImage: '/project-images/covers/pnp-ccacgi.jpg',
+    displayImage: '/project-images/covers/pnp-ccacgi.jpg',
     images: pnpScreenshots,
     tools: [
       'React 19',

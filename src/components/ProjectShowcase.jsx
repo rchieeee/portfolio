@@ -1,77 +1,32 @@
-import { useEffect, useState } from 'react'
 import { projects } from '../portfolioData'
 import { sounds } from '../utils/audio'
 import SpotlightCard from './SpotlightCard'
 
-function ProjectImageLoop({ images, heroImage, title, onClick }) {
-  const [currentIdx, setCurrentIdx] = useState(0)
-
-  // Curate key preview images if images array exists, or fallback to heroImage
-  const imageList =
-    images && images.length > 0
-      ? images.map((img) => (typeof img === 'string' ? img : img.src))
-      : heroImage
-      ? [heroImage]
-      : []
-
-  useEffect(() => {
-    if (imageList.length <= 1) return
-
-    const interval = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % imageList.length)
-    }, 2500) // smooth 2.5s cycle
-
-    return () => clearInterval(interval)
-  }, [imageList.length])
-
-  if (imageList.length === 0) return null
+function ProjectCoverImage({ image, title, onClick }) {
+  if (!image) return null
 
   return (
     <div
       onClick={onClick}
-      className="relative overflow-hidden border-b border-gray-200/80 bg-gray-950 h-36 sm:h-40 cursor-pointer dark:border-gray-800 select-none"
+      className="relative overflow-hidden border-b border-gray-200/80 bg-[#06070a] h-44 sm:h-48 cursor-pointer dark:border-gray-800 select-none"
     >
-      {/* Stitched Smooth Crossfading Image Stack with Ambient Backdrop */}
-      {imageList.map((src, idx) => (
-        <div
-          key={src}
-          className={`absolute inset-0 flex items-center justify-center transition-all duration-800 ease-in-out ${
-            currentIdx === idx
-              ? 'opacity-100 scale-100 z-10'
-              : 'opacity-0 scale-[0.99] z-0 pointer-events-none'
-          }`}
-        >
-          {/* Ambient blurred backdrop glow */}
-          <img
-            src={src}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover blur-xl opacity-20 scale-110 pointer-events-none"
-          />
-          {/* Main uncropped image */}
-          <img
-            src={src}
-            alt={`${title} preview ${idx + 1}`}
-            className="relative z-10 h-full w-auto max-w-full object-contain transition-transform duration-500 group-hover:scale-103"
-          />
-        </div>
-      ))}
+      {/* Ambient blurred backdrop glow */}
+      <img
+        src={image}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover blur-2xl opacity-25 scale-110 pointer-events-none"
+      />
 
-      {/* Subtle bottom gradient & minimal loop progress indicator */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex items-center justify-between p-3.5 bg-gradient-to-t from-black/70 via-black/20 to-transparent">
-        {imageList.length > 1 && (
-          <div className="flex items-center gap-1.5">
-            {imageList.slice(0, 8).map((_, dotIdx) => (
-              <span
-                key={dotIdx}
-                className={`h-1 rounded-full transition-all duration-500 ${
-                  currentIdx % 8 === dotIdx ? 'w-4 bg-white' : 'w-1 bg-white/40'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Main crisp display cover image */}
+      <img
+        src={image}
+        alt={`${title} display cover`}
+        className="relative z-10 h-full w-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-104"
+      />
+
+      {/* Subtle hover gradient */}
+      <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   )
 }
@@ -101,10 +56,9 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
             className="group flex flex-col justify-between overflow-hidden p-0"
           >
             <div>
-              {/* ── Smooth Looping Image Preview ── */}
-              <ProjectImageLoop
-                images={project.images}
-                heroImage={project.heroImage}
+              {/* ── Static High-Impact Display Image ── */}
+              <ProjectCoverImage
+                image={project.displayImage || project.heroImage}
                 title={project.name}
                 onClick={() => {
                   sounds.play('tick')
