@@ -121,9 +121,9 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
                   {project.summary}
                 </p>
 
-                {/* Tools list */}
+                {/* Tools list (Curated top 4 for minimal card) */}
                 <div className="mt-4 flex flex-wrap gap-1.5 font-mono text-[10.5px]">
-                  {project.tools.map((tool) => (
+                  {project.tools.slice(0, 4).map((tool) => (
                     <span
                       key={tool}
                       className="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 text-gray-700 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300"
