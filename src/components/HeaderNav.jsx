@@ -7,6 +7,7 @@ export default function HeaderNav({
   onOpenTerminal,
   theme,
   onSetTheme,
+  themeCooldown = false,
   soundEnabled,
   onToggleSound,
 }) {
@@ -32,6 +33,7 @@ export default function HeaderNav({
   const isDark = theme === 'dark'
 
   const toggleThemeMode = () => {
+    if (themeCooldown) return
     onSetTheme(isDark ? 'light' : 'dark')
   }
 
@@ -94,7 +96,8 @@ export default function HeaderNav({
           <button
             type="button"
             onClick={toggleThemeMode}
-            className="group relative flex h-7 w-13 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
+            disabled={themeCooldown}
+            className="group relative flex h-7 w-13 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
             title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
             aria-label="Toggle Theme Mode"
           >
@@ -208,7 +211,8 @@ export default function HeaderNav({
               <button
                 type="button"
                 onClick={toggleThemeMode}
-                className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-bold text-gray-950 dark:border-gray-700 dark:text-white"
+                disabled={themeCooldown}
+                className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-bold text-gray-950 dark:border-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Switch to {isDark ? 'Light' : 'Dark'}
               </button>

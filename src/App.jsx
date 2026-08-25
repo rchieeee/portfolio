@@ -49,8 +49,16 @@ export default function App() {
     }
   }
 
-  // Handle instant theme change
+  const [themeCooldown, setThemeCooldown] = useState(false)
+
+  // Handle instant theme change with 1-second spam protection
   const handleSetTheme = (newTheme) => {
+    if (themeCooldown) return
+    setThemeCooldown(true)
+    setTimeout(() => {
+      setThemeCooldown(false)
+    }, 1000)
+
     sounds.play('toggle')
     setTheme(newTheme)
     try {
@@ -158,6 +166,7 @@ export default function App() {
         onOpenTerminal={() => setTerminalOpen(true)}
         theme={theme}
         onSetTheme={handleSetTheme}
+        themeCooldown={themeCooldown}
         soundEnabled={soundEnabled}
         onToggleSound={handleToggleSound}
       />
