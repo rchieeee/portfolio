@@ -239,6 +239,38 @@ export default function CaseStudyModal({ slug, onClose }) {
               <p className="mt-1.5">{project.overview}</p>
             </div>
 
+            {/* Why I Built This & Why It Was Needed */}
+            <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+              <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                Why I Built This (The Real-World Need)
+              </h4>
+              <div className="mt-2.5 space-y-2.5">
+                <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800/90 dark:bg-[#121319]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-white">
+                      The Pain Point &amp; Necessity:
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {project.challenge}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-4 dark:border-gray-800/90 dark:bg-[#121319]">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-gray-900 dark:text-white">
+                      The Engineered Solution:
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {project.solution}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* KABAN Security & 3FA */}
             {isKaban && (
               <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
