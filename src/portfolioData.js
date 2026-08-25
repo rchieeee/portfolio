@@ -285,33 +285,6 @@ export const projects = [
     liveUrl: 'https://treasurer-system.vercel.app',
   },
   {
-    id: 'pollen',
-    slug: 'pollen',
-    name: 'Pollen Workspace',
-    category: 'Productivity & Team Momentum',
-    tagline: 'Focused planning space turning scattered ideas into weekly execution.',
-    year: '2026',
-    featured: true,
-    accent: 'from-emerald-500/20 to-teal-500/5',
-    badge: 'Flagship App',
-    tools: ['React', 'Node.js', 'Tailwind CSS', 'PostgreSQL', 'Vite'],
-    summary:
-      'A lightweight, focused weekly planning dashboard for engineering teams to eliminate management bloat and track momentum.',
-    overview:
-      'Pollen gives small teams one calm place to collect ideas, choose weekly priorities, and understand what needs to happen next without cumbersome Jira-like complexity.',
-    challenge:
-      'Existing task management tools often feel overwhelming and demand more effort to maintain than actual product development.',
-    solution:
-      'Designed a streamlined weekly sprint view, keyboard-driven navigation, and real-time task syncing backed by a relational PostgreSQL schema.',
-    highlights: [
-      'Keyboard-first weekly task organizer',
-      'Real-time team presence and updates',
-      'Sub-100ms API response latency',
-    ],
-    githubUrl: 'https://github.com/rchieeee',
-    liveUrl: 'https://github.com/rchieeee',
-  },
-  {
     id: 'kanso',
     slug: 'kanso',
     name: 'Kanso Studio',
