@@ -2,9 +2,9 @@
 // Pure synthesized audio — zero external .mp3 files required
 
 export const SOUND_PROFILES = [
-  { id: 'mechanical', name: 'Mechanical Thock', icon: '⌨️', desc: 'Satisfying tactile mechanical keyboard switches' },
-  { id: 'haptic', name: 'Apple Haptic', icon: '✨', desc: 'Minimal, clean low-frequency haptic clicks' },
-  { id: 'chiptune', name: '8-Bit Retro', icon: '🕹️', desc: 'Nostalgic arcade square-wave blips' },
+  { id: 'mechanical', name: 'Mechanical', desc: 'Tactile mechanical keyboard switches' },
+  { id: 'haptic', name: 'Haptic', desc: 'Minimal clean haptic clicks' },
+  { id: 'chiptune', name: '8-Bit', desc: 'Arcade chiptune square-wave blips' },
 ]
 
 class SoundEngine {

@@ -140,11 +140,10 @@ export default function HeaderNav({
               <button
                 type="button"
                 onClick={handleCycleSoundProfile}
-                className="flex h-7 items-center gap-1 rounded-full border border-gray-200 bg-gray-50/80 px-2 font-mono text-[10.5px] text-gray-700 hover:border-gray-300 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-300 dark:hover:border-gray-700 cursor-pointer active:scale-95 transition-all"
+                className="flex h-7 items-center rounded-full border border-gray-200 bg-gray-50/80 px-2.5 font-mono text-[10.5px] text-gray-700 hover:border-gray-300 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-300 dark:hover:border-gray-700 cursor-pointer active:scale-95 transition-all"
                 title={`Sound FX: ${currentSoundProfile.name} (Click to switch)`}
               >
-                <span>{currentSoundProfile.icon}</span>
-                <span className="font-semibold">{currentSoundProfile.name.split(' ')[0]}</span>
+                <span className="font-semibold">{currentSoundProfile.name}</span>
               </button>
             )}
 

@@ -31,22 +31,22 @@ const PLATFORMS = [
 ]
 
 const CAPABILITIES = [
-  { id: 'offline', name: 'Offline-First & Local DB', weeks: 1.0, icon: '⚡' },
-  { id: 'realtime', name: 'Realtime WebSockets / Streams', weeks: 0.8, icon: '🔄' },
-  { id: 'auth3fa', name: 'Zero-SaaS 3-Factor Auth', weeks: 0.7, icon: '🔐' },
-  { id: 'compression', name: 'Client-Side Image Optimizer (~30KB)', weeks: 0.5, icon: '🖼️' },
-  { id: 'receipts', name: 'Printable PDF Receipts / Memos', weeks: 0.5, icon: '📄' },
-  { id: 'warning_memo', name: 'Automated Disciplinary Warnings', weeks: 0.6, icon: '⚠️' },
-  { id: 'ai_rag', name: 'AI / LLM Integration (RAG / Claude)', weeks: 1.0, icon: '🤖' },
-  { id: 'excel_export', name: 'ExcelJS Spreadsheet Engine', weeks: 0.4, icon: '📊' },
-  { id: 'rls_rules', name: 'Granular RLS & Cloud Security Rules', weeks: 0.5, icon: '🛡️' },
-  { id: 'dark_mode', name: 'Accessible Dark / Light Theme System', weeks: 0.3, icon: '🌓' },
+  { id: 'offline', name: 'Offline-First & Local DB', weeks: 1.0 },
+  { id: 'realtime', name: 'Realtime WebSockets / Streams', weeks: 0.8 },
+  { id: 'auth3fa', name: 'Zero-SaaS 3-Factor Auth', weeks: 0.7 },
+  { id: 'compression', name: 'Client-Side Image Optimizer (~30KB)', weeks: 0.5 },
+  { id: 'receipts', name: 'Printable PDF Receipts / Memos', weeks: 0.5 },
+  { id: 'warning_memo', name: 'Automated Disciplinary Warnings', weeks: 0.6 },
+  { id: 'ai_rag', name: 'AI / LLM Integration (RAG / Claude)', weeks: 1.0 },
+  { id: 'excel_export', name: 'ExcelJS Spreadsheet Engine', weeks: 0.4 },
+  { id: 'rls_rules', name: 'Granular RLS & Cloud Security Rules', weeks: 0.5 },
+  { id: 'dark_mode', name: 'Accessible Dark / Light Theme System', weeks: 0.3 },
 ]
 
 const TIMELINES = [
-  { id: 'rush', label: '⚡ Rapid Sprint', multiplier: 0.75, note: 'Accelerated milestone cycles' },
-  { id: 'standard', label: '🎯 Standard Production', multiplier: 1.0, note: 'Balanced testing & QA' },
-  { id: 'enterprise', label: '🛡️ Comprehensive Lifecycle', multiplier: 1.35, note: 'Deep audits & staging' },
+  { id: 'rush', label: 'Rapid Sprint', multiplier: 0.75, note: 'Accelerated milestone cycles' },
+  { id: 'standard', label: 'Standard Production', multiplier: 1.0, note: 'Balanced testing & QA' },
+  { id: 'enterprise', label: 'Comprehensive Lifecycle', multiplier: 1.35, note: 'Deep audits & staging' },
 ]
 
 export default function ProjectEstimator() {
@@ -208,7 +208,6 @@ ${capsList || '• Standard Core Framework Foundation'}
                         : 'border border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:border-gray-800 dark:bg-[#101115] dark:text-gray-400 dark:hover:border-gray-700'
                     }`}
                   >
-                    <span>{cap.icon}</span>
                     <span>{cap.name}</span>
                     <span className={`text-[10px] ${isSelected ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-400'}`}>
                       {isSelected ? '✓' : '+'}
@@ -239,7 +238,7 @@ ${capsList || '• Standard Core Framework Foundation'}
                       : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-800 dark:bg-[#121216] dark:text-gray-300 dark:hover:border-gray-700'
                   }`}
                 >
-                  <div>{time.label}</div>
+                  <div className="font-semibold">{time.label}</div>
                   <div className="mt-0.5 text-[10.5px] font-normal opacity-75">
                     {time.note}
                   </div>
@@ -304,7 +303,7 @@ ${capsList || '• Standard Core Framework Foundation'}
                   onClick={handleCopyScope}
                   className="w-full flex items-center justify-center gap-2 rounded-xl border border-gray-300 py-2.5 font-medium text-gray-800 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-[#181a22] transition-all cursor-pointer active:scale-98"
                 >
-                  <span>{copied ? '✓ Scope Copied to Clipboard!' : '📋 Copy Scoped Specification'}</span>
+                  <span>{copied ? 'Scope Copied to Clipboard' : 'Copy Scoped Specification'}</span>
                 </button>
               </div>
             </div>

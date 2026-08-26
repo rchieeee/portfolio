@@ -217,9 +217,9 @@ export default function InteractiveHeroCanvas({ theme }) {
   }, [theme])
 
   const modes = [
-    { id: 'attract', label: '🧲 Attract' },
-    { id: 'repel', label: '🛡️ Repel' },
-    { id: 'vortex', label: '🌀 Vortex' },
+    { id: 'attract', label: 'Attract' },
+    { id: 'repel', label: 'Repel' },
+    { id: 'vortex', label: 'Vortex' },
   ]
 
   return (
