@@ -28,7 +28,7 @@ export const socials = [
 ]
 
 export const keyMetrics = [
-  { label: 'Projects Shipped', value: '15+', detail: 'Full-stack & AI applications' },
+  { label: 'Projects Shipped', value: '5+', detail: 'Full-stack & AI applications' },
   { label: 'Core Stack', value: 'React / Node', detail: 'Next.js, Python, PostgreSQL' },
   { label: 'AI Harnesses', value: 'Deterministic', detail: 'Validation & RAG pipelines' },
   { label: 'Base Location', value: 'PH / UTC+8', detail: 'Lupon, Davao Oriental' },
