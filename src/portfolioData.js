@@ -630,6 +630,7 @@ export const terminalCommands = {
   • kaban       - Inspect KABAN Student Council Treasury System (Flagship)
   • cloudzone   - Inspect CloudZone POS Multi-Device Retail System (Flutter)
   • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
+  • estimate    - Launch interactive scope & timeline estimator
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
@@ -639,6 +640,12 @@ export const terminalCommands = {
   • contact     - Get direct communication links
   • time        - Check live Manila timezone & node status
   • clear       - Clear terminal history`,
+  estimate: `⚡ Interactive Project Scope & Estimator:
+Configure platforms, offline-first sync, 3FA authentication, and delivery pace.
+Navigate to the "estimate" section on the page or book directly via email: archie.boiser05@gmail.com`,
+  quote: `⚡ Interactive Project Scope & Estimator:
+Configure platforms, offline-first sync, 3FA authentication, and delivery pace.
+Navigate to the "estimate" section on the page or book directly via email: archie.boiser05@gmail.com`,
   kaban: `🏦 KABAN — Student Council Treasury System [Flagship Enterprise App]
 • Type: Full-Stack Treasury & Transparency Platform (Real Council Production)
 • Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime

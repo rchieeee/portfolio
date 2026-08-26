@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { profile } from '../portfolioData'
-import { sounds } from '../utils/audio'
+import { SOUND_PROFILES, sounds } from '../utils/audio'
 
 export default function HeaderNav({
   activeSection,
@@ -12,6 +12,7 @@ export default function HeaderNav({
   onToggleSound,
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeProfile, setActiveProfile] = useState(() => sounds.profile)
   const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent || '')
   const modKey = isMac ? '⌘' : 'Alt'
 
@@ -20,6 +21,7 @@ export default function HeaderNav({
     { id: 'architecture', label: 'architecture' },
     { id: 'stack', label: 'stack' },
     { id: 'experience', label: 'experience' },
+    { id: 'estimator', label: 'estimate' },
     { id: 'contact', label: 'contact' },
   ]
 
@@ -36,6 +38,16 @@ export default function HeaderNav({
     if (themeCooldown) return
     onSetTheme(isDark ? 'light' : 'dark')
   }
+
+  const handleCycleSoundProfile = () => {
+    const currentIdx = SOUND_PROFILES.findIndex((p) => p.id === activeProfile)
+    const nextIdx = (currentIdx + 1) % SOUND_PROFILES.length
+    const nextProfile = SOUND_PROFILES[nextIdx].id
+    sounds.setProfile(nextProfile)
+    setActiveProfile(nextProfile)
+  }
+
+  const currentSoundProfile = SOUND_PROFILES.find((p) => p.id === activeProfile) || SOUND_PROFILES[0]
 
   return (
     <header className="sticky top-4 z-40 mx-auto max-w-4xl px-4 sm:px-6">
@@ -122,27 +134,42 @@ export default function HeaderNav({
             </span>
           </button>
 
-          {/* Sound Toggle */}
-          <button
-            type="button"
-            onClick={onToggleSound}
-            className={`hidden h-7 w-7 items-center justify-center rounded-full border transition-colors sm:inline-flex ${
-              soundEnabled
-                ? 'border-gray-400 text-gray-950 dark:border-gray-600 dark:text-white font-bold'
-                : 'border-gray-200 text-gray-400 hover:text-gray-950 dark:border-gray-800 dark:hover:text-white'
-            }`}
-            title={soundEnabled ? 'Audio FX Enabled' : 'Audio FX Muted'}
-          >
-            {soundEnabled ? (
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ) : (
-              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
-                <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+          {/* Tactile Sound Profile & Toggle */}
+          <div className="hidden items-center gap-1.5 sm:inline-flex">
+            {soundEnabled && (
+              <button
+                type="button"
+                onClick={handleCycleSoundProfile}
+                className="flex h-7 items-center gap-1 rounded-full border border-gray-200 bg-gray-50/80 px-2 font-mono text-[10.5px] text-gray-700 hover:border-gray-300 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-300 dark:hover:border-gray-700 cursor-pointer active:scale-95 transition-all"
+                title={`Sound FX: ${currentSoundProfile.name} (Click to switch)`}
+              >
+                <span>{currentSoundProfile.icon}</span>
+                <span className="font-semibold">{currentSoundProfile.name.split(' ')[0]}</span>
+              </button>
             )}
-          </button>
+
+            {/* Mute/Unmute Button */}
+            <button
+              type="button"
+              onClick={onToggleSound}
+              className={`h-7 w-7 items-center justify-center rounded-full border transition-colors inline-flex cursor-pointer ${
+                soundEnabled
+                  ? 'border-gray-300 bg-gray-100 text-gray-950 dark:border-gray-700 dark:bg-[#0c0d12] dark:text-white'
+                  : 'border-gray-200 text-gray-400 hover:text-gray-950 dark:border-gray-800 dark:hover:text-white'
+              }`}
+              title={soundEnabled ? 'Mute Sound FX' : 'Enable Sound FX'}
+            >
+              {soundEnabled ? (
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6M18.5 6.5a7.5 7.5 0 010 11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+            </button>
+          </div>
 
           {/* Mobile Hamburger Toggle */}
           <button

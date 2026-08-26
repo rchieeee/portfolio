@@ -9,6 +9,7 @@ import GithubActivityCard from './components/GithubActivityCard'
 import HeaderNav from './components/HeaderNav'
 import Hero from './components/Hero'
 import InteractiveHeroCanvas from './components/InteractiveHeroCanvas'
+import ProjectEstimator from './components/ProjectEstimator'
 import ProjectShowcase from './components/ProjectShowcase'
 import TechRadar from './components/TechRadar'
 import TerminalOverlay from './components/TerminalOverlay'
@@ -181,6 +182,8 @@ export default function App() {
         <TestimonialsSection />
         {/* Real-time GitHub Public Contributions Matrix */}
         <GithubActivityCard />
+        {/* Interactive Scope & Delivery Estimator */}
+        <ProjectEstimator />
         <ContactSection />
       </main>
 
