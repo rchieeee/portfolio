@@ -592,6 +592,10 @@ export const techCategories = [
     items: ['PostgreSQL', 'Supabase', 'Prisma ORM', 'Redis', 'Docker', 'Vercel', 'Git & GitHub CI/CD'],
   },
   {
+    name: 'CMS & Web Platforms',
+    items: ['WordPress (Custom Themes / Elementor)', 'WooCommerce', 'PHP / MySQL', 'Advanced Custom Fields (ACF)', 'WordPress REST API', 'Headless CMS Architecture'],
+  },
+  {
     name: 'AI Engineering & Tooling',
     items: ['Claude API / Anthropic', 'OpenAI API', 'Prompt Engineering', 'AI Guardrails & Harnesses', 'RAG Pipelines'],
   },
@@ -702,6 +706,7 @@ Architecting complete systems with AI, generative product development, scalable 
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
 • Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase
+• CMS & Platforms: WordPress, WooCommerce, PHP, ACF, REST API
 • Security & Realtime: Web Crypto 3FA, Cloudflare Turnstile, Supabase Realtime
 • AI Systems: Claude API, OpenAI API, Guardrails, Deterministic Harnesses`,
   experience: `Timeline:
