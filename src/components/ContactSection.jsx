@@ -73,6 +73,17 @@ export default function ContactSection() {
               <span>send an email (Gmail) ↗</span>
             </a>
 
+            <a
+              href={profile.cvUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => sounds.play('press')}
+              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+              title="View Archie's CV on Google Docs"
+            >
+              <span>view CV / resume ↗</span>
+            </a>
+
             <button
               type="button"
               onClick={handleCopyEmail}
