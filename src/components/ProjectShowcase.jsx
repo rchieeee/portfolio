@@ -18,11 +18,11 @@ function ProjectCoverImage({ image, title, onClick }) {
         className="project-cover-bw absolute inset-0 h-full w-full object-cover blur-2xl opacity-20 group-hover:opacity-40 scale-110 pointer-events-none transition-opacity duration-700"
       />
 
-      {/* Main crisp display cover image (smooth color reveal, zero jarring zoom) */}
+      {/* Main crisp display cover image (smooth cinematic zoom + color reveal) */}
       <img
         src={image}
         alt={`${title} display cover`}
-        className="project-cover-bw relative z-10 h-full w-full object-cover object-center"
+        className="project-cover-bw project-cover-image relative z-10 h-full w-full object-cover object-center"
       />
 
       {/* Subtle hover gradient */}
