@@ -15,18 +15,18 @@ function ProjectCoverImage({ image, title, onClick }) {
         src={image}
         alt=""
         aria-hidden="true"
-        className="project-cover-bw absolute inset-0 h-full w-full object-cover blur-2xl opacity-20 group-hover:opacity-40 scale-110 pointer-events-none transition-opacity duration-500"
+        className="project-cover-bw absolute inset-0 h-full w-full object-cover blur-2xl opacity-20 group-hover:opacity-40 scale-110 pointer-events-none transition-opacity duration-700"
       />
 
-      {/* Main crisp display cover image */}
+      {/* Main crisp display cover image (smooth color reveal, zero jarring zoom) */}
       <img
         src={image}
         alt={`${title} display cover`}
-        className="project-cover-bw relative z-10 h-full w-full object-cover object-center group-hover:scale-104"
+        className="project-cover-bw relative z-10 h-full w-full object-cover object-center"
       />
 
       {/* Subtle hover gradient */}
-      <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="pointer-events-none absolute inset-0 z-20 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
     </div>
   )
 }
@@ -53,6 +53,7 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
         {projects.map((project) => (
           <SpotlightCard
             key={project.id}
+            tilt={false}
             className="group flex flex-col justify-between overflow-hidden p-0"
           >
             <div>
