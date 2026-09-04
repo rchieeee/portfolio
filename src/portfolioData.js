@@ -687,8 +687,8 @@ export const projects = [
     featured: true,
     accent: 'from-violet-500/20 via-indigo-500/10 to-blue-500/5',
     badge: 'AI Biometric Ecosystem',
-    heroImage: '/project-images/covers/checkpoint.png',
-    displayImage: '/project-images/covers/checkpoint.png',
+    heroImage: '/project-images/covers/checkpoint_portfolio_display.png',
+    displayImage: '/project-images/covers/checkpoint_portfolio_display.png',
     images: checkpointScreenshots,
     tools: [
       'React 19',
