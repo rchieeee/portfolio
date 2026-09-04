@@ -375,6 +375,135 @@ export const cloudzoneScreenshots = [
   },
 ]
 
+export const checkpointScreenshots = [
+  {
+    id: 'cp-web-dash',
+    title: 'Executive Analytics & System Overview Dashboard',
+    category: 'Web Administration',
+    src: '/project-images/checkpoint/web2.png',
+    desc: 'Real-time KPI metrics tracking total courses, enrolled students, biometric profiles, active sub-admins, live attendance, and 98.4% system accuracy.',
+  },
+  {
+    id: 'cp-mobile-scanner',
+    title: 'High-FPS Biometric Scanner with Magnetic Face Tracking',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo4.jpg',
+    desc: 'Continuous loop scanning with critically damped spring bounding box tracking, liveness verification, and instant Time-In/Time-Out segmented control.',
+  },
+  {
+    id: 'cp-web-enrollment',
+    title: '5-Angle Facial Biometric Enrollment Modal',
+    category: 'Biometric Enrollment',
+    src: '/project-images/checkpoint/web5.png',
+    desc: 'Guided 5-angle biometric capture sequence (Frontal, Left, Right, Up, Down) extracting 512-D ArcFace vectors indexed directly into FAISS.',
+  },
+  {
+    id: 'cp-web-scanner',
+    title: 'Desktop Kiosk Live Face Scanner',
+    category: 'Web Administration',
+    src: '/project-images/checkpoint/web8.png',
+    desc: 'High-throughput entrance scanning booth utilizing MediaPipe facial landmark detection combined with ArcFace server vector matching.',
+  },
+  {
+    id: 'cp-web-events',
+    title: 'Event Scheduling & Attendance Window Rules',
+    category: 'Event Governance',
+    src: '/project-images/checkpoint/web7.png',
+    desc: 'Campus event management with automated start/cutoff windows, target cohort eligibility, and Time-In/Time-Out dual verification enforcement.',
+  },
+  {
+    id: 'cp-web-attendance',
+    title: 'Master Attendance Audit Records Ledger',
+    category: 'Audit & Records',
+    src: '/project-images/checkpoint/web9.png',
+    desc: 'Unified live ledger of all campus check-ins with exact timestamps, verification method (Facial Recognition vs Manual), and operator signatures.',
+  },
+  {
+    id: 'cp-web-reports',
+    title: 'Filtered Attendance Reports & Multi-Format Export',
+    category: 'Reporting & Compliance',
+    src: '/project-images/checkpoint/web10.png',
+    desc: '1-click generation of presentation-ready PDF event rosters, Excel spreadsheets (.xlsx), and CSV data sheets filtered by event, course, and year level.',
+  },
+  {
+    id: 'cp-web-students',
+    title: 'Student Directory & Biometric Status Profiles',
+    category: 'Student Management',
+    src: '/project-images/checkpoint/web4.png',
+    desc: 'Student registry with instant search, degree program filters, biometric enrollment indicators (Face Enrolled vs Pending), and account status.',
+  },
+  {
+    id: 'cp-web-courses',
+    title: 'Academic Course & Program Management',
+    category: 'Academic Administration',
+    src: '/project-images/checkpoint/web3.png',
+    desc: 'Academic degree program configuration (BSIT, BSBA, BSA, BTLED) automatically tracking enrolled student counts and event eligibility.',
+  },
+  {
+    id: 'cp-web-subadmins',
+    title: 'Sub-Admin Delegation & Role-Based Access Control',
+    category: 'Security & Access',
+    src: '/project-images/checkpoint/web6.png',
+    desc: 'Administrative provisioning for event coordinators and gate stewards with venue event assignments and scoped scanning privileges.',
+  },
+  {
+    id: 'cp-web-audit',
+    title: 'Immutable System Security Audit Logs',
+    category: 'System Security',
+    src: '/project-images/checkpoint/web11.png',
+    desc: 'Forensic security log recording administrative logins, student registrations, biometric enrollments, overrides, and operator IPs.',
+  },
+  {
+    id: 'cp-web-settings',
+    title: 'System & Biometric Threshold Configuration',
+    category: 'System Configuration',
+    src: '/project-images/checkpoint/web12.png',
+    desc: 'Customization suite for attendance grace periods, ArcFace cosine similarity thresholds, anti-spoofing strictness, and security credentials.',
+  },
+  {
+    id: 'cp-web-login',
+    title: 'Unified Administrator Authentication Portal',
+    category: 'Security & Access',
+    src: '/project-images/checkpoint/web1.png',
+    desc: 'Secure authentication gateway with role-based redirection for Super Admins and Sub-Admins, plus public Student Attendance Lookup.',
+  },
+  {
+    id: 'cp-mobile-events',
+    title: 'Assigned Events Hub & Window Enforcement',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo3.jpg',
+    desc: 'Sub-admin event dashboard displaying assigned venues, real-time schedule statuses (Upcoming, In Progress, Closed), and automated lock indicators.',
+  },
+  {
+    id: 'cp-mobile-recent',
+    title: 'Live Recent Scans Feed & Attendance Ledger',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo5.jpg',
+    desc: 'Real-time mobile audit feed showing recently validated attendee names, student IDs, exact timestamps, and color-coded status badges.',
+  },
+  {
+    id: 'cp-mobile-setup',
+    title: 'Zero-Config Local Network Discovery & Server Setup',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo6.jpg',
+    desc: 'Direct LAN Wi-Fi host IP configuration with built-in instant connection health-check verification for zero-latency frame transmission.',
+  },
+  {
+    id: 'cp-mobile-auth',
+    title: 'Sub-Admin Gate Steward Mobile Authentication',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo2.jpg',
+    desc: 'Lightweight biometric scanner startup restricting event scanning access strictly to authorized gate stewards.',
+  },
+  {
+    id: 'cp-mobile-splash',
+    title: 'Native Mobile Terminal Splash Screen',
+    category: 'Mobile Terminal (Expo)',
+    src: '/project-images/checkpoint/expo1.jpg',
+    desc: 'High-performance native mobile splash sequence built with Expo and React Native for instant gate deployment.',
+  },
+]
+
 export const projects = [
   {
     id: 'kaban',
@@ -548,6 +677,66 @@ export const projects = [
     githubUrl: 'https://github.com/rchieeee',
     liveUrl: 'https://pnp-ccacgi.vercel.app/',
   },
+  {
+    id: 'checkpoint',
+    slug: 'checkpoint',
+    name: 'Checkpoint — AI Biometric Attendance System',
+    category: 'Computer Vision & Distributed Systems',
+    tagline: 'Dual-platform AI biometric campus attendance ecosystem with Expo mobile scanning, ArcFace 512-D vector matching, and desktop administration.',
+    year: '2026',
+    featured: true,
+    accent: 'from-violet-500/20 via-indigo-500/10 to-blue-500/5',
+    badge: 'AI Biometric Ecosystem',
+    heroImage: '/project-images/covers/checkpoint.png',
+    displayImage: '/project-images/covers/checkpoint.png',
+    images: checkpointScreenshots,
+    tools: [
+      'React 19',
+      'React Native 0.86',
+      'Expo 57 (Expo Go)',
+      'Python 3.10',
+      'Flask',
+      'InsightFace (ArcFace buffalo_l)',
+      'RetinaFace',
+      'FAISS Vector Database',
+      'OpenCV',
+      'Silent-Face Anti-Spoofing',
+      'Google Cloud Firestore',
+      'Firebase Auth',
+      'CameraX (60FPS)',
+      'Tailwind CSS',
+      'SheetJS (XLSX) & jsPDF',
+      'Direct LAN Wi-Fi Protocol',
+    ],
+    stats: [
+      { label: 'AI Inference', value: 'ArcFace + FAISS (<25ms)' },
+      { label: 'Vector Dimension', value: '512-D L2 Normalized' },
+      { label: 'Recognition Accuracy', value: '98.4% Dual-Angle' },
+      { label: 'Mobile Engine', value: 'React Native CameraX' },
+    ],
+    summary:
+      'A dual-platform AI biometric campus attendance ecosystem combining an Enterprise Desktop Web Admin Portal, an Ultra-Fast Sub-Admin Mobile Scanning Terminal, and an ArcFace + FAISS facial recognition microservice.',
+    overview:
+      'Traditional campus event attendance relies on manual paper rosters or ID cards prone to proxy check-ins, barcode counterfeiting, and gate bottlenecks. Checkpoint is a distributed biometric attendance ecosystem featuring a React 19 desktop administration portal, a high-throughput Expo/React Native mobile terminal with magnetic spring face tracking, and a Python microservice with ArcFace 512-D vector embeddings and FAISS sub-millisecond similarity search.',
+    challenge:
+      'Campus event stewards struggle with paper rosters getting lost or forged, barcode scanners failing under sunlight, and long entrance queues causing event delays. Enforcing strict event arrival/departure cutoffs manually leads to disputes, while mobile devices lack the GPU power to run heavy deep learning facial recognition models locally without draining battery or causing thermal throttling.',
+    solution:
+      'Architected a distributed edge-cloud system: an Expo mobile app streams lightweight JPEG frames over direct local LAN Wi-Fi to a local Python Flask server running ArcFace and FAISS vector search, returning match IDs in <25ms. Validated records sync immediately to Firebase Firestore with real-time listeners across all desktop admin consoles, featuring a 5-angle biometric enrollment workflow and automated window locking.',
+    highlights: [
+      'Dual-Platform Architecture: React 19 Desktop Web Portal for executive governance + Expo Mobile Terminal for high-speed gate scanning',
+      '5-Angle ArcFace Enrollment: Enrolls Frontal, Left, Right, Up, and Down angles into 512-D vectors for invariant 98.4% recognition',
+      'FAISS Sub-Millisecond Search: Local cosine vector similarity search over direct LAN Wi-Fi delivering sub-25ms response times',
+      'Magnetic Bounding Box Tracking: Critically damped spring dynamics (tension: 170, friction: 18) with low-pass jitter filtering',
+      'Silent-Face Anti-Spoofing Guard: Detects screen replays and printed photo bypasses directly within the AI inference pipeline',
+      'Strict Event Window Enforcement: Time-In & Time-Out dual verification with automatic gate locking outside event schedule windows',
+      'Multi-Format Compliance Export: 1-click generation of PDF event rosters, Excel (.xlsx) summaries, and CSV data sheets',
+      'Immutable Security Audit Logs: Full forensic logging of all logins, enrollments, overrides, and scanning sessions',
+    ],
+    developer: 'Archie S. Boiser',
+    organization: 'Campus Biometric Attendance System · Philippines 🇵🇭',
+    githubUrl: 'https://github.com/rchieeee',
+    liveUrl: 'https://github.com/rchieeee',
+  },
 ]
 
 export const experience = [
@@ -632,6 +821,7 @@ export const terminalCommands = {
   • kaban       - Inspect KABAN Student Council Treasury System (Flagship)
   • cloudzone   - Inspect CloudZone POS Multi-Device Retail System (Flutter)
   • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
+  • checkpoint  - Inspect Checkpoint AI Biometric Campus Attendance System
   • estimate    - Launch interactive scope & timeline estimator
   • cv          - View Archie's verified CV / Resume (Google Docs)
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
@@ -659,6 +849,16 @@ Navigate to the "estimate" section on the page or book directly via email: archi
   quote: `⚡ Interactive Project Scope & Estimator:
 Configure platforms, offline-first sync, 3FA authentication, and delivery pace.
 Navigate to the "estimate" section on the page or book directly via email: archie.boiser05@gmail.com`,
+  checkpoint: `🎯 Checkpoint — AI Biometric Campus Attendance System [Dual-Platform Vision]
+• Client / Domain: Higher Education & Campus Event Attendance Platform
+• Stack: React 19, React Native (Expo Go), Python (Flask), ArcFace, FAISS, Firestore
+• Key Tech: 5-Angle Face Enrollment, ArcFace 512-D Vectors, LAN Wi-Fi Frame Streaming (<25ms), CameraX Magnetic Spring Tracking, Anti-Spoofing
+• Developer: Archie S. Boiser`,
+  biometrics: `🎯 Checkpoint — AI Biometric Campus Attendance System [Dual-Platform Vision]
+• Client / Domain: Higher Education & Campus Event Attendance Platform
+• Stack: React 19, React Native (Expo Go), Python (Flask), ArcFace, FAISS, Firestore
+• Key Tech: 5-Angle Face Enrollment, ArcFace 512-D Vectors, LAN Wi-Fi Frame Streaming (<25ms), CameraX Magnetic Spring Tracking, Anti-Spoofing
+• Developer: Archie S. Boiser`,
   kaban: `🏦 KABAN — Student Council Treasury System [Flagship Enterprise App]
 • Type: Full-Stack Treasury & Transparency Platform (Real Council Production)
 • Stack: Next.js 14, TypeScript, Supabase (PostgreSQL), 3-Factor Auth, Realtime
@@ -722,13 +922,15 @@ Architecting complete systems with AI, generative product development, scalable 
   projects: `Featured Projects:
 1. KABAN — Student Council Treasury System (Next.js 14 + Supabase + 3FA)
 2. CloudZone POS — Multi-Device Retail System (Flutter + Firestore + SQLite)
-3. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)`,
+3. PNP-CCACGI — Personnel & Attendance System (React 19 + Firestore + 1-Tap Roll Call)
+4. Checkpoint — AI Biometric Attendance System (React 19 + Expo Go + ArcFace + FAISS)`,
   stack: `Tech Stack:
 • Frontend: React 19, Next.js 14 (App Router), TypeScript, Tailwind CSS, Vite
-• Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase
+• Mobile: React Native, Expo 57, Flutter 3, Dart, CameraX
+• Computer Vision & AI: ArcFace (InsightFace), RetinaFace, FAISS Vector DB, Python, Flask
+• Backend: Node.js, Express, Python, FastAPI, PostgreSQL, Supabase, Firebase Firestore
 • CMS & Platforms: WordPress, WooCommerce, PHP, ACF, REST API
-• Security & Realtime: Web Crypto 3FA, Cloudflare Turnstile, Supabase Realtime
-• AI Systems: Claude API, OpenAI API, Guardrails, Deterministic Harnesses`,
+• Security & Realtime: Web Crypto 3FA, Cloudflare Turnstile, Supabase Realtime`,
   experience: `Timeline:
 • 2025 - Present: Generative Full-Stack AI Engineer (Remote)
 • 2024 - 2025: Frontend & Full-Stack Developer (Web Solutions Studio)

@@ -10,6 +10,7 @@ export default function CaseStudyModal({ slug, onClose }) {
   const isKaban = project?.id === 'kaban'
   const isPnp = project?.id === 'pnp-ccacgi'
   const isCloudzone = project?.id === 'cloudzone-pos'
+  const isCheckpoint = project?.id === 'checkpoint'
   const screenshots = project?.images || []
   const activeScreenshot = screenshots[selectedScreenIdx] || screenshots[0]
 
@@ -353,6 +354,30 @@ export default function CaseStudyModal({ slug, onClose }) {
                 </h4>
                 <p className="mt-1.5">
                   To prevent silent SQLite foreign key constraint failures during cross-device document merges, the SyncEngine dynamically toggles <code>PRAGMA foreign_keys = OFF</code> during listener-driven upserts. Furthermore, the master admin console features an instant <b>Remote Factory Reset Signal</b>: writing a timestamp to Firestore triggers active cashier listeners to atomically wipe all local SQLite tables and fire an <code>onForceLogout</code> stream, instantly kicking unauthorized terminals back to login.
+                </p>
+              </div>
+            )}
+
+            {/* Checkpoint Specific: 5-Angle ArcFace Biometrics & FAISS Inference */}
+            {isCheckpoint && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  5-Angle Biometric Enrollment &amp; FAISS Vector Search
+                </h4>
+                <p className="mt-1.5">
+                  To eliminate false negatives caused by head orientation and campus lighting, Checkpoint guides students through a <b>5-Angle Biometric Capture sequence</b> (Frontal, Left, Right, Up, Down). InsightFace (ArcFace buffalo_l) extracts 512-dimensional L2-normalized vector embeddings indexed directly into an in-memory FAISS database. Over direct local Wi-Fi, vector similarity matching executes in <b>sub-millisecond latency</b> with a verified 98.4% system accuracy rating.
+                </p>
+              </div>
+            )}
+
+            {/* Checkpoint Specific: CameraX Magnetic Spring Tracking & Anti-Spoofing */}
+            {isCheckpoint && (
+              <div className="border-t border-gray-100 pt-4 dark:border-gray-800/80">
+                <h4 className="font-mono text-xs uppercase tracking-wider text-gray-950 dark:text-white font-semibold">
+                  CameraX Magnetic Spring Tracking &amp; Anti-Spoofing Guard
+                </h4>
+                <p className="mt-1.5">
+                  The mobile terminal (React Native + Expo Go) runs a chained <code>loopScan</code> with CameraX yielding ~7 FPS responsive throughput. Bounding boxes cling to moving students using <b>critically damped spring physics (tension: 170, friction: 18)</b> and deadband low-pass jitter filtering to prevent camera jitter. Silent-Face Anti-Spoofing blocks photo and video screen replays, while strict event windows lock the scanner when attendance cutoffs expire.
                 </p>
               </div>
             )}
