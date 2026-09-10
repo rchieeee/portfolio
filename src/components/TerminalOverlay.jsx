@@ -6,7 +6,7 @@ export default function TerminalOverlay({ isOpen, onClose, onLaunchGame }) {
   const [input, setInput] = useState('')
   const [history, setHistory] = useState([
     { type: 'system', text: 'Archie Dev Terminal [v2.5.0]' },
-    { type: 'system', text: 'Type "help" to view available commands or "play" to enter the multiplayer arcade.' },
+    { type: 'system', text: 'Type "help" to view available commands or "play" to enter the Cyber Air Hockey arcade.' },
   ])
   const inputRef = useRef(null)
   const bottomRef = useRef(null)
@@ -38,7 +38,7 @@ export default function TerminalOverlay({ isOpen, onClose, onLaunchGame }) {
     if (trimmed === 'play' || trimmed === 'game' || trimmed === 'arcade') {
       newHistory.push({
         type: 'output',
-        text: '🚀 [System] Launching Archie Cyber Arcade [Multiplayer Arena]...\nConnecting to live room...',
+        text: '[System] Launching Cyber Air Hockey Arcade...\nInitializing arena physics engine...',
       })
       sounds.play('chime')
       setHistory(newHistory)

@@ -823,7 +823,7 @@ export const terminalCommands = {
   • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
   • checkpoint  - Inspect Checkpoint AI Biometric Campus Attendance System
   • cv          - View Archie's verified CV / Resume (Google Docs)
-  • play        - Launch realtime multiplayer Cyber Arcade & live chat
+  • play        - Launch Cyber Air Hockey 2D arcade game
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
   • projects    - List featured full-stack & AI projects

@@ -5,6 +5,7 @@ import { SOUND_PROFILES, sounds } from '../utils/audio'
 export default function HeaderNav({
   activeSection,
   onOpenTerminal,
+  onOpenArcade,
   theme,
   onSetTheme,
   themeCooldown = false,
@@ -95,6 +96,20 @@ export default function HeaderNav({
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Cyber Air Hockey Arcade Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              sounds.play('chime')
+              onOpenArcade?.()
+            }}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
+            title="Play Cyber Air Hockey"
+          >
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">●</span>
+            <span>Arcade</span>
+          </button>
+
           {/* Interactive Terminal Trigger Button */}
           <button
             type="button"
@@ -217,14 +232,27 @@ export default function HeaderNav({
             </nav>
           </div>
 
-          <div className="space-y-4 border-t border-gray-200 pt-6 font-mono text-sm dark:border-gray-800">
+          <div className="space-y-3 border-t border-gray-200 pt-5 font-mono text-sm dark:border-gray-800">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false)
+                sounds.play('chime')
+                onOpenArcade?.()
+              }}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2.5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold cursor-pointer"
+            >
+              <span className="text-[10px] text-emerald-500 font-bold">●</span>
+              <span>Play Cyber Air Hockey</span>
+            </button>
+
             <button
               type="button"
               onClick={() => {
                 setMobileMenuOpen(false)
                 onOpenTerminal()
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-3 text-white dark:bg-white dark:text-gray-950 font-semibold"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-2.5 text-white dark:bg-white dark:text-gray-950 font-semibold"
             >
               <span>$ Open CLI Terminal</span>
             </button>

@@ -166,6 +166,7 @@ export default function App() {
       <HeaderNav
         activeSection={activeSection}
         onOpenTerminal={() => setTerminalOpen(true)}
+        onOpenArcade={() => setIsArcadeOpen(true)}
         theme={theme}
         onSetTheme={handleSetTheme}
         themeCooldown={themeCooldown}

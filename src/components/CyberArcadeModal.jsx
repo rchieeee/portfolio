@@ -1,656 +1,576 @@
-import { useEffect, useRef, useState } from 'react'
-import * as THREE from 'three'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { sounds } from '../utils/audio'
 
-// Shared Global Room Channel
-const ROOM_CHANNEL = 'archie_cyber_sumo_bw_v1'
-const ARENA_RADIUS = 11.5
-const LOCAL_STORAGE_NAME_KEY = 'archie_cyber_sumo_player_name'
-const LOCAL_STORAGE_COLOR_KEY = 'archie_cyber_sumo_player_color'
+const WINNING_SCORE = 5
+const TABLE_WIDTH = 420
+const TABLE_HEIGHT = 600
+const PADDLE_RADIUS = 24
+const PUCK_RADIUS = 11
+const GOAL_WIDTH = 150
+const GOAL_LEFT = (TABLE_WIDTH - GOAL_WIDTH) / 2
+const GOAL_RIGHT = GOAL_LEFT + GOAL_WIDTH
 
-const CHARACTER_COLORS = [
-  { id: 'green', name: 'Mint Green', hex: 0x22c55e, css: '#22c55e' },
-  { id: 'cyan', name: 'Sky Cyan', hex: 0x38bdf8, css: '#38bdf8' },
-  { id: 'purple', name: 'Soft Lavender', hex: 0xa855f7, css: '#a855f7' },
-  { id: 'orange', name: 'Coral Orange', hex: 0xfb923c, css: '#fb923c' },
-  { id: 'pink', name: 'Ruby Pink', hex: 0xf43f5e, css: '#f43f5e' },
-  { id: 'yellow', name: 'Golden Amber', hex: 0xfacc15, css: '#facc15' },
+const DIFFICULTIES = [
+  { id: 'casual', label: 'Casual', aiSpeed: 4.2, aiReaction: 0.82, strikePower: 1.05 },
+  { id: 'balanced', label: 'Balanced', aiSpeed: 6.2, aiReaction: 0.93, strikePower: 1.18 },
+  { id: 'pro', label: 'Pro', aiSpeed: 8.4, aiReaction: 0.98, strikePower: 1.28 },
 ]
 
 export default function CyberArcadeModal({ isOpen, onClose }) {
-  const mountRef = useRef(null)
-  const chatBottomRef = useRef(null)
-  const [playerId] = useState(() => 'usr_' + Math.floor(1000 + Math.random() * 9000))
-  const [playerName, setPlayerName] = useState(() => {
-    try {
-      return localStorage.getItem(LOCAL_STORAGE_NAME_KEY) || ''
-    } catch {
-      return ''
-    }
-  })
-  const [colorIdx, setColorIdx] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_COLOR_KEY)
-      const parsed = parseInt(saved, 10)
-      return !isNaN(parsed) && parsed >= 0 && parsed < CHARACTER_COLORS.length ? parsed : 0
-    } catch {
-      return 0
-    }
-  })
-  const [hasJoined, setHasJoined] = useState(false)
-  const [chatInput, setChatInput] = useState('')
-  const [chatMessages, setChatMessages] = useState([
-    { sender: 'System', text: 'Cyber Sumo Arena Ready. Ram opponents off the ring!', time: '00:00' },
-  ])
-  const [scores, setScores] = useState({})
-  const [onlineCount, setOnlineCount] = useState(1)
+  const canvasRef = useRef(null)
+  const [difficulty, setDifficulty] = useState('balanced')
+  const [playerScore, setPlayerScore] = useState(0)
+  const [aiScore, setAiScore] = useState(0)
+  const [gameState, setGameState] = useState('playing') // 'playing' | 'scored' | 'gameover'
+  const [winner, setWinner] = useState(null) // 'player' | 'ai'
+  const [scoreBanner, setScoreBanner] = useState(null) // string banner during goal celebration
 
-  const selectedColor = CHARACTER_COLORS[colorIdx] || CHARACTER_COLORS[0]
+  const difficultyRef = useRef(difficulty)
+  useEffect(() => {
+    difficultyRef.current = difficulty
+  }, [difficulty])
 
-  // Local game state refs
-  const gameRef = useRef({
-    myPos: {
-      x: (Math.random() - 0.5) * 4,
-      y: 0,
-      z: (Math.random() - 0.5) * 4,
+  // Physics engine reference mutable state
+  const sim = useRef({
+    puck: { x: TABLE_WIDTH / 2, y: TABLE_HEIGHT / 2, vx: 0, vy: 0, r: PUCK_RADIUS },
+    player: {
+      x: TABLE_WIDTH / 2,
+      y: TABLE_HEIGHT - 70,
       vx: 0,
-      vz: 0,
-      rotY: 0,
-      score: 0,
-      isFalling: false,
-      isHeavy: false,
-      lastBumperId: null,
-      lastBumperName: null,
+      vy: 0,
+      r: PADDLE_RADIUS,
+      targetX: TABLE_WIDTH / 2,
+      targetY: TABLE_HEIGHT - 70,
     },
-    remotePlayers: {}, // { id: { name, x, y, z, vx, vz, rotY, score, colorHex, isFalling, lastSeen } }
-    powerups: [
-      { id: 1, type: 'coffee', x: -5, z: -4, active: true },
-      { id: 2, type: 'nitro', x: 5, z: 4, active: true },
-    ],
-    keys: {},
-    chatBubbles: {}, // { id: { text, timer } }
-    channel: null,
-    scene: null,
-    camera: null,
-    renderer: null,
-    meshMap: {}, // id -> THREE.Group
-    indicatorMesh: null,
-    powerupMeshes: [],
+    ai: {
+      x: TABLE_WIDTH / 2,
+      y: 70,
+      vx: 0,
+      vy: 0,
+      r: PADDLE_RADIUS,
+      targetX: TABLE_WIDTH / 2,
+      targetY: 70,
+    },
+    keys: { w: false, a: false, s: false, d: false, up: false, left: false, down: false, right: false },
+    controlMode: 'mouse', // 'mouse' | 'touch' | 'keyboard'
+    trail: [],
+    particles: [],
+    freezeTimer: 0,
+    animFrame: null,
+    isOver: false,
   })
 
-  // Auto-scroll chat to bottom on new messages
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatMessages])
-
-  // Setup join state on modal open
-  useEffect(() => {
-    if (isOpen) {
-      setHasJoined(false)
-      try {
-        const saved = localStorage.getItem(LOCAL_STORAGE_NAME_KEY)
-        if (saved) {
-          setPlayerName(saved)
-        } else {
-          setPlayerName(`Player_${Math.floor(100 + Math.random() * 900)}`)
-        }
-      } catch {
-        setPlayerName(`Player_${Math.floor(100 + Math.random() * 900)}`)
-      }
+  // Restart match
+  const restartMatch = useCallback((newDiff = null) => {
+    if (newDiff) {
+      setDifficulty(newDiff)
+      difficultyRef.current = newDiff
     }
-  }, [isOpen])
+    setPlayerScore(0)
+    setAiScore(0)
+    setWinner(null)
+    setScoreBanner(null)
+    setGameState('playing')
+
+    const s = sim.current
+    s.isOver = false
+    s.freezeTimer = 0
+    s.trail = []
+    s.particles = []
+    s.puck.x = TABLE_WIDTH / 2
+    s.puck.y = TABLE_HEIGHT / 2
+    s.puck.vx = (Math.random() - 0.5) * 4
+    s.puck.vy = Math.random() > 0.5 ? 4 : -4
+    s.player.x = TABLE_WIDTH / 2
+    s.player.y = TABLE_HEIGHT - 70
+    s.player.targetX = TABLE_WIDTH / 2
+    s.player.targetY = TABLE_HEIGHT - 70
+    s.player.vx = 0
+    s.player.vy = 0
+    s.ai.x = TABLE_WIDTH / 2
+    s.ai.y = 70
+    s.ai.vx = 0
+    s.ai.vy = 0
 
-  // 1. Networking (BroadcastChannel Real-Time Sync)
-  useEffect(() => {
-    if (!isOpen || !hasJoined) return
-
-    let bc = null
-    try {
-      if (typeof window !== 'undefined' && window.BroadcastChannel) {
-        bc = new BroadcastChannel(ROOM_CHANNEL)
-        gameRef.current.channel = bc
-
-        bc.onmessage = (event) => {
-          const { type, payload } = event.data
-          if (type === 'PLAYER_STATE') {
-            if (payload.id !== playerId) {
-              gameRef.current.remotePlayers[payload.id] = {
-                ...(gameRef.current.remotePlayers[payload.id] || {}),
-                ...payload,
-                lastSeen: Date.now(),
-              }
-            }
-          } else if (type === 'BUMP_IMPULSE') {
-            if (payload.targetId === playerId) {
-              sounds.play('press')
-              gameRef.current.myPos.vx += payload.impulseX
-              gameRef.current.myPos.vz += payload.impulseZ
-              gameRef.current.myPos.lastBumperId = payload.sourceId
-              gameRef.current.myPos.lastBumperName = payload.sourceName
-            }
-          } else if (type === 'PLAYER_KNOCKED_OUT') {
-            sounds.play('success')
-            if (payload.killerId === playerId) {
-              gameRef.current.myPos.score += 1
-            }
-            if (gameRef.current.remotePlayers[payload.killerId]) {
-              gameRef.current.remotePlayers[payload.killerId].score =
-                (gameRef.current.remotePlayers[payload.killerId].score || 0) + 1
-            }
-
-            const alertText = `${payload.victimName} was knocked off by ${payload.killerName}!`
-            setChatMessages((prev) => [
-              ...prev.slice(-25),
-              { sender: 'System', text: alertText, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-            ])
-          } else if (type === 'CHAT_MESSAGE') {
-            sounds.play('tick')
-            setChatMessages((prev) => [...prev.slice(-25), payload])
-            gameRef.current.chatBubbles[payload.id] = {
-              text: payload.text,
-              timer: Date.now() + 4500,
-            }
-          }
-        }
-      }
-    } catch {}
-
-    // Periodic Heartbeat
-    const hbInterval = setInterval(() => {
-      if (bc) {
-        bc.postMessage({
-          type: 'PLAYER_STATE',
-          payload: {
-            id: playerId,
-            name: playerName,
-            colorHex: selectedColor.hex,
-            x: gameRef.current.myPos.x,
-            y: gameRef.current.myPos.y,
-            z: gameRef.current.myPos.z,
-            vx: gameRef.current.myPos.vx,
-            vz: gameRef.current.myPos.vz,
-            rotY: gameRef.current.myPos.rotY,
-            score: gameRef.current.myPos.score,
-          },
-        })
-      }
-
-      // Cleanup disconnected players
-      const now = Date.now()
-      const remotes = gameRef.current.remotePlayers
-      const scene = gameRef.current.scene
-      const meshMap = gameRef.current.meshMap
-
-      let count = 1
-      Object.keys(remotes).forEach((k) => {
-        if (now - remotes[k].lastSeen > 4000) {
-          if (meshMap[k] && scene) {
-            scene.remove(meshMap[k])
-            delete meshMap[k]
-          }
-          delete remotes[k]
-        } else {
-          count++
-        }
-      })
-      setOnlineCount(count)
-    }, 1000)
-
-    return () => {
-      clearInterval(hbInterval)
-      if (bc) bc.close()
-    }
-  }, [isOpen, hasJoined, playerId, playerName, selectedColor])
-
-  // 2. Keyboard Handlers
-  useEffect(() => {
-    if (!isOpen || !hasJoined) return
-
-    const onKeyDown = (e) => {
-      if (document.activeElement?.tagName === 'INPUT') return
-      gameRef.current.keys[e.key.toLowerCase()] = true
-      gameRef.current.keys[e.code] = true
-    }
-
-    const onKeyUp = (e) => {
-      gameRef.current.keys[e.key.toLowerCase()] = false
-      gameRef.current.keys[e.code] = false
-    }
-
-    window.addEventListener('keydown', onKeyDown)
-    window.addEventListener('keyup', onKeyUp)
-
-    return () => {
-      window.removeEventListener('keydown', onKeyDown)
-      window.removeEventListener('keyup', onKeyUp)
-    }
-  }, [isOpen, hasJoined])
-
-  // 3. Three.js Minimalist Black & White Scene & Physics Loop
-  useEffect(() => {
-    if (!isOpen || !hasJoined || !mountRef.current) return
-
-    const container = mountRef.current
-    const width = container.clientWidth || 600
-    const height = container.clientHeight || 400
-
-    // Scene & Camera
-    const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x0a0a0c)
-    scene.fog = new THREE.FogExp2(0x0a0a0c, 0.02)
-    gameRef.current.scene = scene
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100)
-    camera.position.set(0, 24, 20)
-    camera.lookAt(0, 0, 0)
-    gameRef.current.camera = camera
-
-    // WebGL Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false })
-    renderer.setSize(width, height)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.shadowMap.enabled = true
-    container.innerHTML = ''
-    container.appendChild(renderer.domElement)
-    gameRef.current.renderer = renderer
-
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85)
-    scene.add(ambientLight)
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.4)
-    dirLight.position.set(12, 24, 12)
-    dirLight.castShadow = true
-    scene.add(dirLight)
-
-    // Floating Circular Sumo Platform (Matte Black with Crisp White Perimeter Ring)
-    const islandGeo = new THREE.CylinderGeometry(ARENA_RADIUS, ARENA_RADIUS + 0.5, 1.4, 64)
-    const islandMat = new THREE.MeshStandardMaterial({
-      color: 0x111114,
-      roughness: 0.85,
-      metalness: 0.1,
-    })
-    const island = new THREE.Mesh(islandGeo, islandMat)
-    island.position.y = -0.7
-    island.receiveShadow = true
-    scene.add(island)
-
-    // Crisp White Ring Boundary
-    const ringGeo = new THREE.RingGeometry(ARENA_RADIUS - 0.18, ARENA_RADIUS, 64)
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide })
-    const ring = new THREE.Mesh(ringGeo, ringMat)
-    ring.rotation.x = -Math.PI / 2
-    ring.position.y = 0.02
-    scene.add(ring)
-
-    // Center marker ring
-    const centerGeo = new THREE.RingGeometry(1.8, 1.9, 32)
-    const centerMat = new THREE.MeshBasicMaterial({ color: 0x333338, side: THREE.DoubleSide })
-    const centerRing = new THREE.Mesh(centerGeo, centerMat)
-    centerRing.rotation.x = -Math.PI / 2
-    centerRing.position.y = 0.02
-    scene.add(centerRing)
-
-    // Helper: Build Minimalist Colored Cartoon Character
-    const createCartoonCharacter = (colorHex, isLocal) => {
-      const group = new THREE.Group()
-
-      // Cute Rounded Chibi Body
-      const bodyGeo = new THREE.SphereGeometry(0.85, 24, 24)
-      bodyGeo.scale(1, 1.15, 1)
-      const bodyMat = new THREE.MeshStandardMaterial({
-        color: colorHex,
-        roughness: 0.25,
-        metalness: 0.1,
-      })
-      const body = new THREE.Mesh(bodyGeo, bodyMat)
-      body.position.y = 0.9
-      body.castShadow = true
-      group.add(body)
-
-      // Expressive Cartoon Left Eye
-      const eyeGeo = new THREE.SphereGeometry(0.2, 16, 16)
-      eyeGeo.scale(1, 1.3, 0.6)
-      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-      const eyeL = new THREE.Mesh(eyeGeo, eyeMat)
-      eyeL.position.set(-0.3, 1.1, 0.75)
-      group.add(eyeL)
-
-      // Pupil Left
-      const pupilGeo = new THREE.SphereGeometry(0.09, 8, 8)
-      const pupilMat = new THREE.MeshBasicMaterial({ color: 0x111111 })
-      const pupilL = new THREE.Mesh(pupilGeo, pupilMat)
-      pupilL.position.set(-0.3, 1.1, 0.88)
-      group.add(pupilL)
-
-      // Expressive Cartoon Right Eye
-      const eyeR = new THREE.Mesh(eyeGeo, eyeMat)
-      eyeR.position.set(0.3, 1.1, 0.75)
-      group.add(eyeR)
-
-      // Pupil Right
-      const pupilR = new THREE.Mesh(pupilGeo, pupilMat)
-      pupilR.position.set(0.3, 1.1, 0.88)
-      group.add(pupilR)
-
-      // Overhead "YOU" Identification Arrow Pointer (Local Player Only)
-      if (isLocal) {
-        const arrowGeo = new THREE.ConeGeometry(0.22, 0.45, 8)
-        arrowGeo.rotateX(Math.PI)
-        const arrowMat = new THREE.MeshBasicMaterial({ color: 0xffffff })
-        const arrow = new THREE.Mesh(arrowGeo, arrowMat)
-        arrow.position.y = 2.4
-        group.add(arrow)
-        gameRef.current.indicatorMesh = arrow
-      }
-
-      return group
-    }
-
-    // Local Player Mesh with chosen color
-    const localMesh = createCartoonCharacter(selectedColor.hex, true)
-    scene.add(localMesh)
-    gameRef.current.meshMap[playerId] = localMesh
-
-    // 3D Colored Power-ups (Coffee Mug & Nitro Crystal)
-    const pMeshes = []
-    gameRef.current.powerups.forEach((pu) => {
-      const geo = pu.type === 'coffee'
-        ? new THREE.CylinderGeometry(0.38, 0.3, 0.6, 16)
-        : new THREE.OctahedronGeometry(0.42)
-
-      const mat = new THREE.MeshStandardMaterial({
-        color: pu.type === 'coffee' ? 0xf59e0b : 0x38bdf8,
-        emissive: pu.type === 'coffee' ? 0xb45309 : 0x0284c7,
-        emissiveIntensity: 0.55,
-        roughness: 0.25,
-      })
-      const mesh = new THREE.Mesh(geo, mat)
-      mesh.position.set(pu.x, 0.6, pu.z)
-      scene.add(mesh)
-      pMeshes.push({ mesh, data: pu })
-    })
-    gameRef.current.powerupMeshes = pMeshes
-
-    // Resize
-    const handleResize = () => {
-      if (!container) return
-      const w = container.clientWidth
-      const h = container.clientHeight
-      camera.aspect = w / h
-      camera.updateProjectionMatrix()
-      renderer.setSize(w, h)
-    }
-    window.addEventListener('resize', handleResize)
-
-    // ── 60FPS Game Physics Loop ──
-    let reqId
-    const loop = () => {
-      const { myPos, keys, remotePlayers, channel, meshMap, indicatorMesh } = gameRef.current
-
-      // 1. Local Player Acceleration & Friction
-      const accel = myPos.isHeavy ? 0.018 : 0.024
-      const maxSpeed = myPos.isHeavy ? 0.18 : 0.22
-
-      if (!myPos.isFalling) {
-        if (keys['w'] || keys['arrowup'] || keys['KeyW']) myPos.vz -= accel
-        if (keys['s'] || keys['arrowdown'] || keys['KeyS']) myPos.vz += accel
-        if (keys['a'] || keys['arrowleft'] || keys['KeyA']) myPos.vx -= accel
-        if (keys['d'] || keys['arrowright'] || keys['KeyD']) myPos.vx += accel
-
-        const speed = Math.hypot(myPos.vx, myPos.vz)
-        if (speed > maxSpeed) {
-          myPos.vx = (myPos.vx / speed) * maxSpeed
-          myPos.vz = (myPos.vz / speed) * maxSpeed
-        }
-
-        myPos.vx *= 0.94
-        myPos.vz *= 0.94
-        myPos.x += myPos.vx
-        myPos.z += myPos.vz
-
-        if (Math.hypot(myPos.vx, myPos.vz) > 0.01) {
-          myPos.rotY = Math.atan2(myPos.vx, myPos.vz)
-        }
-
-        // Falling off edge
-        const dist = Math.hypot(myPos.x, myPos.z)
-        if (dist > ARENA_RADIUS) {
-          myPos.isFalling = true
-          sounds.play('droplet')
-
-          if (channel) {
-            // Record KO to the killer
-            if (myPos.lastBumperId) {
-              channel.postMessage({
-                type: 'PLAYER_KNOCKED_OUT',
-                payload: {
-                  victimId: playerId,
-                  victimName: playerName,
-                  killerId: myPos.lastBumperId,
-                  killerName: myPos.lastBumperName || 'Opponent',
-                },
-              })
-            }
-          }
-        }
-      } else {
-        // Fall down into void
-        myPos.y -= 0.35
-        myPos.rotY += 0.15
-
-        if (myPos.y < -16) {
-          myPos.x = (Math.random() - 0.5) * 4
-          myPos.z = (Math.random() - 0.5) * 4
-          myPos.y = 0
-          myPos.vx = 0
-          myPos.vz = 0
-          myPos.isFalling = false
-          myPos.lastBumperId = null
-          myPos.lastBumperName = null
-        }
-      }
-
-      // Update Local Mesh & Floating Indicator
-      if (localMesh) {
-        localMesh.position.set(myPos.x, myPos.y, myPos.z)
-        localMesh.rotation.y = myPos.rotY
-
-        const moveMag = Math.hypot(myPos.vx, myPos.vz)
-        const bounce = 1 + Math.sin(Date.now() * 0.015) * moveMag * 2
-        localMesh.scale.set(myPos.isHeavy ? 1.35 : 1, myPos.isHeavy ? 1.35 : bounce, myPos.isHeavy ? 1.35 : 1)
-      }
-
-      if (indicatorMesh) {
-        indicatorMesh.position.y = 2.4 + Math.sin(Date.now() * 0.006) * 0.15
-      }
-
-      // Broadcast Local State
-      if (channel) {
-        channel.postMessage({
-          type: 'PLAYER_STATE',
-          payload: {
-            id: playerId,
-            name: playerName,
-            colorHex: selectedColor.hex,
-            x: myPos.x,
-            y: myPos.y,
-            z: myPos.z,
-            vx: myPos.vx,
-            vz: myPos.vz,
-            rotY: myPos.rotY,
-            score: myPos.score,
-            isFalling: myPos.isFalling,
-          },
-        })
-      }
-
-      // 2. Render Remote Players with their chosen colors
-      Object.values(remotePlayers).forEach((other) => {
-        if (!meshMap[other.id]) {
-          const rMesh = createCartoonCharacter(other.colorHex || 0x38bdf8, false)
-          scene.add(rMesh)
-          meshMap[other.id] = rMesh
-        }
-
-        const rMesh = meshMap[other.id]
-        if (rMesh) {
-          rMesh.position.lerp(new THREE.Vector3(other.x, other.y || 0, other.z), 0.35)
-          rMesh.rotation.y = other.rotY || 0
-        }
-      })
-
-      // 3. Elastic Collisions (Ramming Real Players)
-      Object.values(remotePlayers).forEach((other) => {
-        if (myPos.isFalling || other.isFalling) return
-        const dist = Math.hypot(myPos.x - other.x, myPos.z - other.z)
-        const hitRadius = myPos.isHeavy ? 1.6 : 1.3
-
-        if (dist < hitRadius) {
-          sounds.play('press')
-          const dx = (myPos.x - other.x) / (dist || 1)
-          const dz = (myPos.z - other.z) / (dist || 1)
-          const force = myPos.isHeavy ? 0.44 : 0.25
-
-          myPos.vx += dx * (force * 0.7)
-          myPos.vz += dz * (force * 0.7)
-
-          if (channel) {
-            channel.postMessage({
-              type: 'BUMP_IMPULSE',
-              payload: {
-                targetId: other.id,
-                sourceId: playerId,
-                sourceName: playerName,
-                impulseX: -dx * force,
-                impulseZ: -dz * force,
-              },
-            })
-          }
-        }
-      })
-
-      // 4. Power-up Pickups
-      const now = Date.now()
-      pMeshes.forEach(({ mesh, data }) => {
-        mesh.rotation.y += 0.04
-        mesh.position.y = 0.6 + Math.sin(now * 0.004 + data.id) * 0.15
-
-        const dist = Math.hypot(myPos.x - data.x, myPos.z - data.z)
-        if (dist < 1.3 && data.active && !myPos.isFalling) {
-          sounds.play('success')
-          data.active = false
-          mesh.visible = false
-
-          if (data.type === 'coffee') {
-            myPos.isHeavy = true
-            setTimeout(() => (myPos.isHeavy = false), 6000)
-          } else if (data.type === 'nitro') {
-            myPos.vx *= 2.4
-            myPos.vz *= 2.4
-          }
-
-          setTimeout(() => {
-            data.active = true
-            mesh.visible = true
-            const angle = Math.random() * Math.PI * 2
-            const r = Math.random() * (ARENA_RADIUS - 3)
-            data.x = Math.cos(angle) * r
-            data.z = Math.sin(angle) * r
-            mesh.position.set(data.x, 0.6, data.z)
-          }, 9000)
-        }
-      })
-
-      // Live Scoreboard
-      const currentScores = { [playerName]: myPos.score }
-      Object.values(remotePlayers).forEach((p) => {
-        currentScores[p.name || p.id] = p.score || 0
-      })
-      setScores(currentScores)
-
-      renderer.render(scene, camera)
-      reqId = requestAnimationFrame(loop)
-    }
-
-    reqId = requestAnimationFrame(loop)
-
-    return () => {
-      cancelAnimationFrame(reqId)
-      window.removeEventListener('resize', handleResize)
-      renderer.dispose()
-    }
-  }, [isOpen, hasJoined, playerId, playerName, selectedColor])
-
-  // In-Game Chat Send
-  const handleSendChat = (e) => {
-    e?.preventDefault()
-    const trimmed = chatInput.trim()
-    if (!trimmed) return
-
-    sounds.play('tick')
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    const msgObj = {
-      id: playerId,
-      sender: playerName,
-      text: trimmed,
-      time: timeStr,
-    }
-
-    setChatMessages((prev) => [...prev.slice(-25), msgObj])
-    gameRef.current.chatBubbles[playerId] = {
-      text: trimmed,
-      timer: Date.now() + 4500,
-    }
-
-    if (gameRef.current.channel) {
-      gameRef.current.channel.postMessage({
-        type: 'CHAT_MESSAGE',
-        payload: msgObj,
-      })
-    }
-
-    setChatInput('')
-  }
-
-  const handleQuickChat = (text) => {
-    setChatInput(text)
-    setTimeout(() => handleSendChat(), 30)
-  }
-
-  const handleTouchMove = (direction) => {
-    const { myPos } = gameRef.current
-    const step = 0.18
-    if (direction === 'up') myPos.vz -= step
-    if (direction === 'down') myPos.vz += step
-    if (direction === 'left') myPos.vx -= step
-    if (direction === 'right') myPos.vx += step
-  }
-
-  const handleJoinArena = (e) => {
-    e?.preventDefault()
-    const name = playerName.trim() || `Player_${Math.floor(100 + Math.random() * 900)}`
-    setPlayerName(name)
-    try {
-      localStorage.setItem(LOCAL_STORAGE_NAME_KEY, name)
-      localStorage.setItem(LOCAL_STORAGE_COLOR_KEY, String(colorIdx))
-    } catch {}
-    setHasJoined(true)
     sounds.play('chime')
+  }, [])
 
-    // Broadcast join announcement
-    if (gameRef.current.channel) {
-      gameRef.current.channel.postMessage({
-        type: 'CHAT_MESSAGE',
-        payload: {
-          id: playerId,
-          sender: 'System',
-          text: `${name} entered the arena.`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
+  // Serve puck after goal
+  const servePuck = useCallback((servedTo) => {
+    const s = sim.current
+    s.puck.x = TABLE_WIDTH / 2
+    s.puck.y = TABLE_HEIGHT / 2
+    s.puck.vx = (Math.random() - 0.5) * 3
+    s.puck.vy = servedTo === 'player' ? 4 : -4
+    s.player.targetX = TABLE_WIDTH / 2
+    s.player.targetY = TABLE_HEIGHT - 70
+    s.ai.x = TABLE_WIDTH / 2
+    s.ai.y = 70
+    s.ai.vx = 0
+    s.ai.vy = 0
+  }, [])
+
+  // Spawn visual sparks
+  const spawnSparks = (x, y, color = '#10b981', count = 16) => {
+    const s = sim.current
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2
+      const speed = 1.5 + Math.random() * 4.5
+      s.particles.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.03,
+        color,
+        size: 2 + Math.random() * 2.5,
       })
     }
   }
+
+  // Handle pointer tracking
+  const updatePlayerPointer = (clientX, clientY) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = TABLE_WIDTH / rect.width
+    const scaleY = TABLE_HEIGHT / rect.height
+
+    const x = (clientX - rect.left) * scaleX
+    const y = (clientY - rect.top) * scaleY
+
+    sim.current.controlMode = 'mouse'
+    sim.current.player.targetX = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, x))
+    sim.current.player.targetY = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, y))
+  }
+
+  // Keyboard events
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e) => {
+      const k = e.key.toLowerCase()
+      const keys = sim.current.keys
+      if (k === 'w' || k === 'arrowup') { keys.up = true; sim.current.controlMode = 'keyboard'; }
+      if (k === 's' || k === 'arrowdown') { keys.down = true; sim.current.controlMode = 'keyboard'; }
+      if (k === 'a' || k === 'arrowleft') { keys.left = true; sim.current.controlMode = 'keyboard'; }
+      if (k === 'd' || k === 'arrowright') { keys.right = true; sim.current.controlMode = 'keyboard'; }
+      if (k === 'r') {
+        restartMatch()
+      }
+    }
+
+    const handleKeyUp = (e) => {
+      const k = e.key.toLowerCase()
+      const keys = sim.current.keys
+      if (k === 'w' || k === 'arrowup') keys.up = false
+      if (k === 's' || k === 'arrowdown') keys.down = false
+      if (k === 'a' || k === 'arrowleft') keys.left = false
+      if (k === 'd' || k === 'arrowright') keys.right = false
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [isOpen, restartMatch])
+
+  // Main simulation loop
+  useEffect(() => {
+    if (!isOpen) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    let isMounted = true
+    let animId = null
+
+    // Initial serve
+    restartMatch()
+
+    const render = () => {
+      if (!isMounted) return
+      const s = sim.current
+
+      // ── 1. Update Physics (if not frozen) ──
+      if (s.freezeTimer > 0) {
+        s.freezeTimer -= 1
+        if (s.freezeTimer === 0 && !s.isOver) {
+          setScoreBanner(null)
+          setGameState('playing')
+        }
+      } else if (!s.isOver) {
+        // --- Player Movement ---
+        if (s.controlMode === 'keyboard') {
+          const speed = 7.5
+          if (s.keys.left) s.player.x -= speed
+          if (s.keys.right) s.player.x += speed
+          if (s.keys.up) s.player.y -= speed
+          if (s.keys.down) s.player.y += speed
+
+          s.player.x = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, s.player.x))
+          s.player.y = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, s.player.y))
+          s.player.vx = (s.keys.right ? speed : 0) - (s.keys.left ? speed : 0)
+          s.player.vy = (s.keys.down ? speed : 0) - (s.keys.up ? speed : 0)
+        } else {
+          // Glide toward target
+          const prevX = s.player.x
+          const prevY = s.player.y
+          s.player.x += (s.player.targetX - s.player.x) * 0.45
+          s.player.y += (s.player.targetY - s.player.y) * 0.45
+          s.player.vx = s.player.x - prevX
+          s.player.vy = s.player.y - prevY
+        }
+
+        // --- AI Movement ---
+        const currentDiffConfig = DIFFICULTIES.find((d) => d.id === difficultyRef.current) || DIFFICULTIES[1]
+        const aiSpeed = currentDiffConfig.aiSpeed
+        let aiTargetX = TABLE_WIDTH / 2
+        let aiTargetY = 85
+
+        if (s.puck.y < TABLE_HEIGHT / 2 + 100) {
+          // Puck is near or in AI half -> actively defend or attack
+          aiTargetX = s.puck.x
+          if (s.puck.y < TABLE_HEIGHT / 2 - 20) {
+            // Puck is in AI half: align to strike toward goal
+            aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(40, s.puck.y - 25))
+          } else {
+            aiTargetY = 95
+          }
+        } else {
+          // Puck in player half -> guard center of goal
+          aiTargetX = TABLE_WIDTH / 2 + (s.puck.x - TABLE_WIDTH / 2) * 0.35
+          aiTargetY = 75
+        }
+
+        const prevAiX = s.ai.x
+        const prevAiY = s.ai.y
+        const dx = aiTargetX - s.ai.x
+        const dy = aiTargetY - s.ai.y
+        const dist = Math.hypot(dx, dy)
+
+        if (dist > 1) {
+          const step = Math.min(dist, aiSpeed)
+          s.ai.x += (dx / dist) * step
+          s.ai.y += (dy / dist) * step
+        }
+
+        // Clamp AI bounds
+        s.ai.x = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, s.ai.x))
+        s.ai.y = Math.max(PADDLE_RADIUS + 4, Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 5, s.ai.y))
+        s.ai.vx = s.ai.x - prevAiX
+        s.ai.vy = s.ai.y - prevAiY
+
+        // --- Puck Movement & Friction ---
+        s.puck.x += s.puck.vx
+        s.puck.y += s.puck.vy
+        s.puck.vx *= 0.995
+        s.puck.vy *= 0.995
+
+        // Trail recording
+        s.trail.unshift({ x: s.puck.x, y: s.puck.y })
+        if (s.trail.length > 8) s.trail.pop()
+
+        // --- Wall Collisions ---
+        // Left wall
+        if (s.puck.x - s.puck.r <= 0) {
+          s.puck.x = s.puck.r
+          s.puck.vx = -s.puck.vx * 0.96
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+        }
+        // Right wall
+        if (s.puck.x + s.puck.r >= TABLE_WIDTH) {
+          s.puck.x = TABLE_WIDTH - s.puck.r
+          s.puck.vx = -s.puck.vx * 0.96
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+        }
+
+        // Top wall (AI Goal zone)
+        const isTopGoalX = s.puck.x >= GOAL_LEFT && s.puck.x <= GOAL_RIGHT
+        if (s.puck.y - s.puck.r <= 0) {
+          if (isTopGoalX) {
+            // GOAL FOR PLAYER!
+            sounds.play('chime')
+            spawnSparks(s.puck.x, 20, '#10b981', 32)
+            setPlayerScore((prev) => {
+              const next = prev + 1
+              if (next >= WINNING_SCORE) {
+                s.isOver = true
+                setGameState('gameover')
+                setWinner('player')
+              } else {
+                setGameState('scored')
+                setScoreBanner('POINT ARCHIE / YOU!')
+                s.freezeTimer = 65
+                servePuck('ai')
+              }
+              return next
+            })
+          } else {
+            s.puck.y = s.puck.r
+            s.puck.vy = -s.puck.vy * 0.96
+            sounds.play('tick')
+            spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+          }
+        }
+
+        // Bottom wall (Player Goal zone)
+        const isBottomGoalX = s.puck.x >= GOAL_LEFT && s.puck.x <= GOAL_RIGHT
+        if (s.puck.y + s.puck.r >= TABLE_HEIGHT) {
+          if (isBottomGoalX) {
+            // GOAL FOR AI!
+            sounds.play('droplet')
+            spawnSparks(s.puck.x, TABLE_HEIGHT - 20, '#f43f5e', 32)
+            setAiScore((prev) => {
+              const next = prev + 1
+              if (next >= WINNING_SCORE) {
+                s.isOver = true
+                setGameState('gameover')
+                setWinner('ai')
+              } else {
+                setGameState('scored')
+                setScoreBanner('AI SCORED!')
+                s.freezeTimer = 65
+                servePuck('player')
+              }
+              return next
+            })
+          } else {
+            s.puck.y = TABLE_HEIGHT - s.puck.r
+            s.puck.vy = -s.puck.vy * 0.96
+            sounds.play('tick')
+            spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+          }
+        }
+
+        // --- Paddle Collisions (Player & AI) ---
+        const handlePaddleCollision = (paddle, isAI = false) => {
+          const dx = s.puck.x - paddle.x
+          const dy = s.puck.y - paddle.y
+          const dist = Math.hypot(dx, dy)
+          const minDist = s.puck.r + paddle.r
+
+          if (dist < minDist && dist > 0.001) {
+            const nx = dx / dist
+            const ny = dy / dist
+
+            // Resolve penetration overlap
+            s.puck.x = paddle.x + nx * minDist
+            s.puck.y = paddle.y + ny * minDist
+
+            // Relative velocity
+            const rvx = s.puck.vx - paddle.vx
+            const rvy = s.puck.vy - paddle.vy
+            const velAlongNormal = rvx * nx + rvy * ny
+
+            if (velAlongNormal < 0) {
+              const restitution = 1.15
+              const impulse = -(1 + restitution) * velAlongNormal
+              s.puck.vx += nx * impulse + paddle.vx * 0.38
+              s.puck.vy += ny * impulse + paddle.vy * 0.38
+
+              // Speed regulation
+              const speed = Math.hypot(s.puck.vx, s.puck.vy)
+              const maxSpeed = 16.5
+              if (speed > maxSpeed) {
+                s.puck.vx = (s.puck.vx / speed) * maxSpeed
+                s.puck.vy = (s.puck.vy / speed) * maxSpeed
+              } else if (speed < 4) {
+                s.puck.vx = (s.puck.vx / (speed || 1)) * 4
+                s.puck.vy = (s.puck.vy / (speed || 1)) * 4
+              }
+
+              sounds.play('press')
+              spawnSparks(s.puck.x, s.puck.y, isAI ? '#f43f5e' : '#10b981', 12)
+            }
+          }
+        }
+
+        handlePaddleCollision(s.player, false)
+        handlePaddleCollision(s.ai, true)
+      }
+
+      // Update particles
+      for (let i = s.particles.length - 1; i >= 0; i--) {
+        const p = s.particles[i]
+        p.x += p.vx
+        p.y += p.vy
+        p.life -= p.decay
+        if (p.life <= 0) {
+          s.particles.splice(i, 1)
+        }
+      }
+
+      // ── 2. Render Canvas Frame ──
+      ctx.clearRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT)
+
+      // Table Felt Background
+      const grad = ctx.createLinearGradient(0, 0, 0, TABLE_HEIGHT)
+      grad.addColorStop(0, '#090a0f')
+      grad.addColorStop(0.5, '#0d0f17')
+      grad.addColorStop(1, '#090a0f')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT)
+
+      // Court Subtle Grid Pattern
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)'
+      ctx.lineWidth = 1
+      for (let x = 30; x < TABLE_WIDTH; x += 30) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, TABLE_HEIGHT)
+        ctx.stroke()
+      }
+      for (let y = 30; y < TABLE_HEIGHT; y += 30) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(TABLE_WIDTH, y)
+        ctx.stroke()
+      }
+
+      // Center Divider Line
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)'
+      ctx.lineWidth = 2
+      ctx.setLineDash([8, 6])
+      ctx.beginPath()
+      ctx.moveTo(0, TABLE_HEIGHT / 2)
+      ctx.lineTo(TABLE_WIDTH, TABLE_HEIGHT / 2)
+      ctx.stroke()
+      ctx.setLineDash([])
+
+      // Center Face-Off Circle
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.2)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 50, 0, Math.PI * 2)
+      ctx.stroke()
+
+      // Center dot
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'
+      ctx.beginPath()
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 4, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Goal Lines & Arcs
+      // AI Goal (Top)
+      ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(TABLE_WIDTH / 2, 0, 60, 0, Math.PI)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(244, 63, 94, 0.12)'
+      ctx.fillRect(GOAL_LEFT, 0, GOAL_WIDTH, 8)
+
+      // Player Goal (Bottom)
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT, 60, Math.PI, Math.PI * 2)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.12)'
+      ctx.fillRect(GOAL_LEFT, TABLE_HEIGHT - 8, GOAL_WIDTH, 8)
+
+      // Table Boundary Outer Border
+      ctx.strokeStyle = '#1e293b'
+      ctx.lineWidth = 3
+      ctx.strokeRect(1.5, 1.5, TABLE_WIDTH - 3, TABLE_HEIGHT - 3)
+
+      // Draw Particles
+      for (const p of s.particles) {
+        ctx.fillStyle = p.color
+        ctx.globalAlpha = Math.max(0, p.life)
+        ctx.beginPath()
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1.0
+
+      // Draw Puck Motion Trail
+      for (let i = 0; i < s.trail.length; i++) {
+        const pt = s.trail[i]
+        const opacity = (1 - i / s.trail.length) * 0.25
+        ctx.fillStyle = `rgba(56, 189, 248, ${opacity})`
+        ctx.beginPath()
+        ctx.arc(pt.x, pt.y, s.puck.r * (0.8 - i * 0.05), 0, Math.PI * 2)
+        ctx.fill()
+      }
+
+      // Draw Puck
+      ctx.save()
+      ctx.shadowColor = '#38bdf8'
+      ctx.shadowBlur = 10
+      ctx.fillStyle = '#f8fafc'
+      ctx.beginPath()
+      ctx.arc(s.puck.x, s.puck.y, s.puck.r, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Puck inner ring
+      ctx.strokeStyle = '#0284c7'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(s.puck.x, s.puck.y, s.puck.r * 0.55, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+
+      // Draw AI Mallet (Crimson / Coral)
+      ctx.save()
+      ctx.shadowColor = '#f43f5e'
+      ctx.shadowBlur = 12
+      ctx.fillStyle = '#f43f5e'
+      ctx.beginPath()
+      ctx.arc(s.ai.x, s.ai.y, s.ai.r, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Inner handle
+      ctx.fillStyle = '#9f1239'
+      ctx.beginPath()
+      ctx.arc(s.ai.x, s.ai.y, s.ai.r * 0.55, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#fecdd3'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(s.ai.x, s.ai.y, s.ai.r * 0.3, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+
+      // Draw Player Mallet (Emerald / Cyan)
+      ctx.save()
+      ctx.shadowColor = '#10b981'
+      ctx.shadowBlur = 12
+      ctx.fillStyle = '#10b981'
+      ctx.beginPath()
+      ctx.arc(s.player.x, s.player.y, s.player.r, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Inner handle
+      ctx.fillStyle = '#065f46'
+      ctx.beginPath()
+      ctx.arc(s.player.x, s.player.y, s.player.r * 0.55, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = '#a7f3d0'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(s.player.x, s.player.y, s.player.r * 0.3, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+
+      animId = requestAnimationFrame(render)
+    }
+
+    render()
+
+    return () => {
+      isMounted = false
+      if (animId) {
+        cancelAnimationFrame(animId)
+      }
+    }
+  }, [isOpen, restartMatch, servePuck])
 
   if (!isOpen) return null
 
@@ -662,252 +582,170 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
-      {/* ── Name & Character Color Selection Modal ── */}
-      {!hasJoined ? (
-        <div className="relative z-20 w-full max-w-md rounded-3xl border border-gray-800 bg-[#0c0d12] p-6 text-white shadow-2xl">
-          <div className="text-center">
-            <div className="font-mono text-xs uppercase tracking-widest text-gray-400">
-              Multiplayer Arena
+      {/* Main Arcade Frame */}
+      <div className="relative z-10 flex max-h-[96vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#0c0d12] shadow-2xl">
+        {/* Top Control Header */}
+        <div className="flex items-center justify-between border-b border-gray-800/80 bg-[#12141c] px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div>
+              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
+                Cyber Air Hockey
+              </h2>
+              <p className="font-mono text-[10px] text-gray-400">
+                2D Real-Time Physics • First to {WINNING_SCORE}
+              </p>
             </div>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
-              CYBER SUMO 3D
-            </h2>
-            <p className="mt-2 text-xs text-gray-400">
-              Pick your callsign and avatar color. Saved permanently on this device.
-            </p>
           </div>
 
-          <form onSubmit={handleJoinArena} className="mt-6 space-y-4">
-            <div>
-              <label className="block font-mono text-xs text-gray-400 mb-1.5">
-                Callsign / Name:
-              </label>
-              <input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Your callsign..."
-                className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 font-mono text-sm text-white placeholder:text-gray-500 focus:border-white focus:outline-none"
-                maxLength={15}
-                autoFocus
-              />
-            </div>
-
-            {/* Avatar Color Picker */}
-            <div>
-              <label className="block font-mono text-xs text-gray-400 mb-2">
-                Choose Avatar Color:
-              </label>
-              <div className="flex items-center justify-center gap-3">
-                {CHARACTER_COLORS.map((c, idx) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      sounds.play('tick')
-                      setColorIdx(idx)
-                    }}
-                    style={{ backgroundColor: c.css }}
-                    className={`h-8 w-8 rounded-full transition-transform cursor-pointer ${
-                      colorIdx === idx
-                        ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-110'
-                        : 'opacity-70 hover:opacity-100'
-                    }`}
-                    title={c.name}
-                  />
-                ))}
-              </div>
-              <div className="mt-1.5 text-center font-mono text-[11px] text-gray-400">
-                Selected: <span style={{ color: selectedColor.css }} className="font-bold">{selectedColor.name}</span>
-              </div>
-            </div>
-
+          <div className="flex items-center gap-3">
             <button
-              type="submit"
-              className="w-full rounded-xl bg-white py-3 font-mono text-sm font-bold text-black transition-all hover:bg-gray-200 active:scale-95 cursor-pointer mt-2"
+              type="button"
+              onClick={() => restartMatch()}
+              className="rounded border border-gray-700 bg-gray-800/80 px-2 py-1 font-mono text-[11px] text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:text-white cursor-pointer"
+              title="Restart Match (R)"
             >
-              Enter Arena →
+              Reset
             </button>
-          </form>
-
-          <div className="mt-4 text-center">
             <button
               type="button"
               onClick={onClose}
-              className="font-mono text-xs text-gray-500 hover:text-gray-300"
+              className="rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-white cursor-pointer"
+              aria-label="Close Arcade"
             >
-              Cancel
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
             </button>
           </div>
         </div>
-      ) : (
-        /* ── Main Minimalist Black & White Frame with Colored Characters ── */
-        <div className="relative z-10 flex max-h-[94vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-gray-800 bg-[#0c0d12] shadow-2xl text-gray-200">
-          {/* Top Header Bar */}
-          <div className="flex flex-wrap items-center justify-between border-b border-gray-800 px-4 py-3 sm:px-5 sm:py-3.5 bg-[#101116] gap-2">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                style={{ backgroundColor: selectedColor.css }}
-                className="h-2.5 w-2.5 rounded-full animate-pulse shadow-sm"
-              />
-              <span className="font-mono text-xs sm:text-sm font-bold tracking-tight text-white">
-                CYBER SUMO <span className="text-gray-400 font-normal text-[10px] sm:text-xs">[3D Multiplayer]</span>
-              </span>
-            </div>
 
-            <div className="flex items-center gap-2 sm:gap-3 font-mono text-[11px] sm:text-xs">
-              <span className="flex items-center gap-1.5 text-gray-300 truncate max-w-[120px] sm:max-w-[160px]">
-                <span style={{ backgroundColor: selectedColor.css }} className="inline-block h-2 w-2 rounded-full" />
-                {playerName}
-              </span>
-              <span className="text-gray-600">|</span>
-              <span className="rounded-md border border-gray-800 bg-gray-900 px-1.5 py-0.5 text-gray-300 text-[10px] sm:text-xs">
-                ● {onlineCount} In Arena
-              </span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg p-1 text-gray-400 hover:text-white hover:bg-gray-800 cursor-pointer text-xs"
-              >
-                ✕ Close
-              </button>
-            </div>
+        {/* Scoreboard & Difficulty Ribbon */}
+        <div className="flex items-center justify-between border-b border-gray-800/60 bg-[#0e1017] px-4 py-2">
+          {/* Difficulty Switcher */}
+          <div className="flex items-center gap-1">
+            {DIFFICULTIES.map((d) => {
+              const active = difficulty === d.id
+              return (
+                <button
+                  key={d.id}
+                  type="button"
+                  onClick={() => restartMatch(d.id)}
+                  className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
+                    active
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 font-bold'
+                      : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40 border border-transparent'
+                  }`}
+                >
+                  {d.label}
+                </button>
+              )
+            })}
           </div>
 
-          {/* Game Layout: 3D Canvas (Left) + Live Chat & Scores (Right) */}
-          <div className="grid grid-cols-1 gap-4 p-3 sm:p-4 lg:grid-cols-12 overflow-y-auto">
-            {/* 3D WebGL Sumo Viewport */}
-            <div className="flex flex-col items-center justify-center lg:col-span-8">
-              <div className="relative w-full overflow-hidden rounded-2xl border border-gray-800 bg-black shadow-inner">
-                <div
-                  ref={mountRef}
-                  className="h-[250px] sm:h-[380px] w-full block cursor-grab active:cursor-grabbing"
-                />
-
-                {/* In-Game Objective Toast */}
-                <div className="absolute top-2 left-2 rounded-lg bg-black/80 px-2.5 py-1 sm:px-3 sm:py-1.5 font-mono text-[10px] sm:text-[11px] text-gray-300 backdrop-blur-md border border-gray-800 space-y-0.5">
-                  <div>
-                    <span style={{ color: selectedColor.css }} className="font-bold">
-                      You ({selectedColor.name} ▼)
-                    </span>{' '}
-                    | Move: <span className="text-white font-bold">WASD / Arrows</span>
-                  </div>
-                  <div className="text-[9.5px] sm:text-[10px] text-gray-400">
-                    Bump opponents off the platform into the void
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Touch D-Pad */}
-              <div className="mt-3 flex items-center justify-center gap-3 sm:hidden select-none">
-                <button
-                  type="button"
-                  onClick={() => handleTouchMove('left')}
-                  className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
-                >
-                  ←
-                </button>
-                <div className="flex flex-col gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleTouchMove('up')}
-                    className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTouchMove('down')}
-                    className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
-                  >
-                    ↓
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleTouchMove('right')}
-                  className="h-11 w-11 rounded-xl bg-gray-800 text-white active:bg-gray-600 font-bold text-lg shadow-md touch-manipulation"
-                >
-                  →
-                </button>
-              </div>
+          {/* Live Score Display */}
+          <div className="flex items-center gap-2 font-mono">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] text-gray-400">AI</span>
+              <span className="text-sm font-bold text-rose-400">{aiScore}</span>
             </div>
-
-            {/* Live In-Game Chat & Scoreboard */}
-            <div className="flex flex-col justify-between rounded-2xl border border-gray-800 bg-[#111218] p-3 sm:p-3.5 lg:col-span-4 h-auto min-h-[300px] lg:h-[380px]">
-              {/* Live Scoreboard */}
-              <div>
-                <div className="font-mono text-xs font-bold uppercase tracking-wider text-gray-400 pb-2 border-b border-gray-800">
-                  Leaderboard
-                </div>
-                <div className="mt-2 space-y-1 font-mono text-xs max-h-24 overflow-y-auto">
-                  {Object.entries(scores)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([name, sc], idx) => (
-                      <div key={name} className="flex items-center justify-between text-gray-300">
-                        <span className="truncate max-w-[130px]">
-                          {`${idx + 1}. `}
-                          {name} {name === playerName ? '(You)' : ''}
-                        </span>
-                        <span className="font-bold text-white">{sc} KOs</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-
-              {/* Live Room Chat Feed */}
-              <div className="mt-3 flex-1 overflow-y-auto border-t border-gray-800 pt-2 font-mono text-[11px] space-y-1.5 max-h-[160px]">
-                <div className="font-bold text-gray-500 uppercase text-[10px]">Arena Chat:</div>
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className="leading-snug">
-                    <span className={`font-bold ${msg.sender === 'System' ? 'text-gray-400 italic' : 'text-white'}`}>
-                      {msg.sender}:{' '}
-                    </span>
-                    <span className="text-gray-300">{msg.text}</span>
-                  </div>
-                ))}
-                <div ref={chatBottomRef} />
-              </div>
-
-              {/* Quick Monochrome Reaction Chips (Zero Emojis) */}
-              <div className="mt-2 flex flex-wrap gap-1 border-t border-gray-800 pt-2 font-mono text-[10px]">
-                {['BOING!', 'Coffee Boost', 'Yawa nahagbong ko!', 'GGs!'].map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => handleQuickChat(chip)}
-                    className="rounded border border-gray-700 bg-gray-900 px-2 py-0.5 text-gray-300 hover:text-white hover:border-gray-500 cursor-pointer"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              </div>
-
-              {/* In-Game Chat Input */}
-              <form onSubmit={handleSendChat} className="mt-2 flex items-center gap-1.5">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Type a message to all visitors..."
-                  className="flex-1 rounded-lg border border-gray-700 bg-gray-900 px-2.5 py-1.5 font-mono text-xs text-white placeholder:text-gray-500 focus:border-white focus:outline-none"
-                  maxLength={45}
-                />
-                <button
-                  type="submit"
-                  className="rounded-lg bg-white px-3 py-1.5 font-mono text-xs font-semibold text-black hover:bg-gray-200 active:scale-95 cursor-pointer"
-                >
-                  Send
-                </button>
-              </form>
+            <span className="text-gray-600">:</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-bold text-emerald-400">{playerScore}</span>
+              <span className="text-[10px] text-gray-400">YOU</span>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Interactive Canvas Area */}
+        <div className="relative flex flex-1 items-center justify-center p-3 sm:p-4 bg-[#08090d]">
+          <canvas
+            ref={canvasRef}
+            width={TABLE_WIDTH}
+            height={TABLE_HEIGHT}
+            onMouseMove={(e) => updatePlayerPointer(e.clientX, e.clientY)}
+            onTouchMove={(e) => {
+              if (e.touches[0]) {
+                updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
+              }
+            }}
+            onTouchStart={(e) => {
+              if (e.touches[0]) {
+                updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
+              }
+            }}
+            className="w-full max-w-[360px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none"
+          />
+
+          {/* Scored Point Toast Banner */}
+          {scoreBanner && gameState === 'scored' && (
+            <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/40 bg-black/90 px-4 py-3 text-center shadow-2xl backdrop-blur-md">
+              <div className="font-mono text-sm font-black tracking-widest text-emerald-400">
+                {scoreBanner}
+              </div>
+              <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                Next serve in progress...
+              </div>
+            </div>
+          )}
+
+          {/* Game Over / Post-Match Overlay */}
+          {gameState === 'gameover' && (
+            <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-700 bg-[#0f111a]/95 p-6 text-center shadow-2xl backdrop-blur-xl">
+              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-400">
+                Match Finished
+              </div>
+              <h3
+                className={`mt-1 font-mono text-2xl font-black tracking-tight ${
+                  winner === 'player' ? 'text-emerald-400' : 'text-rose-400'
+                }`}
+              >
+                {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
+              </h3>
+              <div className="my-3 font-mono text-lg font-bold text-white">
+                <span className="text-emerald-400">{playerScore}</span>
+                <span className="text-gray-500"> - </span>
+                <span className="text-rose-400">{aiScore}</span>
+              </div>
+              <p className="font-mono text-xs text-gray-400 mb-5">
+                {winner === 'player'
+                  ? 'Impressive reflexes! You conquered the arena.'
+                  : 'The AI took the match. Practice makes perfect!'}
+              </p>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => restartMatch()}
+                  className="w-full rounded-xl bg-emerald-500 py-2.5 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer"
+                >
+                  Play Again
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full rounded-xl border border-gray-700 py-2 font-mono text-xs text-gray-300 hover:bg-gray-800 cursor-pointer"
+                >
+                  Exit to Portfolio
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tactile Controls Hint Footer */}
+        <div className="flex items-center justify-between border-t border-gray-800/80 bg-[#0e1017] px-4 py-2 font-mono text-[10px] text-gray-400">
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-500">●</span>
+            <span>Controls: Mouse glide • Touch drag • WASD keys</span>
+          </div>
+          <span className="hidden sm:inline text-gray-600">Press R to restart</span>
+        </div>
+      </div>
     </div>
   )
 }
