@@ -7,7 +7,6 @@ import ContactSection from './components/ContactSection'
 import CyberArcadeModal from './components/CyberArcadeModal'
 import ExperienceTimeline from './components/ExperienceTimeline'
 import GithubActivityCard from './components/GithubActivityCard'
-import GlobalAvailabilityRadar from './components/GlobalAvailabilityRadar'
 import HeaderNav from './components/HeaderNav'
 import Hero from './components/Hero'
 import InteractiveHeroCanvas from './components/InteractiveHeroCanvas'
@@ -188,8 +187,6 @@ export default function App() {
         <TestimonialsSection />
         {/* Real-time GitHub Public Contributions Matrix */}
         <GithubActivityCard />
-        {/* Global Availability & Timezone Overlap Radar */}
-        <GlobalAvailabilityRadar />
         <ContactSection />
       </main>
 
