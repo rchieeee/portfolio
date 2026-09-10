@@ -1,5 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import { sounds } from '../utils/audio'
+import {
+  getStoredPlayerName,
+  savePlayerName,
+  getStoredPlayerWins,
+  incrementPlayerWins,
+  getCombinedLeaderboard,
+} from '../utils/leaderboardService'
 
 const WINNING_SCORE = 5
 const TABLE_WIDTH = 420
@@ -9,16 +16,6 @@ const PUCK_RADIUS = 11
 const GOAL_WIDTH = 150
 const GOAL_LEFT = (TABLE_WIDTH - GOAL_WIDTH) / 2
 const GOAL_RIGHT = GOAL_LEFT + GOAL_WIDTH
-
-const LOCAL_STORAGE_PLAYER_KEY = 'archie_arcade_player_name'
-const LOCAL_STORAGE_WINS_KEY = 'archie_arcade_player_wins'
-
-const INITIAL_LEADERBOARD = [
-  { id: 'arch_creator', name: 'Archie (Creator)', wins: 12, diff: 'Pro' },
-  { id: 'kaban_dev', name: 'KabanDev', wins: 8, diff: 'Balanced' },
-  { id: 'byte_striker', name: 'ByteStriker', wins: 4, diff: 'Balanced' },
-  { id: 'guest_88', name: 'Guest_88', wins: 2, diff: 'Casual' },
-]
 
 const DIFFICULTIES = [
   {
@@ -49,25 +46,12 @@ const DIFFICULTIES = [
 
 export default function CyberArcadeModal({ isOpen, onClose }) {
   const canvasRef = useRef(null)
+  const nameInputRef = useRef(null)
 
   // Player and Leaderboard State
-  const [playerName, setPlayerName] = useState(() => {
-    try {
-      return localStorage.getItem(LOCAL_STORAGE_PLAYER_KEY) || 'Visitor'
-    } catch {
-      return 'Visitor'
-    }
-  })
-
-  const [playerWins, setPlayerWins] = useState(() => {
-    try {
-      const saved = localStorage.getItem(LOCAL_STORAGE_WINS_KEY)
-      const parsed = parseInt(saved, 10)
-      return !isNaN(parsed) && parsed >= 0 ? parsed : 0
-    } catch {
-      return 0
-    }
-  })
+  const [playerName, setPlayerName] = useState(() => getStoredPlayerName())
+  const [playerWins, setPlayerWins] = useState(() => getStoredPlayerWins())
+  const [nameError, setNameError] = useState(false)
 
   const [difficulty, setDifficulty] = useState('balanced')
   const [playerScore, setPlayerScore] = useState(0)
@@ -82,12 +66,18 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     difficultyRef.current = difficulty
   }, [difficulty])
 
+  const isNameValid = playerName.trim().length >= 2
+
   // Reset to pre-game lobby whenever modal is opened
   useEffect(() => {
     if (isOpen) {
       setGameState('lobby')
       setWinner(null)
       setScoreBanner(null)
+      setNameError(false)
+      if (!getStoredPlayerName()) {
+        setTimeout(() => nameInputRef.current?.focus(), 80)
+      }
     }
   }, [isOpen])
 
@@ -155,6 +145,18 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     sounds.play('chime')
   }, [])
 
+  // Handle start button click with mandatory name validation
+  const handleStartMatchClick = useCallback(() => {
+    if (!playerName.trim() || playerName.trim().length < 2) {
+      setNameError(true)
+      sounds.play('droplet')
+      nameInputRef.current?.focus()
+      return
+    }
+    setNameError(false)
+    startMatch()
+  }, [playerName, startMatch])
+
   // Serve puck after a goal is scored
   const servePuck = useCallback((servedTo) => {
     const s = sim.current
@@ -207,26 +209,18 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
   // Record win against Archie AI in state and local storage
   const recordWin = useCallback(() => {
-    setPlayerWins((prev) => {
-      const next = prev + 1
-      try {
-        localStorage.setItem(LOCAL_STORAGE_WINS_KEY, next.toString())
-      } catch {
-        // ignore storage errors
-      }
-      return next
-    })
+    const newWins = incrementPlayerWins()
+    setPlayerWins(newWins)
   }, [])
 
   // Handle player name edit
   const handleNameChange = (e) => {
     const val = e.target.value.slice(0, 18)
     setPlayerName(val)
-    try {
-      localStorage.setItem(LOCAL_STORAGE_PLAYER_KEY, val)
-    } catch {
-      // ignore storage errors
+    if (val.trim().length >= 2) {
+      setNameError(false)
     }
+    savePlayerName(val)
   }
 
   // Keyboard controls during match
@@ -652,19 +646,18 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
   }, [isOpen, gameState, recordWin, servePuck])
 
-  if (!isOpen) return null
-
   // Compute live sorted leaderboard
-  const sortedLeaderboard = [
-    ...INITIAL_LEADERBOARD,
-    {
-      id: 'current_visitor',
-      name: playerName.trim() || 'Visitor',
-      wins: playerWins,
-      diff: DIFFICULTIES.find((d) => d.id === difficulty)?.label || 'Balanced',
-      isCurrent: true,
-    },
-  ].sort((a, b) => b.wins - a.wins)
+  const currentDiffLabel = DIFFICULTIES.find((d) => d.id === difficulty)?.label || 'Balanced'
+  const sortedLeaderboard = useMemo(() => {
+    return getCombinedLeaderboard(playerName, playerWins, currentDiffLabel)
+  }, [playerName, playerWins, currentDiffLabel])
+
+  // Current visitor rank and gap to next rank
+  const currentRank = sortedLeaderboard.findIndex((e) => e.isCurrent) + 1
+  const prevRankPlayer = currentRank > 1 ? sortedLeaderboard[currentRank - 2] : null
+  const winsToClimb = prevRankPlayer ? Math.max(1, prevRankPlayer.wins - playerWins + 1) : 0
+
+  if (!isOpen) return null
 
   return (
     <div
@@ -744,38 +737,60 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
                     Pre-Match Lobby
                   </span>
-                  <span className="font-mono text-[10px] text-gray-500">
-                    Your Wins: {playerWins}
+                  <span className="font-mono text-[10px] text-gray-400">
+                    Your Record: <strong className="text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
                   </span>
                 </div>
                 <h3 className="mt-1 font-mono text-base font-bold text-white">
                   Ready to face Archie AI?
                 </h3>
                 <p className="mt-1 font-mono text-xs text-gray-400 leading-relaxed">
-                  Real-time 2D air hockey physics with elastic rebounds. Score 5 points to earn your spot on the leaderboard.
+                  Enter your name to register your challenger slot. Win matches to climb to Rank #1 on the leaderboard!
                 </p>
               </div>
 
-              {/* Player Name / Handle Input */}
+              {/* Player Name / Handle Input (Mandatory) */}
               <div className="space-y-1.5">
-                <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide">
-                  Player Name / Call-Sign
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide flex items-center gap-1.5">
+                    <span>Player Name / Call-Sign</span>
+                    <span className="text-emerald-400 text-[10px] font-normal">• Required</span>
+                  </label>
+                  {nameError && (
+                    <span className="font-mono text-[10px] font-bold text-rose-400">
+                      Enter at least 2 letters
+                    </span>
+                  )}
+                </div>
                 <div className="relative">
                   <input
+                    ref={nameInputRef}
                     type="text"
                     value={playerName}
                     onChange={handleNameChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleStartMatchClick()
+                      }
+                    }}
                     maxLength={18}
-                    placeholder="Enter your name..."
-                    className="w-full rounded-xl border border-gray-700 bg-[#12141e] px-3.5 py-2.5 font-mono text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    placeholder="Enter your name to unlock the arena..."
+                    className={`w-full rounded-xl border bg-[#12141e] px-3.5 py-2.5 font-mono text-xs text-white placeholder-gray-500 transition-colors focus:outline-none focus:ring-1 ${
+                      nameError
+                        ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500 bg-rose-950/15'
+                        : isNameValid
+                        ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-emerald-500'
+                        : 'border-gray-700 focus:border-emerald-500 focus:ring-emerald-500'
+                    }`}
                   />
                   <span className="absolute right-3 top-2.5 font-mono text-[10px] text-gray-500">
                     {playerName.length}/18
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-gray-500">
-                  Your wins against Archie AI will be recorded under this name.
+                <p className="font-mono text-[10px] text-gray-400">
+                  {isNameValid
+                    ? `Registered as "${playerName.trim()}". Wins will be added to your leaderboard rank.`
+                    : 'Visitors must input their name first before playing so scores are tracked.'}
                 </p>
               </div>
 
@@ -826,10 +841,16 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             <div className="space-y-2 pt-2">
               <button
                 type="button"
-                onClick={() => startMatch()}
-                className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+                onClick={handleStartMatchClick}
+                className={`w-full rounded-xl py-3 font-mono text-xs font-bold transition-all cursor-pointer ${
+                  isNameValid
+                    ? 'bg-emerald-500 text-gray-950 hover:bg-emerald-400 active:scale-98 shadow-lg shadow-emerald-500/20'
+                    : 'bg-gray-800/90 text-gray-400 hover:bg-gray-800 hover:text-gray-200 border border-gray-700'
+                }`}
               >
-                Start Match vs Archie AI
+                {isNameValid
+                  ? `Start Match as ${playerName.trim()} vs Archie AI`
+                  : 'Enter Your Name Above to Play'}
               </button>
 
               <button
@@ -864,8 +885,26 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   Wins Against Archie AI
                 </h3>
                 <p className="mt-0.5 font-mono text-xs text-gray-400">
-                  Hall of fame standings for arena challengers.
+                  Hall of fame rankings for visitors challenging Archie AI.
                 </p>
+              </div>
+
+              {/* Competitive Rank Status Callout */}
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 font-mono text-xs text-emerald-300">
+                {currentRank === 1 ? (
+                  <div>
+                    <strong>Rank #1!</strong> You hold the top spot against Archie AI. Defend your throne!
+                  </div>
+                ) : (
+                  <div>
+                    You are currently <strong>Rank #{currentRank}</strong> ({playerWins} win{playerWins === 1 ? '' : 's'}).
+                    {prevRankPlayer && (
+                      <span className="text-emerald-200 block mt-0.5 text-[11px]">
+                        Win {winsToClimb} more match{winsToClimb === 1 ? '' : 'es'} to surpass {prevRankPlayer.name} and reach <strong>Rank #{currentRank - 1}</strong>!
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Leaderboard Table */}
@@ -874,8 +913,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   <thead>
                     <tr className="border-b border-gray-800 bg-[#141622] text-[10px] uppercase tracking-wider text-gray-400">
                       <th className="py-2.5 pl-3 pr-2 font-bold">#</th>
-                      <th className="py-2.5 px-2 font-bold">Name</th>
-                      <th className="py-2.5 px-2 text-right font-bold">Wins (vs Archie AI)</th>
+                      <th className="py-2.5 px-2 font-bold">Player</th>
+                      <th className="py-2.5 px-2 text-right font-bold">Wins (vs AI)</th>
                       <th className="py-2.5 pr-3 pl-2 text-right font-bold">Tier</th>
                     </tr>
                   </thead>
@@ -885,7 +924,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                         key={entry.id}
                         className={`transition-colors ${
                           entry.isCurrent
-                            ? 'bg-emerald-500/10 font-bold text-emerald-300'
+                            ? 'bg-emerald-500/15 font-bold text-emerald-300'
                             : 'text-gray-300 hover:bg-gray-800/40'
                         }`}
                       >
@@ -894,7 +933,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                         </td>
                         <td className="py-2.5 px-2">
                           <div className="flex items-center gap-1.5">
-                            <span className="truncate max-w-[125px]">{entry.name}</span>
+                            <span className="truncate max-w-[125px]">
+                              {entry.name || 'Anonymous'}
+                            </span>
                             {entry.isCurrent && (
                               <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.5 text-[9px] font-bold text-emerald-400">
                                 YOU
@@ -915,7 +956,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
               </div>
 
               <div className="rounded-lg border border-gray-800/60 bg-[#10121a] px-3 py-2 font-mono text-[10px] text-gray-400">
-                Beat Archie AI to increment your win tally and climb the leaderboard standings.
+                To reach Rank #1, you must accumulate more total wins against Archie AI than anyone else.
               </div>
             </div>
 
@@ -923,10 +964,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             <div className="space-y-2 pt-2">
               <button
                 type="button"
-                onClick={() => startMatch()}
+                onClick={handleStartMatchClick}
                 className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
               >
-                Play Match Now
+                {isNameValid ? `Play Match as ${playerName.trim()}` : 'Enter Name & Play Match'}
               </button>
 
               <button
@@ -1038,7 +1079,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
                   {winner === 'player' ? (
                     <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono text-xs text-emerald-300">
-                      +1 Win recorded against Archie AI! Total Wins: <strong>{playerWins}</strong>
+                      +1 Win recorded against Archie AI! You now have <strong>{playerWins}</strong> win{playerWins === 1 ? '' : 's'} (Rank #{currentRank})
                     </div>
                   ) : (
                     <p className="font-mono text-xs text-gray-400 mb-4">
