@@ -199,6 +199,10 @@ export default function ClientSideOptimizerDemo() {
     }
   }, [])
 
+  const downloadFileName = originalImage?.name
+    ? `${originalImage.name.replace(/\.[^/.]+$/, '')}_optimized.webp`
+    : 'optimized_field_capture.webp'
+
   return (
     <section id="compression-sandbox" className="py-14 sm:py-20">
       <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
@@ -258,6 +262,18 @@ export default function ClientSideOptimizerDemo() {
           >
             <span>Upload Custom Photo</span>
           </button>
+
+          {compressedImage && stats && (
+            <a
+              href={compressedImage.url}
+              download={downloadFileName}
+              onClick={() => sounds.play('success')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors"
+              title="Download optimized WebP file directly to your computer"
+            >
+              <span>Download WebP ({stats.compressedKb} KB) ↓</span>
+            </a>
+          )}
 
           {stats && (
             <div className="ml-auto font-mono text-xs text-gray-500 dark:text-gray-400">
@@ -357,9 +373,22 @@ export default function ClientSideOptimizerDemo() {
                 </button>
               </div>
 
-              <span className="hidden sm:inline text-gray-500">
-                {activeTab === 'compressed' ? 'Rendered via HTML5 Canvas (0.62 WebP)' : 'Source RAW Payload'}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline text-gray-500">
+                  {activeTab === 'compressed' ? 'Rendered via HTML5 Canvas (0.62 WebP)' : 'Source RAW Payload'}
+                </span>
+                {compressedImage && (
+                  <a
+                    href={compressedImage.url}
+                    download={downloadFileName}
+                    onClick={() => sounds.play('success')}
+                    className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors cursor-pointer"
+                    title="Download compressed WebP"
+                  >
+                    <span>Download Output ↓</span>
+                  </a>
+                )}
+              </div>
             </div>
 
             {/* Display Canvas Frame */}
