@@ -4,13 +4,8 @@ const LOCAL_STORAGE_PLAYER_KEY = 'archie_arcade_player_name'
 const LOCAL_STORAGE_WINS_KEY = 'archie_arcade_player_wins'
 const LOCAL_STORAGE_CACHE_KEY = 'archie_arcade_cached_leaderboard'
 
-// Base hall of fame contenders
-export const BASE_LEADERBOARD = [
-  { id: 'arch_creator', name: 'Archie (Creator)', wins: 12, diff: 'Pro' },
-  { id: 'kaban_dev', name: 'KabanDev', wins: 8, diff: 'Balanced' },
-  { id: 'byte_striker', name: 'ByteStriker', wins: 4, diff: 'Balanced' },
-  { id: 'guest_88', name: 'Guest_88', wins: 2, diff: 'Casual' },
-]
+// Base contenders (clean, no dummy players)
+export const BASE_LEADERBOARD = []
 
 // Firebase Realtime Database URL
 // Configured via .env or direct URL fallback
@@ -147,7 +142,7 @@ export async function syncWinToFirebase(playerName, newWins, difficulty = 'Balan
 }
 
 /**
- * Get sorted leaderboard combining base records and current visitor
+ * Get sorted leaderboard combining real remote records and current visitor
  */
 export function getCombinedLeaderboard(
   currentPlayerName,
@@ -156,23 +151,29 @@ export function getCombinedLeaderboard(
   remoteList = null
 ) {
   const cleanName = currentPlayerName?.trim() || ''
+  const list = (remoteList && remoteList.length > 0) ? [...remoteList] : []
 
-  // Use remote list if available, otherwise base leaderboard
-  const baseEntries = (remoteList && remoteList.length > 0) ? remoteList : BASE_LEADERBOARD
+  if (cleanName) {
+    const existingIdx = list.findIndex(
+      (item) => item.name.toLowerCase() === cleanName.toLowerCase()
+    )
 
-  const visitorEntry = {
-    id: 'current_visitor',
-    name: cleanName || 'You',
-    wins: currentPlayerWins || 0,
-    diff: difficulty,
-    isCurrent: true,
+    if (existingIdx >= 0) {
+      list[existingIdx] = {
+        ...list[existingIdx],
+        wins: Math.max(list[existingIdx].wins, currentPlayerWins || 0),
+        isCurrent: true,
+      }
+    } else {
+      list.push({
+        id: 'current_visitor',
+        name: cleanName,
+        wins: currentPlayerWins || 0,
+        diff: difficulty,
+        isCurrent: true,
+      })
+    }
   }
 
-  // Filter out duplicate if remote or base already has this player
-  const filtered = baseEntries.filter(
-    (item) => item.name.toLowerCase() !== cleanName.toLowerCase()
-  )
-
-  const combined = [...filtered, visitorEntry]
-  return combined.sort((a, b) => b.wins - a.wins)
+  return list.sort((a, b) => b.wins - a.wins)
 }

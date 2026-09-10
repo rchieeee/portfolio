@@ -8,15 +8,14 @@ import {
   getCombinedLeaderboard,
   fetchRemoteLeaderboard,
   syncWinToFirebase,
-  FIREBASE_DB_URL,
 } from '../utils/leaderboardService'
 
 const WINNING_SCORE = 5
-const TABLE_WIDTH = 420
-const TABLE_HEIGHT = 600
-const PADDLE_RADIUS = 24
-const PUCK_RADIUS = 11
-const GOAL_WIDTH = 150
+const TABLE_WIDTH = 440
+const TABLE_HEIGHT = 620
+const PADDLE_RADIUS = 25
+const PUCK_RADIUS = 11.5
+const GOAL_WIDTH = 156
 const GOAL_LEFT = (TABLE_WIDTH - GOAL_WIDTH) / 2
 const GOAL_RIGHT = GOAL_LEFT + GOAL_WIDTH
 
@@ -24,32 +23,54 @@ const DIFFICULTIES = [
   {
     id: 'casual',
     label: 'Casual',
-    aiSpeed: 4.2,
+    aiSpeed: 4.4,
     aiReaction: 0.82,
     strikePower: 1.05,
-    desc: 'Relaxed pace & wider error tolerance for easy play.',
+    tag: 'Warm-Up',
+    desc: 'Relaxed speed & forgiving error margin. Great for casual fun.',
   },
   {
     id: 'balanced',
     label: 'Balanced',
-    aiSpeed: 6.2,
+    aiSpeed: 6.4,
     aiReaction: 0.93,
     strikePower: 1.18,
-    desc: 'Dynamic tracking, smart defense & tactical counter-strikes.',
+    tag: 'Standard',
+    desc: 'Tactical defense, smart rebounds & sharp angle counter-strikes.',
   },
   {
     id: 'pro',
     label: 'Pro',
-    aiSpeed: 8.4,
+    aiSpeed: 8.6,
     aiReaction: 0.98,
     strikePower: 1.28,
-    desc: 'Lightning reflexes, aggressive bounces & rapid pursuit.',
+    tag: 'Championship',
+    desc: 'Predictive bank-shots, fast tracking & aggressive attacks.',
   },
 ]
 
-export default function CyberArcadeModal({ isOpen, onClose }) {
+export default function CyberArcadeModal({ isOpen, onClose, theme }) {
   const canvasRef = useRef(null)
   const nameInputRef = useRef(null)
+
+  // Live dark/light mode detection with MutationObserver
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark')
+    }
+    return true
+  })
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const dark = document.documentElement.classList.contains('dark')
+      setIsDark(dark)
+    }
+    updateTheme()
+    const observer = new MutationObserver(updateTheme)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] })
+    return () => observer.disconnect()
+  }, [theme])
 
   // Player and Leaderboard State
   const [playerName, setPlayerName] = useState(() => getStoredPlayerName())
@@ -59,6 +80,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
   const [difficulty, setDifficulty] = useState('balanced')
   const [playerScore, setPlayerScore] = useState(0)
   const [aiScore, setAiScore] = useState(0)
+  const [rallyCount, setRallyCount] = useState(0)
   // Game states: 'lobby' | 'playing' | 'scored' | 'gameover' | 'leaderboard'
   const [gameState, setGameState] = useState('lobby')
   const [winner, setWinner] = useState(null) // 'player' | 'ai'
@@ -70,6 +92,13 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     difficultyRef.current = difficulty
   }, [difficulty])
 
+  const isDarkRef = useRef(isDark)
+  useEffect(() => {
+    isDarkRef.current = isDark
+  }, [isDark])
+
+  const isNameValid = playerName.trim().length >= 2
+
   // Fetch live global leaderboard when modal opens or state changes
   useEffect(() => {
     if (isOpen) {
@@ -78,8 +107,6 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       })
     }
   }, [isOpen, gameState])
-
-  const isNameValid = playerName.trim().length >= 2
 
   // Reset to pre-game lobby whenever modal is opened
   useEffect(() => {
@@ -94,31 +121,33 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
   }, [isOpen])
 
-  // Physics engine reference mutable state
+  // Physics engine mutable state
   const sim = useRef({
     puck: { x: TABLE_WIDTH / 2, y: TABLE_HEIGHT / 2, vx: 0, vy: 0, r: PUCK_RADIUS },
     player: {
       x: TABLE_WIDTH / 2,
-      y: TABLE_HEIGHT - 70,
+      y: TABLE_HEIGHT - 75,
       vx: 0,
       vy: 0,
       r: PADDLE_RADIUS,
       targetX: TABLE_WIDTH / 2,
-      targetY: TABLE_HEIGHT - 70,
+      targetY: TABLE_HEIGHT - 75,
     },
     ai: {
       x: TABLE_WIDTH / 2,
-      y: 70,
+      y: 75,
       vx: 0,
       vy: 0,
       r: PADDLE_RADIUS,
       targetX: TABLE_WIDTH / 2,
-      targetY: 70,
+      targetY: 75,
     },
     keys: { w: false, a: false, s: false, d: false, up: false, left: false, down: false, right: false },
     controlMode: 'mouse', // 'mouse' | 'touch' | 'keyboard'
     trail: [],
     particles: [],
+    shakeAmount: 0,
+    rally: 0,
     freezeTimer: 0,
     isOver: false,
   })
@@ -131,6 +160,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
     setPlayerScore(0)
     setAiScore(0)
+    setRallyCount(0)
     setWinner(null)
     setScoreBanner(null)
     setGameState('playing')
@@ -138,20 +168,22 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     const s = sim.current
     s.isOver = false
     s.freezeTimer = 0
+    s.rally = 0
+    s.shakeAmount = 0
     s.trail = []
     s.particles = []
     s.puck.x = TABLE_WIDTH / 2
     s.puck.y = TABLE_HEIGHT / 2
     s.puck.vx = (Math.random() - 0.5) * 4
-    s.puck.vy = Math.random() > 0.5 ? 4 : -4
+    s.puck.vy = Math.random() > 0.5 ? 4.5 : -4.5
     s.player.x = TABLE_WIDTH / 2
-    s.player.y = TABLE_HEIGHT - 70
+    s.player.y = TABLE_HEIGHT - 75
     s.player.targetX = TABLE_WIDTH / 2
-    s.player.targetY = TABLE_HEIGHT - 70
+    s.player.targetY = TABLE_HEIGHT - 75
     s.player.vx = 0
     s.player.vy = 0
     s.ai.x = TABLE_WIDTH / 2
-    s.ai.y = 70
+    s.ai.y = 75
     s.ai.vx = 0
     s.ai.vy = 0
 
@@ -176,13 +208,15 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     s.puck.x = TABLE_WIDTH / 2
     s.puck.y = TABLE_HEIGHT / 2
     s.puck.vx = (Math.random() - 0.5) * 3
-    s.puck.vy = servedTo === 'player' ? 4 : -4
+    s.puck.vy = servedTo === 'player' ? 4.5 : -4.5
     s.player.targetX = TABLE_WIDTH / 2
-    s.player.targetY = TABLE_HEIGHT - 70
+    s.player.targetY = TABLE_HEIGHT - 75
     s.ai.x = TABLE_WIDTH / 2
-    s.ai.y = 70
+    s.ai.y = 75
     s.ai.vx = 0
     s.ai.vy = 0
+    s.rally = 0
+    setRallyCount(0)
   }, [])
 
   // Spawn visual sparks
@@ -190,16 +224,16 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     const s = sim.current
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2
-      const speed = 1.5 + Math.random() * 4.5
+      const speed = 2.0 + Math.random() * 5.0
       s.particles.push({
         x,
         y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 1.0,
-        decay: 0.02 + Math.random() * 0.03,
+        decay: 0.025 + Math.random() * 0.03,
         color,
-        size: 2 + Math.random() * 2.5,
+        size: 2.2 + Math.random() * 2.8,
       })
     }
   }
@@ -217,7 +251,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
     sim.current.controlMode = 'mouse'
     sim.current.player.targetX = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, x))
-    sim.current.player.targetY = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, y))
+    sim.current.player.targetY = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 6, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, y))
   }
 
   // Record win against Archie AI in state, local storage, and Firebase
@@ -225,6 +259,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     const newWins = incrementPlayerWins()
     setPlayerWins(newWins)
     syncWinToFirebase(playerName, newWins, difficultyRef.current)
+    fetchRemoteLeaderboard().then((data) => {
+      if (data) setRemoteLeaderboard(data)
+    })
   }, [playerName])
 
   // Handle player name edit
@@ -270,7 +307,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
   }, [isOpen, gameState, startMatch])
 
-  // Canvas 60fps simulation loop
+  // Canvas 60fps simulation loop with theme awareness
   useEffect(() => {
     if (!isOpen || (gameState !== 'playing' && gameState !== 'scored' && gameState !== 'gameover')) {
       return
@@ -285,8 +322,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     const render = () => {
       if (!isMounted) return
       const s = sim.current
+      const currentDark = isDarkRef.current
 
-      // ── 1. Update Physics (if not frozen and not game over) ──
+      // ── 1. Update Physics ──
       if (s.freezeTimer > 0) {
         s.freezeTimer -= 1
         if (s.freezeTimer === 0 && !s.isOver) {
@@ -296,22 +334,22 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       } else if (!s.isOver) {
         // --- Player Movement ---
         if (s.controlMode === 'keyboard') {
-          const speed = 7.5
+          const speed = 7.8
           if (s.keys.left) s.player.x -= speed
           if (s.keys.right) s.player.x += speed
           if (s.keys.up) s.player.y -= speed
           if (s.keys.down) s.player.y += speed
 
           s.player.x = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, s.player.x))
-          s.player.y = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, s.player.y))
+          s.player.y = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 6, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, s.player.y))
           s.player.vx = (s.keys.right ? speed : 0) - (s.keys.left ? speed : 0)
           s.player.vy = (s.keys.down ? speed : 0) - (s.keys.up ? speed : 0)
         } else {
-          // Smooth cursor / touch glide
+          // Smooth glide
           const prevX = s.player.x
           const prevY = s.player.y
-          s.player.x += (s.player.targetX - s.player.x) * 0.45
-          s.player.y += (s.player.targetY - s.player.y) * 0.45
+          s.player.x += (s.player.targetX - s.player.x) * 0.46
+          s.player.y += (s.player.targetY - s.player.y) * 0.46
           s.player.vx = s.player.x - prevX
           s.player.vy = s.player.y - prevY
         }
@@ -322,10 +360,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         let aiTargetX = TABLE_WIDTH / 2
         let aiTargetY = 85
 
-        if (s.puck.y < TABLE_HEIGHT / 2 + 100) {
+        if (s.puck.y < TABLE_HEIGHT / 2 + 120) {
           aiTargetX = s.puck.x
-          if (s.puck.y < TABLE_HEIGHT / 2 - 20) {
-            aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(40, s.puck.y - 25))
+          if (s.puck.y < TABLE_HEIGHT / 2 - 15) {
+            aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(45, s.puck.y - 25))
           } else {
             aiTargetY = 95
           }
@@ -346,9 +384,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           s.ai.y += (dy / dist) * step
         }
 
-        // Clamp AI bounds
         s.ai.x = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, s.ai.x))
-        s.ai.y = Math.max(PADDLE_RADIUS + 4, Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 5, s.ai.y))
+        s.ai.y = Math.max(PADDLE_RADIUS + 4, Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 6, s.ai.y))
         s.ai.vx = s.ai.x - prevAiX
         s.ai.vy = s.ai.y - prevAiY
 
@@ -360,22 +397,20 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
         // Trail recording
         s.trail.unshift({ x: s.puck.x, y: s.puck.y })
-        if (s.trail.length > 8) s.trail.pop()
+        if (s.trail.length > 9) s.trail.pop()
 
         // --- Wall Collisions ---
-        // Left wall
         if (s.puck.x - s.puck.r <= 0) {
           s.puck.x = s.puck.r
           s.puck.vx = -s.puck.vx * 0.96
           sounds.play('tick')
-          spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
         }
-        // Right wall
         if (s.puck.x + s.puck.r >= TABLE_WIDTH) {
           s.puck.x = TABLE_WIDTH - s.puck.r
           s.puck.vx = -s.puck.vx * 0.96
           sounds.play('tick')
-          spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
         }
 
         // Top wall (AI Goal zone)
@@ -384,7 +419,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           if (isTopGoalX) {
             // GOAL FOR PLAYER!
             sounds.play('chime')
-            spawnSparks(s.puck.x, 20, '#10b981', 32)
+            s.shakeAmount = 7
+            spawnSparks(s.puck.x, 20, '#10b981', 36)
             setPlayerScore((prev) => {
               const next = prev + 1
               if (next >= WINNING_SCORE) {
@@ -394,7 +430,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 recordWin()
               } else {
                 setGameState('scored')
-                setScoreBanner('POINT FOR YOU!')
+                setScoreBanner('GOAL! POINT FOR YOU!')
                 s.freezeTimer = 65
                 servePuck('ai')
               }
@@ -404,7 +440,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             s.puck.y = s.puck.r
             s.puck.vy = -s.puck.vy * 0.96
             sounds.play('tick')
-            spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+            spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
           }
         }
 
@@ -414,7 +450,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           if (isBottomGoalX) {
             // GOAL FOR AI!
             sounds.play('droplet')
-            spawnSparks(s.puck.x, TABLE_HEIGHT - 20, '#f43f5e', 32)
+            s.shakeAmount = 7
+            spawnSparks(s.puck.x, TABLE_HEIGHT - 20, '#f43f5e', 36)
             setAiScore((prev) => {
               const next = prev + 1
               if (next >= WINNING_SCORE) {
@@ -433,11 +470,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             s.puck.y = TABLE_HEIGHT - s.puck.r
             s.puck.vy = -s.puck.vy * 0.96
             sounds.play('tick')
-            spawnSparks(s.puck.x, s.puck.y, '#38bdf8', 6)
+            spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
           }
         }
 
-        // --- Paddle Collisions (Player & AI) ---
+        // --- Paddle Collisions ---
         const handlePaddleCollision = (paddle, isAI = false) => {
           const dx = s.puck.x - paddle.x
           const dy = s.puck.y - paddle.y
@@ -448,33 +485,39 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             const nx = dx / dist
             const ny = dy / dist
 
-            // Resolve overlap
             s.puck.x = paddle.x + nx * minDist
             s.puck.y = paddle.y + ny * minDist
 
-            // Relative velocity
             const rvx = s.puck.vx - paddle.vx
             const rvy = s.puck.vy - paddle.vy
             const velAlongNormal = rvx * nx + rvy * ny
 
             if (velAlongNormal < 0) {
-              const restitution = 1.15
+              const restitution = 1.16
               const impulse = -(1 + restitution) * velAlongNormal
-              s.puck.vx += nx * impulse + paddle.vx * 0.38
-              s.puck.vy += ny * impulse + paddle.vy * 0.38
+              s.puck.vx += nx * impulse + paddle.vx * 0.4
+              s.puck.vy += ny * impulse + paddle.vy * 0.4
 
               const speed = Math.hypot(s.puck.vx, s.puck.vy)
-              const maxSpeed = 16.5
+              const maxSpeed = 17.5
               if (speed > maxSpeed) {
                 s.puck.vx = (s.puck.vx / speed) * maxSpeed
                 s.puck.vy = (s.puck.vy / speed) * maxSpeed
-              } else if (speed < 4) {
-                s.puck.vx = (s.puck.vx / (speed || 1)) * 4
-                s.puck.vy = (s.puck.vy / (speed || 1)) * 4
+              } else if (speed < 4.2) {
+                s.puck.vx = (s.puck.vx / (speed || 1)) * 4.2
+                s.puck.vy = (s.puck.vy / (speed || 1)) * 4.2
               }
 
+              // Tactile impact shake on hard hits
+              if (speed > 10) {
+                s.shakeAmount = 4
+              }
+
+              s.rally += 1
+              setRallyCount(s.rally)
+
               sounds.play('press')
-              spawnSparks(s.puck.x, s.puck.y, isAI ? '#f43f5e' : '#10b981', 12)
+              spawnSparks(s.puck.x, s.puck.y, isAI ? '#f43f5e' : '#10b981', 14)
             }
           }
         }
@@ -495,26 +538,45 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       }
 
       // ── 2. Render Canvas Frame ──
+      ctx.save()
+
+      // Handle screen shake
+      if (s.shakeAmount > 0) {
+        const sx = (Math.random() - 0.5) * s.shakeAmount
+        const sy = (Math.random() - 0.5) * s.shakeAmount
+        ctx.translate(sx, sy)
+        s.shakeAmount *= 0.82
+        if (s.shakeAmount < 0.3) s.shakeAmount = 0
+      }
+
       ctx.clearRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT)
 
-      // Table Felt Background
-      const grad = ctx.createLinearGradient(0, 0, 0, TABLE_HEIGHT)
-      grad.addColorStop(0, '#090a0f')
-      grad.addColorStop(0.5, '#0d0f17')
-      grad.addColorStop(1, '#090a0f')
-      ctx.fillStyle = grad
+      // Table Surface Background
+      if (currentDark) {
+        const grad = ctx.createLinearGradient(0, 0, 0, TABLE_HEIGHT)
+        grad.addColorStop(0, '#090a0f')
+        grad.addColorStop(0.5, '#0e111a')
+        grad.addColorStop(1, '#090a0f')
+        ctx.fillStyle = grad
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, TABLE_HEIGHT)
+        grad.addColorStop(0, '#f8fafc')
+        grad.addColorStop(0.5, '#edf2f7')
+        grad.addColorStop(1, '#f8fafc')
+        ctx.fillStyle = grad
+      }
       ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT)
 
-      // Court Subtle Grid Pattern
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)'
+      // Subtle Grid Markings
+      ctx.strokeStyle = currentDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)'
       ctx.lineWidth = 1
-      for (let x = 30; x < TABLE_WIDTH; x += 30) {
+      for (let x = 32; x < TABLE_WIDTH; x += 32) {
         ctx.beginPath()
         ctx.moveTo(x, 0)
         ctx.lineTo(x, TABLE_HEIGHT)
         ctx.stroke()
       }
-      for (let y = 30; y < TABLE_HEIGHT; y += 30) {
+      for (let y = 32; y < TABLE_HEIGHT; y += 32) {
         ctx.beginPath()
         ctx.moveTo(0, y)
         ctx.lineTo(TABLE_WIDTH, y)
@@ -522,7 +584,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       }
 
       // Center Divider Line
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.25)'
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(5, 150, 105, 0.45)'
       ctx.lineWidth = 2
       ctx.setLineDash([8, 6])
       ctx.beginPath()
@@ -532,39 +594,39 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       ctx.setLineDash([])
 
       // Center Face-Off Circle
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.2)'
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.28)' : 'rgba(5, 150, 105, 0.35)'
       ctx.lineWidth = 1.5
       ctx.beginPath()
-      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 50, 0, Math.PI * 2)
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 54, 0, Math.PI * 2)
       ctx.stroke()
 
       // Center dot
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.4)'
+      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.5)' : 'rgba(5, 150, 105, 0.6)'
       ctx.beginPath()
-      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 4, 0, Math.PI * 2)
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 4.5, 0, Math.PI * 2)
       ctx.fill()
 
       // Goal Lines & Arcs
       // AI Goal (Top)
-      ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)'
-      ctx.lineWidth = 2
+      ctx.strokeStyle = currentDark ? 'rgba(244, 63, 94, 0.45)' : 'rgba(225, 29, 72, 0.5)'
+      ctx.lineWidth = 2.5
       ctx.beginPath()
-      ctx.arc(TABLE_WIDTH / 2, 0, 60, 0, Math.PI)
+      ctx.arc(TABLE_WIDTH / 2, 0, 64, 0, Math.PI)
       ctx.stroke()
-      ctx.fillStyle = 'rgba(244, 63, 94, 0.12)'
-      ctx.fillRect(GOAL_LEFT, 0, GOAL_WIDTH, 8)
+      ctx.fillStyle = currentDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(225, 29, 72, 0.12)'
+      ctx.fillRect(GOAL_LEFT, 0, GOAL_WIDTH, 9)
 
       // Player Goal (Bottom)
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)'
-      ctx.lineWidth = 2
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.45)' : 'rgba(5, 150, 105, 0.5)'
+      ctx.lineWidth = 2.5
       ctx.beginPath()
-      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT, 60, Math.PI, Math.PI * 2)
+      ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT, 64, Math.PI, Math.PI * 2)
       ctx.stroke()
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.12)'
-      ctx.fillRect(GOAL_LEFT, TABLE_HEIGHT - 8, GOAL_WIDTH, 8)
+      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 150, 105, 0.12)'
+      ctx.fillRect(GOAL_LEFT, TABLE_HEIGHT - 9, GOAL_WIDTH, 9)
 
       // Table Boundary Outer Border
-      ctx.strokeStyle = '#1e293b'
+      ctx.strokeStyle = currentDark ? '#1e293b' : '#cbd5e1'
       ctx.lineWidth = 3
       ctx.strokeRect(1.5, 1.5, TABLE_WIDTH - 3, TABLE_HEIGHT - 3)
 
@@ -581,24 +643,26 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       // Draw Puck Motion Trail
       for (let i = 0; i < s.trail.length; i++) {
         const pt = s.trail[i]
-        const opacity = (1 - i / s.trail.length) * 0.25
-        ctx.fillStyle = `rgba(56, 189, 248, ${opacity})`
+        const opacity = (1 - i / s.trail.length) * 0.28
+        ctx.fillStyle = currentDark
+          ? `rgba(56, 189, 248, ${opacity})`
+          : `rgba(2, 132, 199, ${opacity * 0.9})`
         ctx.beginPath()
-        ctx.arc(pt.x, pt.y, s.puck.r * (0.8 - i * 0.05), 0, Math.PI * 2)
+        ctx.arc(pt.x, pt.y, s.puck.r * (0.85 - i * 0.05), 0, Math.PI * 2)
         ctx.fill()
       }
 
       // Draw Puck
       ctx.save()
-      ctx.shadowColor = '#38bdf8'
-      ctx.shadowBlur = 10
-      ctx.fillStyle = '#f8fafc'
+      ctx.shadowColor = currentDark ? '#38bdf8' : '#0284c7'
+      ctx.shadowBlur = currentDark ? 10 : 6
+      ctx.fillStyle = currentDark ? '#f8fafc' : '#0f172a'
       ctx.beginPath()
       ctx.arc(s.puck.x, s.puck.y, s.puck.r, 0, Math.PI * 2)
       ctx.fill()
 
       // Puck inner ring
-      ctx.strokeStyle = '#0284c7'
+      ctx.strokeStyle = currentDark ? '#0284c7' : '#38bdf8'
       ctx.lineWidth = 2
       ctx.beginPath()
       ctx.arc(s.puck.x, s.puck.y, s.puck.r * 0.55, 0, Math.PI * 2)
@@ -607,15 +671,14 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
       // Draw AI Mallet (Crimson / Coral)
       ctx.save()
-      ctx.shadowColor = '#f43f5e'
-      ctx.shadowBlur = 12
-      ctx.fillStyle = '#f43f5e'
+      ctx.shadowColor = currentDark ? '#f43f5e' : '#e11d48'
+      ctx.shadowBlur = currentDark ? 12 : 6
+      ctx.fillStyle = currentDark ? '#f43f5e' : '#e11d48'
       ctx.beginPath()
       ctx.arc(s.ai.x, s.ai.y, s.ai.r, 0, Math.PI * 2)
       ctx.fill()
 
-      // AI Inner handle
-      ctx.fillStyle = '#9f1239'
+      ctx.fillStyle = currentDark ? '#9f1239' : '#be123c'
       ctx.beginPath()
       ctx.arc(s.ai.x, s.ai.y, s.ai.r * 0.55, 0, Math.PI * 2)
       ctx.fill()
@@ -626,17 +689,16 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       ctx.stroke()
       ctx.restore()
 
-      // Draw Player Mallet (Emerald / Cyan)
+      // Draw Player Mallet (Emerald)
       ctx.save()
-      ctx.shadowColor = '#10b981'
-      ctx.shadowBlur = 12
-      ctx.fillStyle = '#10b981'
+      ctx.shadowColor = currentDark ? '#10b981' : '#059669'
+      ctx.shadowBlur = currentDark ? 12 : 6
+      ctx.fillStyle = currentDark ? '#10b981' : '#059669'
       ctx.beginPath()
       ctx.arc(s.player.x, s.player.y, s.player.r, 0, Math.PI * 2)
       ctx.fill()
 
-      // Player Inner handle
-      ctx.fillStyle = '#065f46'
+      ctx.fillStyle = currentDark ? '#065f46' : '#047857'
       ctx.beginPath()
       ctx.arc(s.player.x, s.player.y, s.player.r * 0.55, 0, Math.PI * 2)
       ctx.fill()
@@ -645,6 +707,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       ctx.beginPath()
       ctx.arc(s.player.x, s.player.y, s.player.r * 0.3, 0, Math.PI * 2)
       ctx.stroke()
+      ctx.restore()
+
       ctx.restore()
 
       animId = requestAnimationFrame(render)
@@ -660,13 +724,12 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     }
   }, [isOpen, gameState, recordWin, servePuck])
 
-  // Compute live sorted leaderboard
+  // Compute live sorted leaderboard with zero dummy records
   const currentDiffLabel = DIFFICULTIES.find((d) => d.id === difficulty)?.label || 'Balanced'
   const sortedLeaderboard = useMemo(() => {
     return getCombinedLeaderboard(playerName, playerWins, currentDiffLabel, remoteLeaderboard)
   }, [playerName, playerWins, currentDiffLabel, remoteLeaderboard])
 
-  // Current visitor rank and gap to next rank
   const currentRank = sortedLeaderboard.findIndex((e) => e.isCurrent) + 1
   const prevRankPlayer = currentRank > 1 ? sortedLeaderboard[currentRank - 2] : null
   const winsToClimb = prevRankPlayer ? Math.max(1, prevRankPlayer.wins - playerWins + 1) : 0
@@ -677,31 +740,31 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 transition-colors"
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/75 dark:bg-black/85 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
-      {/* Main Arcade Frame */}
-      <div className="relative z-10 flex max-h-[96vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#0c0d12] shadow-2xl">
+      {/* Main Arcade Frame - Expanded width for immersive play */}
+      <div className="relative z-10 flex max-h-[95vh] w-full max-w-xl sm:max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-colors dark:border-gray-800 dark:bg-[#0c0d12] text-gray-900 dark:text-gray-100">
         {/* Top Control Header */}
-        <div className="flex items-center justify-between border-b border-gray-800/80 bg-[#12141c] px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/90 px-4 py-3 sm:px-6 transition-colors dark:border-gray-800/80 dark:bg-[#12141c]">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
             <div>
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-white">
-                Cyber Air Hockey
+              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-gray-950 dark:text-white">
+                Cyber Air Hockey Arcade
               </h2>
-              <p className="font-mono text-[10px] text-gray-400">
-                vs Archie AI • First to {WINNING_SCORE}
+              <p className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                vs Archie AI • First to {WINNING_SCORE} Points
               </p>
             </div>
           </div>
 
-          {/* Header Action Controls (No Reset Button) */}
+          {/* Header Action Controls */}
           <div className="flex items-center gap-2">
             {gameState === 'leaderboard' ? (
               <button
@@ -710,7 +773,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="rounded border border-gray-700 bg-gray-800/80 px-2 py-1 font-mono text-[11px] text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:text-white cursor-pointer"
+                className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-mono text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white cursor-pointer"
               >
                 Lobby
               </button>
@@ -721,7 +784,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   sounds.play('tick')
                   setGameState('leaderboard')
                 }}
-                className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 font-mono text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
+                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 cursor-pointer"
                 title="View Arena Leaderboards"
               >
                 Leaderboard
@@ -731,7 +794,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded p-1 text-gray-400 hover:bg-gray-800 hover:text-white cursor-pointer"
+              className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
               aria-label="Close Arcade"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -743,35 +806,35 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
         {/* ── 1. PRE-GAME LOBBY SCREEN ── */}
         {gameState === 'lobby' && (
-          <div className="flex flex-col p-5 space-y-4 bg-[#090a0f] text-gray-200 min-h-[500px] justify-between">
-            <div className="space-y-4">
-              {/* Title & Introduction */}
-              <div className="rounded-xl border border-gray-800 bg-[#10121a] p-4">
+          <div className="flex flex-col p-5 sm:p-7 space-y-5 bg-white dark:bg-[#090a0f] min-h-[520px] justify-between overflow-y-auto">
+            <div className="space-y-5">
+              {/* Introduction Banner */}
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5 dark:border-gray-800 dark:bg-[#10121a]">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    Pre-Match Lobby
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                    Pre-Match Briefing
                   </span>
-                  <span className="font-mono text-[10px] text-gray-400">
-                    Your Record: <strong className="text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
+                  <span className="font-mono text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                    Your Record: <strong className="text-emerald-600 dark:text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
                   </span>
                 </div>
-                <h3 className="mt-1 font-mono text-base font-bold text-white">
-                  Ready to face Archie AI?
+                <h3 className="mt-1 font-mono text-lg font-bold text-gray-950 dark:text-white">
+                  Can You Beat Archie AI?
                 </h3>
-                <p className="mt-1 font-mono text-xs text-gray-400 leading-relaxed">
-                  Enter your name to register your challenger slot. Win matches to climb to Rank #1 on the leaderboard!
+                <p className="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                  Fast-paced 2D air hockey with responsive physics. Enter your name below, choose your AI difficulty, and score 5 points to record your win on the global leaderboard!
                 </p>
               </div>
 
-              {/* Player Name / Handle Input (Mandatory) */}
+              {/* Player Name Input (Mandatory) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide flex items-center gap-1.5">
-                    <span>Player Name / Call-Sign</span>
-                    <span className="text-emerald-400 text-[10px] font-normal">• Required</span>
+                  <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide flex items-center gap-1.5">
+                    <span>Enter Your Name / Nickname</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-normal">• Required to Play</span>
                   </label>
                   {nameError && (
-                    <span className="font-mono text-[10px] font-bold text-rose-400">
+                    <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400">
                       Enter at least 2 letters
                     </span>
                   )}
@@ -788,32 +851,32 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                       }
                     }}
                     maxLength={18}
-                    placeholder="Enter your name to unlock the arena..."
-                    className={`w-full rounded-xl border bg-[#12141e] px-3.5 py-2.5 font-mono text-xs text-white placeholder-gray-500 transition-colors focus:outline-none focus:ring-1 ${
+                    placeholder="Type your name or player handle..."
+                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm transition-all focus:outline-none focus:ring-2 ${
                       nameError
-                        ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500 bg-rose-950/15'
+                        ? 'border-rose-500 bg-rose-50/50 text-rose-950 focus:ring-rose-500 dark:border-rose-500 dark:bg-rose-950/20 dark:text-white'
                         : isNameValid
-                        ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-emerald-500'
-                        : 'border-gray-700 focus:border-emerald-500 focus:ring-emerald-500'
+                        ? 'border-emerald-500/80 bg-white text-gray-900 focus:ring-emerald-500 dark:border-emerald-500/80 dark:bg-[#141622] dark:text-white'
+                        : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-[#141622] dark:text-white dark:placeholder-gray-500'
                     }`}
                   />
-                  <span className="absolute right-3 top-2.5 font-mono text-[10px] text-gray-500">
+                  <span className="absolute right-3.5 top-3 font-mono text-xs text-gray-400 dark:text-gray-500">
                     {playerName.length}/18
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-gray-400">
+                <p className="font-mono text-[11px] text-gray-500 dark:text-gray-400">
                   {isNameValid
-                    ? `Registered as "${playerName.trim()}". Wins will be added to your leaderboard rank.`
-                    : 'Visitors must input their name first before playing so scores are tracked.'}
+                    ? `Registered as "${playerName.trim()}". Your wins will sync to the worldwide leaderboard.`
+                    : 'Input your name first so your rank and score are tracked among other visitors.'}
                 </p>
               </div>
 
               {/* Difficulty Selection */}
               <div className="space-y-2">
-                <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide">
+                <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
                   Select AI Difficulty
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2.5">
                   {DIFFICULTIES.map((d) => {
                     const active = difficulty === d.id
                     return (
@@ -824,42 +887,43 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                           sounds.play('tick')
                           setDifficulty(d.id)
                         }}
-                        className={`flex flex-col items-center justify-center rounded-xl border p-2.5 font-mono transition-all cursor-pointer ${
+                        className={`flex flex-col items-center justify-center rounded-xl border p-3 font-mono transition-all cursor-pointer ${
                           active
-                            ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 font-bold shadow-sm'
-                            : 'border-gray-800 bg-[#12141e] text-gray-400 hover:border-gray-700 hover:text-gray-200'
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-sm dark:bg-emerald-500/15 dark:text-emerald-400'
+                            : 'border-gray-200 bg-gray-50/80 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:bg-[#12141e] dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
                         }`}
                       >
-                        <span className="text-xs uppercase">{d.label}</span>
+                        <span className="text-xs sm:text-sm uppercase font-bold">{d.label}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{d.tag}</span>
                       </button>
                     )
                   })}
                 </div>
-                <p className="font-mono text-[11px] text-gray-400 bg-[#10121a] rounded-lg px-3 py-1.5 border border-gray-800/80">
+                <p className="font-mono text-xs text-gray-600 bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-200 dark:bg-[#10121a] dark:text-gray-400 dark:border-gray-800/80">
                   {DIFFICULTIES.find((d) => d.id === difficulty)?.desc}
                 </p>
               </div>
 
               {/* Controls Hint */}
-              <div className="rounded-xl border border-gray-800/80 bg-[#0d0e14] p-3 font-mono text-[11px] text-gray-400 space-y-1">
-                <div className="text-gray-300 font-bold text-[10px] uppercase tracking-wider">
-                  Tactile Controls
+              <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-3.5 font-mono text-xs text-gray-600 space-y-1 dark:border-gray-800/80 dark:bg-[#0d0e14] dark:text-gray-400">
+                <div className="text-gray-800 dark:text-gray-200 font-bold text-[11px] uppercase tracking-wider">
+                  How to Play & Controls
                 </div>
-                <div>• Mouse: Move cursor to position your paddle</div>
-                <div>• Touch: Drag finger directly on screen</div>
+                <div>• Mouse: Move cursor anywhere on court to guide your mallet</div>
+                <div>• Touch: Drag finger directly on screen for instant response</div>
                 <div>• Keyboard: W, A, S, D or Arrow Keys</div>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-3 border-t border-gray-200 dark:border-gray-800">
               <button
                 type="button"
                 onClick={handleStartMatchClick}
-                className={`w-full rounded-xl py-3 font-mono text-xs font-bold transition-all cursor-pointer ${
+                className={`w-full rounded-xl py-3.5 font-mono text-sm font-bold transition-all cursor-pointer ${
                   isNameValid
                     ? 'bg-emerald-500 text-gray-950 hover:bg-emerald-400 active:scale-98 shadow-lg shadow-emerald-500/20'
-                    : 'bg-gray-800/90 text-gray-400 hover:bg-gray-800 hover:text-gray-200 border border-gray-700'
+                    : 'bg-gray-200 text-gray-500 hover:bg-gray-300 dark:bg-gray-800/90 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-700'
                 }`}
               >
                 {isNameValid
@@ -873,9 +937,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   sounds.play('tick')
                   setGameState('leaderboard')
                 }}
-                className="w-full rounded-xl border border-gray-700 bg-[#141620] py-2.5 font-mono text-xs font-semibold text-gray-300 hover:border-gray-600 hover:bg-gray-800 hover:text-white cursor-pointer"
+                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#141620] dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
               >
-                View Leaderboard ({playerWins} Win{playerWins === 1 ? '' : 's'})
+                View Worldwide Leaderboard ({playerWins} Win{playerWins === 1 ? '' : 's'})
               </button>
             </div>
           </div>
@@ -883,49 +947,47 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
 
         {/* ── 2. LEADERBOARD SCREEN ── */}
         {gameState === 'leaderboard' && (
-          <div className="flex flex-col p-5 space-y-4 bg-[#090a0f] text-gray-200 min-h-[500px] justify-between">
-            <div className="space-y-3">
+          <div className="flex flex-col p-5 sm:p-7 space-y-4 bg-white dark:bg-[#090a0f] min-h-[520px] justify-between overflow-y-auto">
+            <div className="space-y-4">
               {/* Leaderboard Header */}
-              <div className="rounded-xl border border-gray-800 bg-[#10121a] p-4">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5 dark:border-gray-800 dark:bg-[#10121a]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                      Leaderboard
+                    <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      Worldwide Leaderboard
                     </span>
-                    {FIREBASE_DB_URL ? (
-                      <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-400 border border-emerald-500/40">
-                        Global Cloud Sync
-                      </span>
-                    ) : (
-                      <span className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-[9px] text-gray-400 border border-gray-700">
-                        Local Standings
-                      </span>
-                    )}
+                    <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-[9px] font-bold text-emerald-700 border border-emerald-500/40 dark:text-emerald-400">
+                      Live Cloud Sync
+                    </span>
                   </div>
-                  <span className="font-mono text-[10px] text-gray-400">
-                    Your Record: <strong className="text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
+                  <span className="font-mono text-xs font-semibold text-gray-500 dark:text-gray-400">
+                    Your Wins: <strong className="text-emerald-600 dark:text-emerald-400">{playerWins}</strong>
                   </span>
                 </div>
-                <h3 className="mt-1 font-mono text-base font-bold text-white">
+                <h3 className="mt-1 font-mono text-base sm:text-lg font-bold text-gray-950 dark:text-white">
                   Wins Against Archie AI
                 </h3>
-                <p className="mt-0.5 font-mono text-xs text-gray-400">
-                  Hall of fame rankings for visitors challenging Archie AI.
+                <p className="mt-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
+                  Global standings for real visitors challenging Archie AI.
                 </p>
               </div>
 
               {/* Competitive Rank Status Callout */}
-              <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 font-mono text-xs text-emerald-300">
-                {currentRank === 1 ? (
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 font-mono text-xs text-emerald-900 dark:text-emerald-300">
+                {sortedLeaderboard.length === 0 || (sortedLeaderboard.length === 1 && playerWins === 0) ? (
                   <div>
-                    <strong>Rank #1!</strong> You hold the top spot against Archie AI. Defend your throne!
+                    <strong>Be the First Champion!</strong> The leaderboard is fresh and awaiting its first winner. Defeat Archie AI to take Rank #1!
+                  </div>
+                ) : currentRank === 1 && playerWins > 0 ? (
+                  <div>
+                    <strong>Rank #1 Champion!</strong> You hold the top spot on the worldwide leaderboard. Keep winning to defend your crown!
                   </div>
                 ) : (
                   <div>
-                    You are currently <strong>Rank #{currentRank}</strong> ({playerWins} win{playerWins === 1 ? '' : 's'}).
+                    You are currently <strong>Rank #{currentRank || 1}</strong> ({playerWins} win{playerWins === 1 ? '' : 's'}).
                     {prevRankPlayer && (
-                      <span className="text-emerald-200 block mt-0.5 text-[11px]">
-                        Win {winsToClimb} more match{winsToClimb === 1 ? '' : 'es'} to surpass {prevRankPlayer.name} and reach <strong>Rank #{currentRank - 1}</strong>!
+                      <span className="block mt-1 text-[11px] text-emerald-800 dark:text-emerald-200">
+                        Win {winsToClimb} more match{winsToClimb === 1 ? '' : 'es'} to surpass {prevRankPlayer.name} and claim <strong>Rank #{currentRank - 1}</strong>!
                       </span>
                     )}
                   </div>
@@ -933,64 +995,72 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
               </div>
 
               {/* Leaderboard Table */}
-              <div className="overflow-hidden rounded-xl border border-gray-800 bg-[#0d0e15]">
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-[#0d0e15]">
                 <table className="w-full text-left font-mono text-xs">
                   <thead>
-                    <tr className="border-b border-gray-800 bg-[#141622] text-[10px] uppercase tracking-wider text-gray-400">
-                      <th className="py-2.5 pl-3 pr-2 font-bold">#</th>
+                    <tr className="border-b border-gray-200 bg-gray-100 text-[10px] uppercase tracking-wider text-gray-600 dark:border-gray-800 dark:bg-[#141622] dark:text-gray-400">
+                      <th className="py-2.5 pl-3 pr-2 font-bold"># Rank</th>
                       <th className="py-2.5 px-2 font-bold">Player</th>
                       <th className="py-2.5 px-2 text-right font-bold">Wins (vs AI)</th>
                       <th className="py-2.5 pr-3 pl-2 text-right font-bold">Tier</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-800/60">
-                    {sortedLeaderboard.map((entry, idx) => (
-                      <tr
-                        key={entry.id}
-                        className={`transition-colors ${
-                          entry.isCurrent
-                            ? 'bg-emerald-500/15 font-bold text-emerald-300'
-                            : 'text-gray-300 hover:bg-gray-800/40'
-                        }`}
-                      >
-                        <td className="py-2.5 pl-3 pr-2 text-gray-400 text-[11px]">
-                          {idx === 0 ? '1' : idx === 1 ? '2' : idx === 2 ? '3' : `${idx + 1}`}
-                        </td>
-                        <td className="py-2.5 px-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="truncate max-w-[125px]">
-                              {entry.name || 'Anonymous'}
-                            </span>
-                            {entry.isCurrent && (
-                              <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.5 text-[9px] font-bold text-emerald-400">
-                                YOU
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-2.5 px-2 text-right font-bold text-emerald-400">
-                          {entry.wins}
-                        </td>
-                        <td className="py-2.5 pr-3 pl-2 text-right text-[10px] text-gray-400">
-                          {entry.diff}
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                    {sortedLeaderboard.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="py-6 text-center text-xs text-gray-400 font-mono">
+                          No matches won yet. Play a game to record the first victory!
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      sortedLeaderboard.map((entry, idx) => (
+                        <tr
+                          key={entry.id || idx}
+                          className={`transition-colors ${
+                            entry.isCurrent
+                              ? 'bg-emerald-500/15 font-bold text-emerald-900 dark:text-emerald-300'
+                              : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/40'
+                          }`}
+                        >
+                          <td className="py-2.5 pl-3 pr-2 font-semibold text-gray-500 dark:text-gray-400 text-xs">
+                            {idx === 0 ? '1' : idx === 1 ? '2' : idx === 2 ? '3' : `${idx + 1}`}
+                          </td>
+                          <td className="py-2.5 px-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="truncate max-w-[140px] sm:max-w-[200px]">
+                                {entry.name || 'Anonymous'}
+                              </span>
+                              {entry.isCurrent && (
+                                <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.5 text-[9px] font-bold text-emerald-700 dark:text-emerald-400">
+                                  YOU
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-2.5 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                            {entry.wins}
+                          </td>
+                          <td className="py-2.5 pr-3 pl-2 text-right text-[10px] text-gray-500 dark:text-gray-400">
+                            {entry.diff || 'Balanced'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
 
-              <div className="rounded-lg border border-gray-800/60 bg-[#10121a] px-3 py-2 font-mono text-[10px] text-gray-400">
-                To reach Rank #1, you must accumulate more total wins against Archie AI than anyone else.
+              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-[11px] text-gray-500 dark:border-gray-800/60 dark:bg-[#10121a] dark:text-gray-400">
+                To reach Rank #1, accumulate more total wins against Archie AI than any other visitor.
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-3 border-t border-gray-200 dark:border-gray-800">
               <button
                 type="button"
                 onClick={handleStartMatchClick}
-                className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+                className="w-full rounded-xl bg-emerald-500 py-3.5 font-mono text-sm font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
               >
                 {isNameValid ? `Play Match as ${playerName.trim()}` : 'Enter Name & Play Match'}
               </button>
@@ -1001,7 +1071,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="w-full rounded-xl border border-gray-700 bg-[#141620] py-2.5 font-mono text-xs font-semibold text-gray-300 hover:border-gray-600 hover:bg-gray-800 hover:text-white cursor-pointer"
+                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#141620] dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
               >
                 Back to Pre-Match Lobby
               </button>
@@ -1012,10 +1082,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         {/* ── 3. PLAYING & GAME OVER ARENA ── */}
         {(gameState === 'playing' || gameState === 'scored' || gameState === 'gameover') && (
           <>
-            {/* Scoreboard & Difficulty Ribbon */}
-            <div className="flex items-center justify-between border-b border-gray-800/60 bg-[#0e1017] px-4 py-2">
+            {/* Scoreboard & Match Info Ribbon */}
+            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-100/90 px-4 py-2.5 sm:px-6 transition-colors dark:border-gray-800/60 dark:bg-[#0e1017]">
               {/* Difficulty Switcher */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 {DIFFICULTIES.map((d) => {
                   const active = difficulty === d.id
                   return (
@@ -1023,10 +1093,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                       key={d.id}
                       type="button"
                       onClick={() => startMatch(d.id)}
-                      className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
+                      className={`rounded-lg px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
                         active
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 font-bold'
-                          : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40 border border-transparent'
+                          ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/50 font-bold dark:text-emerald-400'
+                          : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/60 border border-transparent dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800/40'
                       }`}
                     >
                       {d.label}
@@ -1035,24 +1105,30 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 })}
               </div>
 
-              {/* Live Score Display */}
-              <div className="flex items-center gap-2 font-mono">
+              {/* Live Arcade Scoreboard HUD */}
+              <div className="flex items-center gap-3 font-mono">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-gray-400">AI</span>
-                  <span className="text-sm font-bold text-rose-400">{aiScore}</span>
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">AI</span>
+                  <span className="text-base font-black text-rose-600 dark:text-rose-400">{aiScore}</span>
                 </div>
-                <span className="text-gray-600">:</span>
+                <span className="text-gray-400 dark:text-gray-600 font-bold">:</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm font-bold text-emerald-400">{playerScore}</span>
-                  <span className="text-[10px] text-gray-400 truncate max-w-[70px] uppercase">
+                  <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{playerScore}</span>
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate max-w-[80px] uppercase">
                     {playerName || 'YOU'}
                   </span>
                 </div>
+
+                {rallyCount > 2 && (
+                  <span className="hidden sm:inline rounded bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:text-blue-400 border border-blue-500/30">
+                    Rally: {rallyCount}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Interactive Canvas Area */}
-            <div className="relative flex flex-1 items-center justify-center p-3 sm:p-4 bg-[#08090d]">
+            <div className="relative flex flex-1 items-center justify-center p-3 sm:p-5 bg-gray-100 dark:bg-[#08090d]">
               <canvas
                 ref={canvasRef}
                 width={TABLE_WIDTH}
@@ -1068,55 +1144,55 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                     updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
                   }
                 }}
-                className="w-full max-w-[360px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none"
+                className="w-full max-w-[380px] sm:max-w-[440px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none border border-gray-300 dark:border-gray-800"
               />
 
               {/* Scored Point Toast Banner */}
               {scoreBanner && gameState === 'scored' && (
-                <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/40 bg-black/90 px-4 py-3 text-center shadow-2xl backdrop-blur-md">
-                  <div className="font-mono text-sm font-black tracking-widest text-emerald-400">
+                <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/60 bg-white/95 dark:bg-black/90 px-5 py-4 text-center shadow-2xl backdrop-blur-md">
+                  <div className="font-mono text-base sm:text-lg font-black tracking-widest text-emerald-600 dark:text-emerald-400">
                     {scoreBanner}
                   </div>
-                  <div className="mt-0.5 font-mono text-[10px] text-gray-400">
-                    Next serve in progress...
+                  <div className="mt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
+                    Next serve ready in a second...
                   </div>
                 </div>
               )}
 
               {/* Game Over / Post-Match Overlay */}
               {gameState === 'gameover' && (
-                <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-700 bg-[#0f111a]/95 p-6 text-center shadow-2xl backdrop-blur-xl">
-                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-400">
-                    Match Finished
+                <div className="absolute inset-x-6 sm:inset-x-12 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-300 bg-white/95 p-6 text-center shadow-2xl backdrop-blur-xl dark:border-gray-700 dark:bg-[#0f111a]/95">
+                  <div className="font-mono text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
+                    Match Completed
                   </div>
                   <h3
-                    className={`mt-1 font-mono text-2xl font-black tracking-tight ${
-                      winner === 'player' ? 'text-emerald-400' : 'text-rose-400'
+                    className={`mt-1 font-mono text-2xl sm:text-3xl font-black tracking-tight ${
+                      winner === 'player' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'
                     }`}
                   >
                     {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
                   </h3>
-                  <div className="my-3 font-mono text-lg font-bold text-white">
-                    <span className="text-emerald-400">{playerScore}</span>
-                    <span className="text-gray-500"> - </span>
-                    <span className="text-rose-400">{aiScore}</span>
+                  <div className="my-3 font-mono text-xl font-bold">
+                    <span className="text-emerald-600 dark:text-emerald-400">{playerScore}</span>
+                    <span className="text-gray-400 dark:text-gray-500"> - </span>
+                    <span className="text-rose-600 dark:text-rose-400">{aiScore}</span>
                   </div>
 
                   {winner === 'player' ? (
-                    <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono text-xs text-emerald-300">
-                      +1 Win recorded against Archie AI! You now have <strong>{playerWins}</strong> win{playerWins === 1 ? '' : 's'} (Rank #{currentRank})
+                    <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2.5 font-mono text-xs text-emerald-800 dark:text-emerald-300">
+                      +1 Win synced to Firebase Leaderboard! Total Wins: <strong>{playerWins}</strong>
                     </div>
                   ) : (
-                    <p className="font-mono text-xs text-gray-400 mb-4">
-                      Archie AI held the line this time. Ready for revenge?
+                    <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-4">
+                      Archie AI defended its net this round. Ready to strike back?
                     </p>
                   )}
 
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2.5">
                     <button
                       type="button"
                       onClick={() => startMatch()}
-                      className="w-full rounded-xl bg-emerald-500 py-2.5 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer"
+                      className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-md shadow-emerald-500/20"
                     >
                       Play Again
                     </button>
@@ -1126,9 +1202,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                         sounds.play('tick')
                         setGameState('leaderboard')
                       }}
-                      className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2 font-mono text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
+                      className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2.5 font-mono text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 cursor-pointer"
                     >
-                      View Leaderboard
+                      View Worldwide Leaderboard
                     </button>
                     <button
                       type="button"
@@ -1136,7 +1212,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                         sounds.play('tick')
                         setGameState('lobby')
                       }}
-                      className="w-full rounded-xl border border-gray-700 py-2 font-mono text-xs text-gray-300 hover:bg-gray-800 cursor-pointer"
+                      className="w-full rounded-xl border border-gray-300 py-2 font-mono text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
                     >
                       Return to Lobby
                     </button>
@@ -1146,10 +1222,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             </div>
 
             {/* Tactile Controls Hint Footer */}
-            <div className="flex items-center justify-between border-t border-gray-800/80 bg-[#0e1017] px-4 py-2 font-mono text-[10px] text-gray-400">
+            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50/90 px-4 py-2.5 sm:px-6 font-mono text-[11px] text-gray-500 dark:border-gray-800/80 dark:bg-[#0e1017] dark:text-gray-400">
               <div className="flex items-center gap-2">
-                <span className="text-emerald-500">●</span>
-                <span>Controls: Mouse glide • Touch drag • WASD keys</span>
+                <span className="text-emerald-500 font-bold">●</span>
+                <span>Controls: Glide Mouse • Drag Touch • WASD Keys</span>
               </div>
               <button
                 type="button"
@@ -1157,9 +1233,9 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="text-gray-400 hover:text-white cursor-pointer underline underline-offset-2"
+                className="hover:text-gray-950 dark:hover:text-white cursor-pointer underline underline-offset-2"
               >
-                Back to Lobby
+                Exit to Lobby
               </button>
             </div>
           </>

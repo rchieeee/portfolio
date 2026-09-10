@@ -205,6 +205,7 @@ export default function App() {
       <CyberArcadeModal
         isOpen={isArcadeOpen}
         onClose={() => setIsArcadeOpen(false)}
+        theme={theme}
       />
 
       {/* Technical Case Study Modal */}
