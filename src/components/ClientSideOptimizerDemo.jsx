@@ -478,27 +478,16 @@ export default function ClientSideOptimizerDemo() {
                 </button>
               </div>
 
-              {/* Status & Quick Download Action */}
+              {/* Status Display */}
               <div className="flex items-center gap-2 sm:gap-3">
-                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                   -{stats?.reductionPct}% smaller
                 </span>
-                <span className="hidden md:inline font-mono text-xs text-gray-500 whitespace-nowrap">
+                <span className="hidden sm:inline font-mono text-xs text-gray-500 whitespace-nowrap">
                   {activeTab === 'compressed'
                     ? `${compressedImage.width}×${compressedImage.height} · ${FORMAT_CONFIGS[exportFormat]?.label}`
                     : `${originalImage.width}×${originalImage.height} · RAW`}
                 </span>
-                {compressedImage && (
-                  <a
-                    href={compressedImage.url}
-                    download={downloadFileName}
-                    onClick={() => sounds.play('success')}
-                    className="inline-flex items-center gap-1 rounded-md bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 font-mono text-xs font-semibold text-white whitespace-nowrap transition-colors cursor-pointer"
-                    title={`Download optimized ${FORMAT_CONFIGS[exportFormat]?.label}`}
-                  >
-                    <span>Download ↓</span>
-                  </a>
-                )}
               </div>
             </div>
 
