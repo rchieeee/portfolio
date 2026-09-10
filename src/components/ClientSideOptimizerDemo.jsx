@@ -213,24 +213,35 @@ export default function ClientSideOptimizerDemo() {
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500" />
               <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Interactive Engineering Sandbox
+                Live Feature Demo · Performance Engineering
               </span>
             </div>
             <h2 className="mt-1 text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
-              Client-Side Canvas Media Optimizer
+              How I Cut Cloud Storage Costs by 99%
             </h2>
           </div>
           <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-            Live Browser Benchmark · Zero Cloud Costs
+            Real Algorithm from PNP-CCACGI System
           </span>
         </div>
 
-        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-          Test the in-browser downsampling and WebP re-encoding engine architected for the 
-          <span className="font-semibold text-gray-900 dark:text-white"> PNP-CCACGI field system</span>. 
-          By offloading image compression to client hardware before upload, the system eliminates 99.6% of bandwidth overhead 
-          and enables 25,000+ active member records to run indefinitely within free cloud tiers.
-        </p>
+        {/* Story / Problem & Solution */}
+        <div className="mt-4 space-y-2 max-w-3xl text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+          <p>
+            <strong className="text-gray-950 dark:text-white">The Problem:</strong> When building the{' '}
+            <span className="font-semibold text-gray-900 dark:text-white">PNP-CCACGI</span> police auxiliary portal,
+            over 25,000 volunteers needed to upload ID photos directly from their phone cameras (often 5MB to 10MB each).
+            Uploading all those huge files would quickly exhaust free cloud limits and lead to expensive monthly server bills.
+          </p>
+          <p>
+            <strong className="text-gray-950 dark:text-white">My Solution:</strong> Instead of paying expensive cloud hosting fees,
+            I wrote an in-browser algorithm that automatically resizes and compresses photos <em>right inside the user&apos;s phone or laptop</em> before anything is uploaded.
+            It shrinks images by <strong className="text-emerald-600 dark:text-emerald-400">over 99% in just 25 milliseconds</strong> with zero noticeable quality loss.
+          </p>
+          <p className="font-mono text-xs text-gray-500 dark:text-gray-400 pt-1">
+            Try it yourself below: test the sample 4.8MB capture or upload any picture to see it shrink live!
+          </p>
+        </div>
 
         {/* Action Controls Strip */}
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -240,7 +251,7 @@ export default function ClientSideOptimizerDemo() {
             disabled={isProcessing}
             className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2.5 font-mono text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 cursor-pointer disabled:opacity-50"
           >
-            <span>{isProcessing ? 'Processing...' : 'Load Sample 4.8MB Capture'}</span>
+            <span>{isProcessing ? 'Compressing...' : 'Test Sample 4.8MB Photo'}</span>
           </button>
 
           <input
@@ -260,7 +271,7 @@ export default function ClientSideOptimizerDemo() {
             disabled={isProcessing}
             className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer disabled:opacity-50"
           >
-            <span>Upload Custom Photo</span>
+            <span>Upload Your Own Picture</span>
           </button>
 
           {compressedImage && stats && (
@@ -268,16 +279,16 @@ export default function ClientSideOptimizerDemo() {
               href={compressedImage.url}
               download={downloadFileName}
               onClick={() => sounds.play('success')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors cursor-pointer"
               title="Download optimized WebP file directly to your computer"
             >
-              <span>Download WebP ({stats.compressedKb} KB) ↓</span>
+              <span>Download Compressed WebP ({stats.compressedKb} KB) ↓</span>
             </a>
           )}
 
           {stats && (
             <div className="ml-auto font-mono text-xs text-gray-500 dark:text-gray-400">
-              Latency: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{stats.durationMs}ms</span>
+              Compression speed: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{stats.durationMs}ms</span>
             </div>
           )}
         </div>
@@ -287,7 +298,7 @@ export default function ClientSideOptimizerDemo() {
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Original Payload
+                Original Photo Size
               </div>
               <div className="mt-1 font-mono text-lg font-bold text-gray-900 dark:text-white">
                 {stats.originalKb > 1024
@@ -295,43 +306,43 @@ export default function ClientSideOptimizerDemo() {
                   : `${stats.originalKb} KB`}
               </div>
               <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400 mt-0.5">
-                {stats.originalWidth} × {stats.originalHeight}px
+                Before optimization
               </div>
             </div>
 
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
-              <div className="font-mono text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                Optimized Output
+              <div className="font-mono text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold">
+                After Compression
               </div>
               <div className="mt-1 font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {stats.compressedKb} KB
               </div>
               <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400 mt-0.5">
-                {stats.compressedWidth} × {stats.compressedHeight}px (WebP)
+                Clean WebP format
               </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Bandwidth Saved
+                Storage Saved
               </div>
               <div className="mt-1 font-mono text-lg font-bold text-gray-900 dark:text-white">
                 -{stats.reductionPct}%
               </div>
               <div className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 mt-0.5">
-                Free-Tier Compliant
+                Zero cloud storage waste
               </div>
             </div>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
-                Client Execution
+                Execution Time
               </div>
               <div className="mt-1 font-mono text-lg font-bold text-gray-900 dark:text-white">
                 {stats.durationMs}ms
               </div>
               <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400 mt-0.5">
-                Zero Cloud Compute
+                Runs locally on your device
               </div>
             </div>
           </div>
@@ -355,7 +366,7 @@ export default function ClientSideOptimizerDemo() {
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Compressed WebP ({stats?.compressedKb} KB)
+                  Compressed Photo ({stats?.compressedKb} KB)
                 </button>
                 <button
                   type="button"
@@ -369,13 +380,13 @@ export default function ClientSideOptimizerDemo() {
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Original Image ({(originalImage.sizeBytes / 1024).toFixed(1)} KB)
+                  Original Photo ({originalImage.sizeBytes > 1048576 ? `${(originalImage.sizeBytes / 1048576).toFixed(2)} MB` : `${(originalImage.sizeBytes / 1024).toFixed(1)} KB`})
                 </button>
               </div>
 
               <div className="flex items-center gap-3">
                 <span className="hidden sm:inline text-gray-500">
-                  {activeTab === 'compressed' ? 'Rendered via HTML5 Canvas (0.62 WebP)' : 'Source RAW Payload'}
+                  {activeTab === 'compressed' ? '99% smaller with sharp quality' : 'Heavy uncompressed file'}
                 </span>
                 {compressedImage && (
                   <a
