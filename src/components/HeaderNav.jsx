@@ -21,7 +21,6 @@ export default function HeaderNav({
     { id: 'architecture', label: 'architecture' },
     { id: 'stack', label: 'stack' },
     { id: 'experience', label: 'experience' },
-    { id: 'estimator', label: 'estimate' },
     { id: 'contact', label: 'contact' },
   ]
 

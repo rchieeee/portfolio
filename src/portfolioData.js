@@ -822,7 +822,6 @@ export const terminalCommands = {
   • cloudzone   - Inspect CloudZone POS Multi-Device Retail System (Flutter)
   • pnp         - Inspect PNP-CCACGI Personnel Registry & Attendance Platform
   • checkpoint  - Inspect Checkpoint AI Biometric Campus Attendance System
-  • estimate    - Launch interactive scope & timeline estimator
   • cv          - View Archie's verified CV / Resume (Google Docs)
   • play        - Launch realtime multiplayer Cyber Arcade & live chat
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
@@ -843,12 +842,6 @@ export const terminalCommands = {
 • Link: https://docs.google.com/document/d/1jFywIG1bQW2eeNL0IP0srp_0gHVeRuuFc7xlvTqq0vE/edit?tab=t.0
 • Role: Full-Stack Developer & Generative AI Builder
 • Location: Lupon, Davao Oriental, Philippines (UTC+8)`,
-  estimate: `⚡ Interactive Project Scope & Estimator:
-Configure platforms, offline-first sync, 3FA authentication, and delivery pace.
-Navigate to the "estimate" section on the page or book directly via email: archie.boiser05@gmail.com`,
-  quote: `⚡ Interactive Project Scope & Estimator:
-Configure platforms, offline-first sync, 3FA authentication, and delivery pace.
-Navigate to the "estimate" section on the page or book directly via email: archie.boiser05@gmail.com`,
   checkpoint: `🎯 Checkpoint — AI Biometric Campus Attendance System [Dual-Platform Vision]
 • Client / Domain: Higher Education & Campus Event Attendance Platform
 • Stack: React 19, React Native (Expo Go), Python (Flask), ArcFace, FAISS, Firestore
