@@ -316,8 +316,7 @@ export default function TechStackFitChecker() {
                       key={project.name}
                       className="rounded-xl border border-gray-200/80 bg-white p-3 dark:border-gray-800 dark:bg-[#111216]"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <div>
                         <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
                           {project.name}
                         </span>
