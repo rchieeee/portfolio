@@ -2,15 +2,18 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import BentoGrid from './components/BentoGrid'
 import CaseStudyModal from './components/CaseStudyModal'
+import ClientSideOptimizerDemo from './components/ClientSideOptimizerDemo'
 import ContactSection from './components/ContactSection'
 import CyberArcadeModal from './components/CyberArcadeModal'
 import ExperienceTimeline from './components/ExperienceTimeline'
 import GithubActivityCard from './components/GithubActivityCard'
+import GlobalAvailabilityRadar from './components/GlobalAvailabilityRadar'
 import HeaderNav from './components/HeaderNav'
 import Hero from './components/Hero'
 import InteractiveHeroCanvas from './components/InteractiveHeroCanvas'
 import ProjectShowcase from './components/ProjectShowcase'
 import TechRadar from './components/TechRadar'
+import TechStackFitChecker from './components/TechStackFitChecker'
 import TerminalOverlay from './components/TerminalOverlay'
 import TestimonialsSection from './components/TestimonialsSection'
 import { sounds } from './utils/audio'
@@ -177,10 +180,16 @@ export default function App() {
         <BentoGrid />
         <ProjectShowcase onOpenCaseStudy={(slug) => setCaseStudySlug(slug)} />
         <TechRadar />
+        {/* Live Engineering Sandbox: In-Browser Media Optimizer */}
+        <ClientSideOptimizerDemo />
+        {/* Interactive Architecture & Toolchain Evaluator */}
+        <TechStackFitChecker />
         <ExperienceTimeline />
         <TestimonialsSection />
         {/* Real-time GitHub Public Contributions Matrix */}
         <GithubActivityCard />
+        {/* Global Availability & Timezone Overlap Radar */}
+        <GlobalAvailabilityRadar />
         <ContactSection />
       </main>
 
