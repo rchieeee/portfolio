@@ -6,6 +6,9 @@ import {
   getStoredPlayerWins,
   incrementPlayerWins,
   getCombinedLeaderboard,
+  fetchRemoteLeaderboard,
+  syncWinToFirebase,
+  FIREBASE_DB_URL,
 } from '../utils/leaderboardService'
 
 const WINNING_SCORE = 5
@@ -60,11 +63,21 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
   const [gameState, setGameState] = useState('lobby')
   const [winner, setWinner] = useState(null) // 'player' | 'ai'
   const [scoreBanner, setScoreBanner] = useState(null)
+  const [remoteLeaderboard, setRemoteLeaderboard] = useState(null)
 
   const difficultyRef = useRef(difficulty)
   useEffect(() => {
     difficultyRef.current = difficulty
   }, [difficulty])
+
+  // Fetch live global leaderboard when modal opens or state changes
+  useEffect(() => {
+    if (isOpen) {
+      fetchRemoteLeaderboard().then((data) => {
+        if (data) setRemoteLeaderboard(data)
+      })
+    }
+  }, [isOpen, gameState])
 
   const isNameValid = playerName.trim().length >= 2
 
@@ -207,11 +220,12 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     sim.current.player.targetY = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, y))
   }
 
-  // Record win against Archie AI in state and local storage
+  // Record win against Archie AI in state, local storage, and Firebase
   const recordWin = useCallback(() => {
     const newWins = incrementPlayerWins()
     setPlayerWins(newWins)
-  }, [])
+    syncWinToFirebase(playerName, newWins, difficultyRef.current)
+  }, [playerName])
 
   // Handle player name edit
   const handleNameChange = (e) => {
@@ -649,8 +663,8 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
   // Compute live sorted leaderboard
   const currentDiffLabel = DIFFICULTIES.find((d) => d.id === difficulty)?.label || 'Balanced'
   const sortedLeaderboard = useMemo(() => {
-    return getCombinedLeaderboard(playerName, playerWins, currentDiffLabel)
-  }, [playerName, playerWins, currentDiffLabel])
+    return getCombinedLeaderboard(playerName, playerWins, currentDiffLabel, remoteLeaderboard)
+  }, [playerName, playerWins, currentDiffLabel, remoteLeaderboard])
 
   // Current visitor rank and gap to next rank
   const currentRank = sortedLeaderboard.findIndex((e) => e.isCurrent) + 1
@@ -874,9 +888,20 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
               {/* Leaderboard Header */}
               <div className="rounded-xl border border-gray-800 bg-[#10121a] p-4">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    Leaderboard
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                      Leaderboard
+                    </span>
+                    {FIREBASE_DB_URL ? (
+                      <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-emerald-400 border border-emerald-500/40">
+                        Global Cloud Sync
+                      </span>
+                    ) : (
+                      <span className="rounded bg-gray-800 px-1.5 py-0.5 font-mono text-[9px] text-gray-400 border border-gray-700">
+                        Local Standings
+                      </span>
+                    )}
+                  </div>
                   <span className="font-mono text-[10px] text-gray-400">
                     Your Record: <strong className="text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
                   </span>

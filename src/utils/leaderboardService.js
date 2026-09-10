@@ -1,7 +1,8 @@
-// Leaderboard Service: Local persistence with Cloud Sync architecture
+// Leaderboard Service: Local persistence with optional Firebase Cloud Sync
 
 const LOCAL_STORAGE_PLAYER_KEY = 'archie_arcade_player_name'
 const LOCAL_STORAGE_WINS_KEY = 'archie_arcade_player_wins'
+const LOCAL_STORAGE_CACHE_KEY = 'archie_arcade_cached_leaderboard'
 
 // Base hall of fame contenders
 export const BASE_LEADERBOARD = [
@@ -10,6 +11,11 @@ export const BASE_LEADERBOARD = [
   { id: 'byte_striker', name: 'ByteStriker', wins: 4, diff: 'Balanced' },
   { id: 'guest_88', name: 'Guest_88', wins: 2, diff: 'Casual' },
 ]
+
+// Firebase Realtime Database URL
+// Configured via .env or direct URL
+export const FIREBASE_DB_URL =
+  import.meta.env.VITE_FIREBASE_DB_URL || ''
 
 /**
  * Get current stored player name
@@ -63,10 +69,95 @@ export function incrementPlayerWins() {
 }
 
 /**
+ * Fetch remote leaderboard from Firebase Realtime Database
+ */
+export async function fetchRemoteLeaderboard() {
+  if (!FIREBASE_DB_URL) return null
+
+  try {
+    const cleanUrl = FIREBASE_DB_URL.replace(/\/$/, '')
+    const res = await fetch(`${cleanUrl}/leaderboard.json`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (!data || typeof data !== 'object') return null
+
+    // Firebase returns an object with keys: { [key]: { name, wins, diff, updatedAt } }
+    const list = Object.entries(data).map(([key, val]) => ({
+      id: key,
+      name: val.name || 'Anonymous',
+      wins: typeof val.wins === 'number' ? val.wins : parseInt(val.wins, 10) || 0,
+      diff: val.diff || 'Balanced',
+      updatedAt: val.updatedAt || 0,
+    }))
+
+    // Save to local cache
+    try {
+      localStorage.setItem(LOCAL_STORAGE_CACHE_KEY, JSON.stringify(list))
+    } catch {
+      // ignore
+    }
+
+    return list
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Sync player win to Firebase Realtime Database
+ */
+export async function syncWinToFirebase(playerName, newWins, difficulty = 'Balanced') {
+  if (!FIREBASE_DB_URL || !playerName?.trim()) return
+
+  try {
+    const cleanUrl = FIREBASE_DB_URL.replace(/\/$/, '')
+    // Sanitize key for Firebase (no ., $, #, [, ], /)
+    const safeKey = playerName.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 24)
+
+    // Check existing remote record first to avoid overwriting a higher score
+    let targetWins = newWins
+    try {
+      const checkRes = await fetch(`${cleanUrl}/leaderboard/${safeKey}.json`)
+      if (checkRes.ok) {
+        const existing = await checkRes.json()
+        if (existing && typeof existing.wins === 'number') {
+          targetWins = Math.max(existing.wins + 1, newWins)
+        }
+      }
+    } catch {
+      // ignore check error
+    }
+
+    await fetch(`${cleanUrl}/leaderboard/${safeKey}.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: playerName.trim(),
+        wins: targetWins,
+        diff: difficulty,
+        updatedAt: Date.now(),
+      }),
+    })
+  } catch {
+    // Fail silently without blocking gameplay
+  }
+}
+
+/**
  * Get sorted leaderboard combining base records and current visitor
  */
-export function getCombinedLeaderboard(currentPlayerName, currentPlayerWins, difficulty = 'Balanced') {
+export function getCombinedLeaderboard(
+  currentPlayerName,
+  currentPlayerWins,
+  difficulty = 'Balanced',
+  remoteList = null
+) {
   const cleanName = currentPlayerName?.trim() || ''
+
+  // Use remote list if available, otherwise base leaderboard
+  const baseEntries = (remoteList && remoteList.length > 0) ? remoteList : BASE_LEADERBOARD
 
   const visitorEntry = {
     id: 'current_visitor',
@@ -76,11 +167,11 @@ export function getCombinedLeaderboard(currentPlayerName, currentPlayerWins, dif
     isCurrent: true,
   }
 
-  // Filter out duplicate if user entered 'Archie (Creator)'
-  const filteredBase = BASE_LEADERBOARD.filter(
+  // Filter out duplicate if remote or base already has this player
+  const filtered = baseEntries.filter(
     (item) => item.name.toLowerCase() !== cleanName.toLowerCase()
   )
 
-  const combined = [...filteredBase, visitorEntry]
+  const combined = [...filtered, visitorEntry]
   return combined.sort((a, b) => b.wins - a.wins)
 }
