@@ -443,23 +443,24 @@ export default function ClientSideOptimizerDemo() {
 
         {/* Visual Inspection Viewport */}
         {originalImage && compressedImage && (
-          <div className="mt-6 rounded-2xl border border-gray-200 overflow-hidden bg-gray-950 dark:border-gray-800">
+          <div className="mt-6 rounded-2xl border border-gray-200 overflow-hidden bg-gray-950 dark:border-gray-800 shadow-sm">
             {/* Viewport Toolbar */}
-            <div className="flex items-center justify-between border-b border-gray-800 bg-[#0c0d12] px-4 py-2.5 font-mono text-xs">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-gray-800 bg-[#0c0d12] px-3 sm:px-4 py-2 font-mono text-xs">
+              {/* Segmented View Toggle */}
+              <div className="inline-flex items-center rounded-lg bg-gray-900/90 p-0.5 border border-gray-800">
                 <button
                   type="button"
                   onClick={() => {
                     sounds.play('tick')
                     setActiveTab('compressed')
                   }}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold cursor-pointer transition-colors ${
+                  className={`rounded-md px-2.5 sm:px-3 py-1 font-mono text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     activeTab === 'compressed'
-                      ? 'bg-white text-gray-950 dark:bg-gray-200'
+                      ? 'bg-white text-gray-950 shadow-xs'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Compressed Photo ({stats?.compressedKb} KB · {FORMAT_CONFIGS[exportFormat]?.label})
+                  Optimized ({stats?.compressedKb} KB)
                 </button>
                 <button
                   type="button"
@@ -467,29 +468,35 @@ export default function ClientSideOptimizerDemo() {
                     sounds.play('tick')
                     setActiveTab('original')
                   }}
-                  className={`rounded-md px-2.5 py-1 text-xs font-semibold cursor-pointer transition-colors ${
+                  className={`rounded-md px-2.5 sm:px-3 py-1 font-mono text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                     activeTab === 'original'
-                      ? 'bg-white text-gray-950 dark:bg-gray-200'
+                      ? 'bg-white text-gray-950 shadow-xs'
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Original Photo ({originalImage.sizeBytes > 1048576 ? `${(originalImage.sizeBytes / 1048576).toFixed(2)} MB` : `${(originalImage.sizeBytes / 1024).toFixed(1)} KB`})
+                  Original ({originalImage.sizeBytes > 1048576 ? `${(originalImage.sizeBytes / 1048576).toFixed(2)} MB` : `${(originalImage.sizeBytes / 1024).toFixed(1)} KB`})
                 </button>
               </div>
 
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline text-gray-500">
-                  {activeTab === 'compressed' ? `${stats?.reductionPct}% smaller with sharp quality` : 'Heavy uncompressed file'}
+              {/* Status & Quick Download Action */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <span className="hidden sm:inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+                  -{stats?.reductionPct}% smaller
+                </span>
+                <span className="hidden md:inline font-mono text-xs text-gray-500 whitespace-nowrap">
+                  {activeTab === 'compressed'
+                    ? `${compressedImage.width}×${compressedImage.height} · ${FORMAT_CONFIGS[exportFormat]?.label}`
+                    : `${originalImage.width}×${originalImage.height} · RAW`}
                 </span>
                 {compressedImage && (
                   <a
                     href={compressedImage.url}
                     download={downloadFileName}
                     onClick={() => sounds.play('success')}
-                    className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors cursor-pointer"
-                    title={`Download compressed ${FORMAT_CONFIGS[exportFormat]?.label}`}
+                    className="inline-flex items-center gap-1 rounded-md bg-emerald-600 hover:bg-emerald-500 px-2.5 py-1 font-mono text-xs font-semibold text-white whitespace-nowrap transition-colors cursor-pointer"
+                    title={`Download optimized ${FORMAT_CONFIGS[exportFormat]?.label}`}
                   >
-                    <span>Download Output ↓</span>
+                    <span>Download ↓</span>
                   </a>
                 )}
               </div>
@@ -502,10 +509,13 @@ export default function ClientSideOptimizerDemo() {
                 alt={activeTab === 'compressed' ? 'Compressed view' : 'Original view'}
                 className="max-h-full max-w-full object-contain"
               />
-              <div className="absolute bottom-3 left-3 rounded-lg bg-black/75 px-3 py-1 font-mono text-[11px] text-white backdrop-blur-md">
-                {activeTab === 'compressed'
-                  ? `Optimized Output: ${compressedImage.width}×${compressedImage.height}px · ${FORMAT_CONFIGS[exportFormat]?.label}`
-                  : `Original Source: ${originalImage.width}×${originalImage.height}px · Raw`}
+              <div className="absolute bottom-3 left-3 flex items-center gap-2 rounded-lg bg-gray-950/85 px-2.5 py-1 font-mono text-[11px] text-gray-300 border border-white/10 backdrop-blur-md pointer-events-none">
+                <span className={`h-1.5 w-1.5 rounded-full ${activeTab === 'compressed' ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                <span>
+                  {activeTab === 'compressed'
+                    ? `${compressedImage.width}×${compressedImage.height}px · ${FORMAT_CONFIGS[exportFormat]?.label}`
+                    : `${originalImage.width}×${originalImage.height}px · RAW Uncompressed`}
+                </span>
               </div>
             </div>
           </div>
