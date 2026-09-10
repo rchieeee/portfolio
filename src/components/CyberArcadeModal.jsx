@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { SOUND_PROFILES, sounds } from '../utils/audio'
+import { sounds } from '../utils/audio'
 import {
   getStoredPlayerName,
   savePlayerName,
@@ -52,62 +52,26 @@ const DIFFICULTIES = [
 export default function CyberArcadeModal({
   isOpen,
   onClose,
-  onOpenTerminal,
   theme,
-  onSetTheme,
-  themeCooldown = false,
-  soundEnabled = true,
-  onToggleSound,
 }) {
   const canvasRef = useRef(null)
   const nameInputRef = useRef(null)
 
   // Live dark/light mode detection with MutationObserver
   const [isDark, setIsDark] = useState(() => {
-    if (typeof document !== 'undefined') {
-      return document.documentElement.classList.contains('dark')
-    }
-    return true
+    if (typeof document === 'undefined') return false
+    return document.documentElement.classList.contains('dark') || theme === 'dark'
   })
 
   useEffect(() => {
-    const updateTheme = () => {
-      const dark = document.documentElement.classList.contains('dark')
-      setIsDark(dark)
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark') || theme === 'dark')
     }
-    updateTheme()
-    const observer = new MutationObserver(updateTheme)
+    checkDark()
+    const observer = new MutationObserver(checkDark)
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] })
     return () => observer.disconnect()
   }, [theme])
-
-  // Audio Profile state
-  const [activeSoundProfile, setActiveSoundProfile] = useState(() => sounds.profile)
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent || '')
-  const modKey = isMac ? '⌘' : 'Alt'
-
-  const handleCycleSound = () => {
-    if (!soundEnabled) {
-      onToggleSound?.()
-      return
-    }
-    const currentIdx = SOUND_PROFILES.findIndex((p) => p.id === activeSoundProfile)
-    if (currentIdx === SOUND_PROFILES.length - 1) {
-      onToggleSound?.()
-    } else {
-      const nextIdx = currentIdx + 1
-      const nextProfile = SOUND_PROFILES[nextIdx].id
-      sounds.setProfile(nextProfile)
-      setActiveSoundProfile(nextProfile)
-    }
-  }
-
-  const currentSoundProfile = SOUND_PROFILES.find((p) => p.id === activeSoundProfile) || SOUND_PROFILES[0]
-
-  const handleToggleTheme = () => {
-    if (themeCooldown) return
-    onSetTheme?.(isDark ? 'light' : 'dark')
-  }
 
   // Player and Leaderboard State
   const [playerName, setPlayerName] = useState(() => getStoredPlayerName())
@@ -806,79 +770,8 @@ export default function CyberArcadeModal({
             </div>
           </div>
 
-          {/* Right: The 3 Requested Controls + Leaderboard + Close Button */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Control 1: Interactive Terminal Trigger Button ($ CLI) */}
-            <button
-              type="button"
-              onClick={() => {
-                sounds.play('chime')
-                onOpenTerminal?.()
-              }}
-              className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
-              title="Open Interactive CLI Terminal"
-            >
-              <span className="font-bold text-gray-950 dark:text-white">$</span>
-              <span className="hidden sm:inline font-semibold">CLI</span>
-              <kbd className="hidden rounded bg-gray-200 px-1 py-0.2 text-[9px] text-gray-600 sm:inline dark:bg-gray-800 dark:text-gray-300">
-                {modKey}+K
-              </kbd>
-            </button>
-
-            {/* Control 2: Tactile Theme Switcher (Sliding Thumb) */}
-            <button
-              type="button"
-              onClick={handleToggleTheme}
-              disabled={themeCooldown}
-              className="group relative flex h-6 w-11 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
-              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
-              aria-label="Toggle Theme Mode"
-            >
-              <span
-                className={`flex h-4.5 w-4.5 transform items-center justify-center rounded-full shadow-sm transition-transform duration-200 ease-out ${
-                  isDark
-                    ? 'translate-x-5 bg-white text-gray-950'
-                    : 'translate-x-0 bg-gray-900 text-white'
-                }`}
-              >
-                {isDark ? (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
-                    <path d="M20 13.6A8 8 0 1 1 10.4 4a6.2 6.2 0 0 0 9.6 9.6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
-                    <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-                    <path d="M12 2v1.5M12 20.5V22M2 12h1.5M20.5 12H22M4.9 4.9l1 1M18.1 18.1l1 1M19.1 4.9l-1 1M5.9 18.1l-1 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                )}
-              </span>
-            </button>
-
-            {/* Control 3: Tactile Audio Profile Controller (8-Bit / Mechanical / Muted) */}
-            <button
-              type="button"
-              onClick={handleCycleSound}
-              className={`h-6 items-center gap-1.5 rounded-full border px-2 font-mono text-[11px] transition-all cursor-pointer active:scale-95 inline-flex ${
-                soundEnabled
-                  ? 'border-gray-300 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-[#181920] dark:text-white shadow-2xs'
-                  : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-500'
-              }`}
-              title={`Audio: ${soundEnabled ? currentSoundProfile.name : 'Muted'} (Click to cycle)`}
-            >
-              {soundEnabled ? (
-                <svg className="h-3 w-3 text-gray-700 dark:text-gray-300" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <svg className="h-3 w-3 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-              <span className="hidden sm:inline font-semibold">
-                {soundEnabled ? currentSoundProfile.name : 'Muted'}
-              </span>
-            </button>
-
+          {/* Right: Leaderboard Toggle + Close Button */}
+          <div className="flex items-center gap-2">
             {/* Leaderboard or Lobby View Toggle */}
             {gameState === 'leaderboard' ? (
               <button

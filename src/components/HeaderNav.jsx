@@ -59,145 +59,180 @@ export default function HeaderNav({
   const currentSoundProfile = SOUND_PROFILES.find((p) => p.id === activeProfile) || SOUND_PROFILES[0]
 
   return (
-    <header className="sticky top-4 z-40 mx-auto max-w-4xl px-4 sm:px-6">
-      {/* Floating Island Navigation Container */}
-      <div className="flex items-center justify-between rounded-2xl border border-gray-200/90 bg-white/90 px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90">
-        {/* Brand Logo */}
-        <a
-          href="#top"
-          onClick={() => sounds.play('tick')}
-          className="flex items-center gap-2 text-sm font-semibold tracking-tight text-gray-950 dark:text-white"
-        >
-          <span className="font-mono font-bold text-[14px]">
-            {profile.brand}
-          </span>
-        </a>
+    <>
+      {/* ── Main Navigation Island (Sticky, Centered) ── */}
+      <header className="sticky top-4 z-40 mx-auto max-w-fit px-4 pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3 rounded-2xl border border-gray-200/90 bg-white/90 px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90">
+          {/* Brand Logo */}
+          <a
+            href="#top"
+            onClick={() => sounds.play('tick')}
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-gray-950 dark:text-white pr-1"
+          >
+            <span className="font-mono font-bold text-[14px]">
+              {profile.brand}
+            </span>
+          </a>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => {
-            const isActive = activeSection === link.id
-            return (
-              <a
-                key={link.id}
-                href={`#${link.id}`}
-                onClick={() => sounds.play('tick')}
-                className={`rounded-lg px-2.5 py-1 font-mono text-[12px] transition-colors ${
-                  isActive
-                    ? 'bg-gray-100 font-semibold text-gray-950 dark:bg-gray-800 dark:text-white'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white'
+          {/* Desktop Navigation Links */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id
+              return (
+                <a
+                  key={link.id}
+                  href={`#${link.id}`}
+                  onClick={() => sounds.play('tick')}
+                  className={`rounded-lg px-2.5 py-1 font-mono text-[12px] transition-colors ${
+                    isActive
+                      ? 'bg-gray-100 font-semibold text-gray-950 dark:bg-gray-800 dark:text-white'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              )
+            })}
+          </nav>
+
+          {/* Action Area */}
+          <div className="flex items-center gap-2">
+            {/* Cyber Air Hockey 'play' Trigger (No green dot, clean text) */}
+            <button
+              type="button"
+              onClick={() => {
+                sounds.play('chime')
+                onOpenArcade?.()
+              }}
+              className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+              title="Play Cyber Air Hockey"
+            >
+              play
+            </button>
+
+            {/* Mobile-only theme toggle switch for fast access */}
+            <button
+              type="button"
+              onClick={toggleThemeMode}
+              disabled={themeCooldown}
+              className="group relative flex h-6 w-11 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95 md:hidden"
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+              aria-label="Toggle Theme Mode"
+            >
+              <span
+                className={`flex h-4.5 w-4.5 transform items-center justify-center rounded-full shadow-sm transition-transform duration-200 ease-out ${
+                  isDark
+                    ? 'translate-x-5 bg-white text-gray-950'
+                    : 'translate-x-0 bg-gray-900 text-white'
                 }`}
               >
-                {link.label}
-              </a>
-            )
-          })}
-        </nav>
+                {isDark ? (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <path d="M20 13.6A8 8 0 1 1 10.4 4a6.2 6.2 0 0 0 9.6 9.6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+                    <path d="M12 2v1.5M12 20.5V22M2 12h1.5M20.5 12H22M4.9 4.9l1 1M18.1 18.1l1 1M19.1 4.9l-1 1M5.9 18.1l-1 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                )}
+              </span>
+            </button>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {/* Cyber Air Hockey Arcade Trigger */}
-          <button
-            type="button"
-            onClick={() => {
-              sounds.play('chime')
-              onOpenArcade?.()
-            }}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
-            title="Play Cyber Air Hockey"
-          >
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">●</span>
-            <span>Arcade</span>
-          </button>
-
-          {/* Interactive Terminal Trigger Button */}
-          <button
-            type="button"
-            onClick={() => {
-              sounds.play('chime')
-              onOpenTerminal()
-            }}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800"
-            title="Open Interactive CLI Terminal"
-          >
-            <span className="font-bold text-gray-950 dark:text-white">$</span>
-            <span className="hidden sm:inline">CLI</span>
-            <kbd className="hidden rounded bg-gray-200 px-1 py-0.5 text-[9px] text-gray-600 sm:inline dark:bg-gray-800 dark:text-gray-300">
-              {modKey}+K
-            </kbd>
-          </button>
-
-          {/* Clean Tactile Theme Switcher */}
-          <button
-            type="button"
-            onClick={toggleThemeMode}
-            disabled={themeCooldown}
-            className="group relative flex h-6.5 w-12 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
-            title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
-            aria-label="Toggle Theme Mode"
-          >
-            {/* Sliding Thumb */}
-            <span
-              className={`flex h-5 w-5 transform items-center justify-center rounded-full shadow-sm transition-transform duration-200 ease-out ${
-                isDark
-                  ? 'translate-x-5.5 bg-white text-gray-950'
-                  : 'translate-x-0 bg-gray-900 text-white'
-              }`}
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                sounds.play('toggle')
+                setMobileMenuOpen(!mobileMenuOpen)
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
+              aria-label="Toggle menu"
             >
-              {isDark ? (
-                <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
-                  <path d="M20 13.6A8 8 0 1 1 10.4 4a6.2 6.2 0 0 0 9.6 9.6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
-                  <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
-                  <path d="M12 2v1.5M12 20.5V22M2 12h1.5M20.5 12H22M4.9 4.9l1 1M18.1 18.1l1 1M19.1 4.9l-1 1M5.9 18.1l-1 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              )}
-            </span>
-          </button>
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
 
-          {/* Unified Tactile Audio Controller */}
-          <button
-            type="button"
-            onClick={handleCycleSoundProfile}
-            className={`hidden h-6.5 items-center gap-1.5 rounded-full border px-2.5 font-mono text-[11px] transition-all cursor-pointer active:scale-95 sm:inline-flex ${
-              soundEnabled
-                ? 'border-gray-300 bg-gray-100/90 text-gray-900 dark:border-gray-700 dark:bg-[#181920] dark:text-white shadow-2xs'
-                : 'border-gray-200 bg-gray-50/60 text-gray-400 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-500'
+      {/* ── Top-Right Screen Controls: Positioned on Top Right of the Screen ── */}
+      <aside
+        aria-label="Screen utility controls"
+        className="fixed top-4 right-4 sm:right-6 z-40 hidden md:flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-gray-200/90 bg-white/90 p-1.5 sm:px-2.5 sm:py-2 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90"
+      >
+        {/* Interactive Terminal Trigger Button ($ CLI) */}
+        <button
+          type="button"
+          onClick={() => {
+            sounds.play('chime')
+            onOpenTerminal()
+          }}
+          className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
+          title="Open Interactive CLI Terminal"
+        >
+          <span className="font-bold text-gray-950 dark:text-white">$</span>
+          <span className="hidden lg:inline font-semibold">CLI</span>
+          <kbd className="hidden xl:inline rounded bg-gray-200 px-1 py-0.5 text-[9px] text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            {modKey}+K
+          </kbd>
+        </button>
+
+        {/* Clean Tactile Theme Switcher */}
+        <button
+          type="button"
+          onClick={toggleThemeMode}
+          disabled={themeCooldown}
+          className="group relative flex h-6.5 w-12 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
+          title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+          aria-label="Toggle Theme Mode"
+        >
+          <span
+            className={`flex h-5 w-5 transform items-center justify-center rounded-full shadow-sm transition-transform duration-200 ease-out ${
+              isDark
+                ? 'translate-x-5.5 bg-white text-gray-950'
+                : 'translate-x-0 bg-gray-900 text-white'
             }`}
-            title={`Audio: ${soundEnabled ? currentSoundProfile.name : 'Muted'} (Click to cycle profile or mute)`}
           >
-            {soundEnabled ? (
-              <svg className="h-3 w-3 text-gray-700 dark:text-gray-300" viewBox="0 0 24 24" fill="none">
-                <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            {isDark ? (
+              <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                <path d="M20 13.6A8 8 0 1 1 10.4 4a6.2 6.2 0 0 0 9.6 9.6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
               </svg>
             ) : (
-              <svg className="h-3 w-3 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none">
-                <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+                <path d="M12 2v1.5M12 20.5V22M2 12h1.5M20.5 12H22M4.9 4.9l1 1M18.1 18.1l1 1M19.1 4.9l-1 1M5.9 18.1l-1 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             )}
-            <span className="font-semibold">
-              {soundEnabled ? currentSoundProfile.name : 'Muted'}
-            </span>
-          </button>
+          </span>
+        </button>
 
-          {/* Mobile Hamburger Toggle */}
-          <button
-            type="button"
-            onClick={() => {
-              sounds.play('toggle')
-              setMobileMenuOpen(!mobileMenuOpen)
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
-            aria-label="Toggle menu"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
-              <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        {/* Unified Tactile Audio Controller */}
+        <button
+          type="button"
+          onClick={handleCycleSoundProfile}
+          className={`h-6.5 items-center gap-1.5 rounded-full border px-2.5 font-mono text-[11px] transition-all cursor-pointer active:scale-95 inline-flex ${
+            soundEnabled
+              ? 'border-gray-300 bg-gray-100/90 text-gray-900 dark:border-gray-700 dark:bg-[#181920] dark:text-white shadow-2xs'
+              : 'border-gray-200 bg-gray-50/60 text-gray-400 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-500'
+          }`}
+          title={`Audio: ${soundEnabled ? currentSoundProfile.name : 'Muted'} (Click to cycle profile or mute)`}
+        >
+          {soundEnabled ? (
+            <svg className="h-3 w-3 text-gray-700 dark:text-gray-300" viewBox="0 0 24 24" fill="none">
+              <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-          </button>
-        </div>
-      </div>
+          ) : (
+            <svg className="h-3 w-3 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none">
+              <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+          <span className="font-semibold hidden lg:inline">
+            {soundEnabled ? currentSoundProfile.name : 'Muted'}
+          </span>
+        </button>
+      </aside>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
@@ -240,10 +275,9 @@ export default function HeaderNav({
                 sounds.play('chime')
                 onOpenArcade?.()
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 py-2.5 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold cursor-pointer"
+              className="flex w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 py-2.5 font-mono text-sm text-gray-900 hover:bg-white dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-100 dark:hover:bg-gray-800 font-semibold cursor-pointer transition-colors"
             >
-              <span className="text-[10px] text-emerald-500 font-bold">●</span>
-              <span>Play Cyber Air Hockey</span>
+              play
             </button>
 
             <button
@@ -268,9 +302,20 @@ export default function HeaderNav({
                 Switch to {isDark ? 'Light' : 'Dark'}
               </button>
             </div>
+
+            <div className="flex items-center justify-between text-gray-500 dark:text-gray-400">
+              <span>Sound Profile:</span>
+              <button
+                type="button"
+                onClick={handleCycleSoundProfile}
+                className="rounded-lg border border-gray-300 px-4 py-1.5 text-xs font-bold text-gray-950 dark:border-gray-700 dark:text-white cursor-pointer"
+              >
+                {soundEnabled ? currentSoundProfile.name : 'Muted'}
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </header>
+    </>
   )
 }
