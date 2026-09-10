@@ -10,25 +10,86 @@ const GOAL_WIDTH = 150
 const GOAL_LEFT = (TABLE_WIDTH - GOAL_WIDTH) / 2
 const GOAL_RIGHT = GOAL_LEFT + GOAL_WIDTH
 
+const LOCAL_STORAGE_PLAYER_KEY = 'archie_arcade_player_name'
+const LOCAL_STORAGE_WINS_KEY = 'archie_arcade_player_wins'
+
+const INITIAL_LEADERBOARD = [
+  { id: 'arch_creator', name: 'Archie (Creator)', wins: 12, diff: 'Pro' },
+  { id: 'kaban_dev', name: 'KabanDev', wins: 8, diff: 'Balanced' },
+  { id: 'byte_striker', name: 'ByteStriker', wins: 4, diff: 'Balanced' },
+  { id: 'guest_88', name: 'Guest_88', wins: 2, diff: 'Casual' },
+]
+
 const DIFFICULTIES = [
-  { id: 'casual', label: 'Casual', aiSpeed: 4.2, aiReaction: 0.82, strikePower: 1.05 },
-  { id: 'balanced', label: 'Balanced', aiSpeed: 6.2, aiReaction: 0.93, strikePower: 1.18 },
-  { id: 'pro', label: 'Pro', aiSpeed: 8.4, aiReaction: 0.98, strikePower: 1.28 },
+  {
+    id: 'casual',
+    label: 'Casual',
+    aiSpeed: 4.2,
+    aiReaction: 0.82,
+    strikePower: 1.05,
+    desc: 'Relaxed pace & wider error tolerance for easy play.',
+  },
+  {
+    id: 'balanced',
+    label: 'Balanced',
+    aiSpeed: 6.2,
+    aiReaction: 0.93,
+    strikePower: 1.18,
+    desc: 'Dynamic tracking, smart defense & tactical counter-strikes.',
+  },
+  {
+    id: 'pro',
+    label: 'Pro',
+    aiSpeed: 8.4,
+    aiReaction: 0.98,
+    strikePower: 1.28,
+    desc: 'Lightning reflexes, aggressive bounces & rapid pursuit.',
+  },
 ]
 
 export default function CyberArcadeModal({ isOpen, onClose }) {
   const canvasRef = useRef(null)
+
+  // Player and Leaderboard State
+  const [playerName, setPlayerName] = useState(() => {
+    try {
+      return localStorage.getItem(LOCAL_STORAGE_PLAYER_KEY) || 'Visitor'
+    } catch {
+      return 'Visitor'
+    }
+  })
+
+  const [playerWins, setPlayerWins] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LOCAL_STORAGE_WINS_KEY)
+      const parsed = parseInt(saved, 10)
+      return !isNaN(parsed) && parsed >= 0 ? parsed : 0
+    } catch {
+      return 0
+    }
+  })
+
   const [difficulty, setDifficulty] = useState('balanced')
   const [playerScore, setPlayerScore] = useState(0)
   const [aiScore, setAiScore] = useState(0)
-  const [gameState, setGameState] = useState('playing') // 'playing' | 'scored' | 'gameover'
+  // Game states: 'lobby' | 'playing' | 'scored' | 'gameover' | 'leaderboard'
+  const [gameState, setGameState] = useState('lobby')
   const [winner, setWinner] = useState(null) // 'player' | 'ai'
-  const [scoreBanner, setScoreBanner] = useState(null) // string banner during goal celebration
+  const [scoreBanner, setScoreBanner] = useState(null)
 
   const difficultyRef = useRef(difficulty)
   useEffect(() => {
     difficultyRef.current = difficulty
   }, [difficulty])
+
+  // Reset to pre-game lobby whenever modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setGameState('lobby')
+      setWinner(null)
+      setScoreBanner(null)
+    }
+  }, [isOpen])
 
   // Physics engine reference mutable state
   const sim = useRef({
@@ -56,12 +117,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     trail: [],
     particles: [],
     freezeTimer: 0,
-    animFrame: null,
     isOver: false,
   })
 
-  // Restart match
-  const restartMatch = useCallback((newDiff = null) => {
+  // Start or restart match
+  const startMatch = useCallback((newDiff = null) => {
     if (newDiff) {
       setDifficulty(newDiff)
       difficultyRef.current = newDiff
@@ -95,7 +155,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     sounds.play('chime')
   }, [])
 
-  // Serve puck after goal
+  // Serve puck after a goal is scored
   const servePuck = useCallback((servedTo) => {
     const s = sim.current
     s.puck.x = TABLE_WIDTH / 2
@@ -145,9 +205,33 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     sim.current.player.targetY = Math.max(TABLE_HEIGHT / 2 + PADDLE_RADIUS + 5, Math.min(TABLE_HEIGHT - PADDLE_RADIUS, y))
   }
 
-  // Keyboard events
+  // Record win against Archie AI in state and local storage
+  const recordWin = useCallback(() => {
+    setPlayerWins((prev) => {
+      const next = prev + 1
+      try {
+        localStorage.setItem(LOCAL_STORAGE_WINS_KEY, next.toString())
+      } catch {
+        // ignore storage errors
+      }
+      return next
+    })
+  }, [])
+
+  // Handle player name edit
+  const handleNameChange = (e) => {
+    const val = e.target.value.slice(0, 18)
+    setPlayerName(val)
+    try {
+      localStorage.setItem(LOCAL_STORAGE_PLAYER_KEY, val)
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  // Keyboard controls during match
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || (gameState !== 'playing' && gameState !== 'scored')) return
 
     const handleKeyDown = (e) => {
       const k = e.key.toLowerCase()
@@ -157,7 +241,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       if (k === 'a' || k === 'arrowleft') { keys.left = true; sim.current.controlMode = 'keyboard'; }
       if (k === 'd' || k === 'arrowright') { keys.right = true; sim.current.controlMode = 'keyboard'; }
       if (k === 'r') {
-        restartMatch()
+        startMatch()
       }
     }
 
@@ -176,11 +260,13 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
-  }, [isOpen, restartMatch])
+  }, [isOpen, gameState, startMatch])
 
-  // Main simulation loop
+  // Canvas 60fps simulation loop
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen || (gameState !== 'playing' && gameState !== 'scored' && gameState !== 'gameover')) {
+      return
+    }
 
     const canvas = canvasRef.current
     if (!canvas) return
@@ -188,14 +274,11 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
     let isMounted = true
     let animId = null
 
-    // Initial serve
-    restartMatch()
-
     const render = () => {
       if (!isMounted) return
       const s = sim.current
 
-      // ── 1. Update Physics (if not frozen) ──
+      // ── 1. Update Physics (if not frozen and not game over) ──
       if (s.freezeTimer > 0) {
         s.freezeTimer -= 1
         if (s.freezeTimer === 0 && !s.isOver) {
@@ -216,7 +299,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           s.player.vx = (s.keys.right ? speed : 0) - (s.keys.left ? speed : 0)
           s.player.vy = (s.keys.down ? speed : 0) - (s.keys.up ? speed : 0)
         } else {
-          // Glide toward target
+          // Smooth cursor / touch glide
           const prevX = s.player.x
           const prevY = s.player.y
           s.player.x += (s.player.targetX - s.player.x) * 0.45
@@ -232,16 +315,13 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         let aiTargetY = 85
 
         if (s.puck.y < TABLE_HEIGHT / 2 + 100) {
-          // Puck is near or in AI half -> actively defend or attack
           aiTargetX = s.puck.x
           if (s.puck.y < TABLE_HEIGHT / 2 - 20) {
-            // Puck is in AI half: align to strike toward goal
             aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(40, s.puck.y - 25))
           } else {
             aiTargetY = 95
           }
         } else {
-          // Puck in player half -> guard center of goal
           aiTargetX = TABLE_WIDTH / 2 + (s.puck.x - TABLE_WIDTH / 2) * 0.35
           aiTargetY = 75
         }
@@ -303,9 +383,10 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 s.isOver = true
                 setGameState('gameover')
                 setWinner('player')
+                recordWin()
               } else {
                 setGameState('scored')
-                setScoreBanner('POINT ARCHIE / YOU!')
+                setScoreBanner('POINT FOR YOU!')
                 s.freezeTimer = 65
                 servePuck('ai')
               }
@@ -334,7 +415,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 setWinner('ai')
               } else {
                 setGameState('scored')
-                setScoreBanner('AI SCORED!')
+                setScoreBanner('ARCHIE AI SCORED!')
                 s.freezeTimer = 65
                 servePuck('player')
               }
@@ -359,7 +440,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
             const nx = dx / dist
             const ny = dy / dist
 
-            // Resolve penetration overlap
+            // Resolve overlap
             s.puck.x = paddle.x + nx * minDist
             s.puck.y = paddle.y + ny * minDist
 
@@ -374,7 +455,6 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
               s.puck.vx += nx * impulse + paddle.vx * 0.38
               s.puck.vy += ny * impulse + paddle.vy * 0.38
 
-              // Speed regulation
               const speed = Math.hypot(s.puck.vx, s.puck.vy)
               const maxSpeed = 16.5
               if (speed > maxSpeed) {
@@ -526,7 +606,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       ctx.arc(s.ai.x, s.ai.y, s.ai.r, 0, Math.PI * 2)
       ctx.fill()
 
-      // Inner handle
+      // AI Inner handle
       ctx.fillStyle = '#9f1239'
       ctx.beginPath()
       ctx.arc(s.ai.x, s.ai.y, s.ai.r * 0.55, 0, Math.PI * 2)
@@ -547,7 +627,7 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
       ctx.arc(s.player.x, s.player.y, s.player.r, 0, Math.PI * 2)
       ctx.fill()
 
-      // Inner handle
+      // Player Inner handle
       ctx.fillStyle = '#065f46'
       ctx.beginPath()
       ctx.arc(s.player.x, s.player.y, s.player.r * 0.55, 0, Math.PI * 2)
@@ -570,9 +650,21 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
         cancelAnimationFrame(animId)
       }
     }
-  }, [isOpen, restartMatch, servePuck])
+  }, [isOpen, gameState, recordWin, servePuck])
 
   if (!isOpen) return null
+
+  // Compute live sorted leaderboard
+  const sortedLeaderboard = [
+    ...INITIAL_LEADERBOARD,
+    {
+      id: 'current_visitor',
+      name: playerName.trim() || 'Visitor',
+      wins: playerWins,
+      diff: DIFFICULTIES.find((d) => d.id === difficulty)?.label || 'Balanced',
+      isCurrent: true,
+    },
+  ].sort((a, b) => b.wins - a.wins)
 
   return (
     <div
@@ -597,20 +689,38 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
                 Cyber Air Hockey
               </h2>
               <p className="font-mono text-[10px] text-gray-400">
-                2D Real-Time Physics • First to {WINNING_SCORE}
+                vs Archie AI • First to {WINNING_SCORE}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => restartMatch()}
-              className="rounded border border-gray-700 bg-gray-800/80 px-2 py-1 font-mono text-[11px] text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:text-white cursor-pointer"
-              title="Restart Match (R)"
-            >
-              Reset
-            </button>
+          {/* Header Action Controls (No Reset Button) */}
+          <div className="flex items-center gap-2">
+            {gameState === 'leaderboard' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.play('tick')
+                  setGameState('lobby')
+                }}
+                className="rounded border border-gray-700 bg-gray-800/80 px-2 py-1 font-mono text-[11px] text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:text-white cursor-pointer"
+              >
+                Lobby
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.play('tick')
+                  setGameState('leaderboard')
+                }}
+                className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 font-mono text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
+                title="View Arena Leaderboards"
+              >
+                Leaderboard
+              </button>
+            )}
+
             <button
               type="button"
               onClick={onClose}
@@ -624,127 +734,370 @@ export default function CyberArcadeModal({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Scoreboard & Difficulty Ribbon */}
-        <div className="flex items-center justify-between border-b border-gray-800/60 bg-[#0e1017] px-4 py-2">
-          {/* Difficulty Switcher */}
-          <div className="flex items-center gap-1">
-            {DIFFICULTIES.map((d) => {
-              const active = difficulty === d.id
-              return (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => restartMatch(d.id)}
-                  className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
-                    active
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 font-bold'
-                      : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40 border border-transparent'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Live Score Display */}
-          <div className="flex items-center gap-2 font-mono">
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-gray-400">AI</span>
-              <span className="text-sm font-bold text-rose-400">{aiScore}</span>
-            </div>
-            <span className="text-gray-600">:</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-emerald-400">{playerScore}</span>
-              <span className="text-[10px] text-gray-400">YOU</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Interactive Canvas Area */}
-        <div className="relative flex flex-1 items-center justify-center p-3 sm:p-4 bg-[#08090d]">
-          <canvas
-            ref={canvasRef}
-            width={TABLE_WIDTH}
-            height={TABLE_HEIGHT}
-            onMouseMove={(e) => updatePlayerPointer(e.clientX, e.clientY)}
-            onTouchMove={(e) => {
-              if (e.touches[0]) {
-                updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
-              }
-            }}
-            onTouchStart={(e) => {
-              if (e.touches[0]) {
-                updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
-              }
-            }}
-            className="w-full max-w-[360px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none"
-          />
-
-          {/* Scored Point Toast Banner */}
-          {scoreBanner && gameState === 'scored' && (
-            <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/40 bg-black/90 px-4 py-3 text-center shadow-2xl backdrop-blur-md">
-              <div className="font-mono text-sm font-black tracking-widest text-emerald-400">
-                {scoreBanner}
+        {/* ── 1. PRE-GAME LOBBY SCREEN ── */}
+        {gameState === 'lobby' && (
+          <div className="flex flex-col p-5 space-y-4 bg-[#090a0f] text-gray-200 min-h-[500px] justify-between">
+            <div className="space-y-4">
+              {/* Title & Introduction */}
+              <div className="rounded-xl border border-gray-800 bg-[#10121a] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    Pre-Match Lobby
+                  </span>
+                  <span className="font-mono text-[10px] text-gray-500">
+                    Your Wins: {playerWins}
+                  </span>
+                </div>
+                <h3 className="mt-1 font-mono text-base font-bold text-white">
+                  Ready to face Archie AI?
+                </h3>
+                <p className="mt-1 font-mono text-xs text-gray-400 leading-relaxed">
+                  Real-time 2D air hockey physics with elastic rebounds. Score 5 points to earn your spot on the leaderboard.
+                </p>
               </div>
-              <div className="mt-0.5 font-mono text-[10px] text-gray-400">
-                Next serve in progress...
+
+              {/* Player Name / Handle Input */}
+              <div className="space-y-1.5">
+                <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide">
+                  Player Name / Call-Sign
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={playerName}
+                    onChange={handleNameChange}
+                    maxLength={18}
+                    placeholder="Enter your name..."
+                    className="w-full rounded-xl border border-gray-700 bg-[#12141e] px-3.5 py-2.5 font-mono text-xs text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <span className="absolute right-3 top-2.5 font-mono text-[10px] text-gray-500">
+                    {playerName.length}/18
+                  </span>
+                </div>
+                <p className="font-mono text-[10px] text-gray-500">
+                  Your wins against Archie AI will be recorded under this name.
+                </p>
+              </div>
+
+              {/* Difficulty Selection */}
+              <div className="space-y-2">
+                <label className="font-mono text-[11px] font-bold text-gray-300 uppercase tracking-wide">
+                  Select AI Difficulty
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {DIFFICULTIES.map((d) => {
+                    const active = difficulty === d.id
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => {
+                          sounds.play('tick')
+                          setDifficulty(d.id)
+                        }}
+                        className={`flex flex-col items-center justify-center rounded-xl border p-2.5 font-mono transition-all cursor-pointer ${
+                          active
+                            ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400 font-bold shadow-sm'
+                            : 'border-gray-800 bg-[#12141e] text-gray-400 hover:border-gray-700 hover:text-gray-200'
+                        }`}
+                      >
+                        <span className="text-xs uppercase">{d.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+                <p className="font-mono text-[11px] text-gray-400 bg-[#10121a] rounded-lg px-3 py-1.5 border border-gray-800/80">
+                  {DIFFICULTIES.find((d) => d.id === difficulty)?.desc}
+                </p>
+              </div>
+
+              {/* Controls Hint */}
+              <div className="rounded-xl border border-gray-800/80 bg-[#0d0e14] p-3 font-mono text-[11px] text-gray-400 space-y-1">
+                <div className="text-gray-300 font-bold text-[10px] uppercase tracking-wider">
+                  Tactile Controls
+                </div>
+                <div>• Mouse: Move cursor to position your paddle</div>
+                <div>• Touch: Drag finger directly on screen</div>
+                <div>• Keyboard: W, A, S, D or Arrow Keys</div>
               </div>
             </div>
-          )}
 
-          {/* Game Over / Post-Match Overlay */}
-          {gameState === 'gameover' && (
-            <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-700 bg-[#0f111a]/95 p-6 text-center shadow-2xl backdrop-blur-xl">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-gray-400">
-                Match Finished
-              </div>
-              <h3
-                className={`mt-1 font-mono text-2xl font-black tracking-tight ${
-                  winner === 'player' ? 'text-emerald-400' : 'text-rose-400'
-                }`}
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => startMatch()}
+                className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
               >
-                {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
-              </h3>
-              <div className="my-3 font-mono text-lg font-bold text-white">
-                <span className="text-emerald-400">{playerScore}</span>
-                <span className="text-gray-500"> - </span>
-                <span className="text-rose-400">{aiScore}</span>
-              </div>
-              <p className="font-mono text-xs text-gray-400 mb-5">
-                {winner === 'player'
-                  ? 'Impressive reflexes! You conquered the arena.'
-                  : 'The AI took the match. Practice makes perfect!'}
-              </p>
+                Start Match vs Archie AI
+              </button>
 
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={() => restartMatch()}
-                  className="w-full rounded-xl bg-emerald-500 py-2.5 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer"
-                >
-                  Play Again
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-full rounded-xl border border-gray-700 py-2 font-mono text-xs text-gray-300 hover:bg-gray-800 cursor-pointer"
-                >
-                  Exit to Portfolio
-                </button>
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.play('tick')
+                  setGameState('leaderboard')
+                }}
+                className="w-full rounded-xl border border-gray-700 bg-[#141620] py-2.5 font-mono text-xs font-semibold text-gray-300 hover:border-gray-600 hover:bg-gray-800 hover:text-white cursor-pointer"
+              >
+                View Leaderboard ({playerWins} Win{playerWins === 1 ? '' : 's'})
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── 2. LEADERBOARD SCREEN ── */}
+        {gameState === 'leaderboard' && (
+          <div className="flex flex-col p-5 space-y-4 bg-[#090a0f] text-gray-200 min-h-[500px] justify-between">
+            <div className="space-y-3">
+              {/* Leaderboard Header */}
+              <div className="rounded-xl border border-gray-800 bg-[#10121a] p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    Leaderboard
+                  </span>
+                  <span className="font-mono text-[10px] text-gray-400">
+                    Your Record: <strong className="text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <h3 className="mt-1 font-mono text-base font-bold text-white">
+                  Wins Against Archie AI
+                </h3>
+                <p className="mt-0.5 font-mono text-xs text-gray-400">
+                  Hall of fame standings for arena challengers.
+                </p>
+              </div>
+
+              {/* Leaderboard Table */}
+              <div className="overflow-hidden rounded-xl border border-gray-800 bg-[#0d0e15]">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-800 bg-[#141622] text-[10px] uppercase tracking-wider text-gray-400">
+                      <th className="py-2.5 pl-3 pr-2 font-bold">#</th>
+                      <th className="py-2.5 px-2 font-bold">Name</th>
+                      <th className="py-2.5 px-2 text-right font-bold">Wins (vs Archie AI)</th>
+                      <th className="py-2.5 pr-3 pl-2 text-right font-bold">Tier</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/60">
+                    {sortedLeaderboard.map((entry, idx) => (
+                      <tr
+                        key={entry.id}
+                        className={`transition-colors ${
+                          entry.isCurrent
+                            ? 'bg-emerald-500/10 font-bold text-emerald-300'
+                            : 'text-gray-300 hover:bg-gray-800/40'
+                        }`}
+                      >
+                        <td className="py-2.5 pl-3 pr-2 text-gray-400 text-[11px]">
+                          {idx === 0 ? '1' : idx === 1 ? '2' : idx === 2 ? '3' : `${idx + 1}`}
+                        </td>
+                        <td className="py-2.5 px-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="truncate max-w-[125px]">{entry.name}</span>
+                            {entry.isCurrent && (
+                              <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.5 text-[9px] font-bold text-emerald-400">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-bold text-emerald-400">
+                          {entry.wins}
+                        </td>
+                        <td className="py-2.5 pr-3 pl-2 text-right text-[10px] text-gray-400">
+                          {entry.diff}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rounded-lg border border-gray-800/60 bg-[#10121a] px-3 py-2 font-mono text-[10px] text-gray-400">
+                Beat Archie AI to increment your win tally and climb the leaderboard standings.
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Tactile Controls Hint Footer */}
-        <div className="flex items-center justify-between border-t border-gray-800/80 bg-[#0e1017] px-4 py-2 font-mono text-[10px] text-gray-400">
-          <div className="flex items-center gap-2">
-            <span className="text-emerald-500">●</span>
-            <span>Controls: Mouse glide • Touch drag • WASD keys</span>
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={() => startMatch()}
+                className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+              >
+                Play Match Now
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.play('tick')
+                  setGameState('lobby')
+                }}
+                className="w-full rounded-xl border border-gray-700 bg-[#141620] py-2.5 font-mono text-xs font-semibold text-gray-300 hover:border-gray-600 hover:bg-gray-800 hover:text-white cursor-pointer"
+              >
+                Back to Pre-Match Lobby
+              </button>
+            </div>
           </div>
-          <span className="hidden sm:inline text-gray-600">Press R to restart</span>
-        </div>
+        )}
+
+        {/* ── 3. PLAYING & GAME OVER ARENA ── */}
+        {(gameState === 'playing' || gameState === 'scored' || gameState === 'gameover') && (
+          <>
+            {/* Scoreboard & Difficulty Ribbon */}
+            <div className="flex items-center justify-between border-b border-gray-800/60 bg-[#0e1017] px-4 py-2">
+              {/* Difficulty Switcher */}
+              <div className="flex items-center gap-1">
+                {DIFFICULTIES.map((d) => {
+                  const active = difficulty === d.id
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => startMatch(d.id)}
+                      className={`rounded px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
+                        active
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/50 font-bold'
+                          : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/40 border border-transparent'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Live Score Display */}
+              <div className="flex items-center gap-2 font-mono">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-gray-400">AI</span>
+                  <span className="text-sm font-bold text-rose-400">{aiScore}</span>
+                </div>
+                <span className="text-gray-600">:</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold text-emerald-400">{playerScore}</span>
+                  <span className="text-[10px] text-gray-400 truncate max-w-[70px] uppercase">
+                    {playerName || 'YOU'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Canvas Area */}
+            <div className="relative flex flex-1 items-center justify-center p-3 sm:p-4 bg-[#08090d]">
+              <canvas
+                ref={canvasRef}
+                width={TABLE_WIDTH}
+                height={TABLE_HEIGHT}
+                onMouseMove={(e) => updatePlayerPointer(e.clientX, e.clientY)}
+                onTouchMove={(e) => {
+                  if (e.touches[0]) {
+                    updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (e.touches[0]) {
+                    updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
+                  }
+                }}
+                className="w-full max-w-[360px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none"
+              />
+
+              {/* Scored Point Toast Banner */}
+              {scoreBanner && gameState === 'scored' && (
+                <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/40 bg-black/90 px-4 py-3 text-center shadow-2xl backdrop-blur-md">
+                  <div className="font-mono text-sm font-black tracking-widest text-emerald-400">
+                    {scoreBanner}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[10px] text-gray-400">
+                    Next serve in progress...
+                  </div>
+                </div>
+              )}
+
+              {/* Game Over / Post-Match Overlay */}
+              {gameState === 'gameover' && (
+                <div className="absolute inset-x-6 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-700 bg-[#0f111a]/95 p-6 text-center shadow-2xl backdrop-blur-xl">
+                  <div className="font-mono text-[11px] uppercase tracking-widest text-gray-400">
+                    Match Finished
+                  </div>
+                  <h3
+                    className={`mt-1 font-mono text-2xl font-black tracking-tight ${
+                      winner === 'player' ? 'text-emerald-400' : 'text-rose-400'
+                    }`}
+                  >
+                    {winner === 'player' ? 'VICTORY' : 'DEFEAT'}
+                  </h3>
+                  <div className="my-3 font-mono text-lg font-bold text-white">
+                    <span className="text-emerald-400">{playerScore}</span>
+                    <span className="text-gray-500"> - </span>
+                    <span className="text-rose-400">{aiScore}</span>
+                  </div>
+
+                  {winner === 'player' ? (
+                    <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 font-mono text-xs text-emerald-300">
+                      +1 Win recorded against Archie AI! Total Wins: <strong>{playerWins}</strong>
+                    </div>
+                  ) : (
+                    <p className="font-mono text-xs text-gray-400 mb-4">
+                      Archie AI held the line this time. Ready for revenge?
+                    </p>
+                  )}
+
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startMatch()}
+                      className="w-full rounded-xl bg-emerald-500 py-2.5 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer"
+                    >
+                      Play Again
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sounds.play('tick')
+                        setGameState('leaderboard')
+                      }}
+                      className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2 font-mono text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 cursor-pointer"
+                    >
+                      View Leaderboard
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        sounds.play('tick')
+                        setGameState('lobby')
+                      }}
+                      className="w-full rounded-xl border border-gray-700 py-2 font-mono text-xs text-gray-300 hover:bg-gray-800 cursor-pointer"
+                    >
+                      Return to Lobby
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tactile Controls Hint Footer */}
+            <div className="flex items-center justify-between border-t border-gray-800/80 bg-[#0e1017] px-4 py-2 font-mono text-[10px] text-gray-400">
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-500">●</span>
+                <span>Controls: Mouse glide • Touch drag • WASD keys</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  sounds.play('tick')
+                  setGameState('lobby')
+                }}
+                className="text-gray-400 hover:text-white cursor-pointer underline underline-offset-2"
+              >
+                Back to Lobby
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
