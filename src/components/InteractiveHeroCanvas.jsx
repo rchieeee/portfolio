@@ -226,7 +226,7 @@ export default function InteractiveHeroCanvas({ theme }) {
     <>
       <canvas
         ref={canvasRef}
-        className="pointer-events-none fixed inset-0 z-0 h-screen w-screen opacity-85 transition-opacity duration-300"
+        className="pointer-events-none fixed inset-0 -z-10 h-screen w-screen opacity-75 transition-opacity duration-300"
       />
 
       {/* ── Unobtrusive Minimalist Floating Physics Widget ── */}

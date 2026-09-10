@@ -187,28 +187,30 @@ export default function TechStackFitChecker() {
 
   return (
     <section id="stack-fit" className="py-14 sm:py-20">
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
+      <div className="relative isolate rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-gray-100 pb-6 dark:border-gray-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-6 dark:border-gray-800/80">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
-              Can I Build Your Project? Pick Your Tech Stack
+              Can I Build Your Project?
             </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Pick your tech stack to inspect real production match
+            </p>
           </div>
-          <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-2 shrink-0 font-mono text-xs whitespace-nowrap">
             <button
               type="button"
               onClick={handleSelectAll}
-              className="text-gray-500 hover:text-gray-950 dark:hover:text-white underline cursor-pointer"
+              className="rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-1 text-gray-600 hover:bg-white hover:text-gray-950 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 dark:hover:text-white dark:hover:border-gray-700 cursor-pointer transition-colors"
             >
               Select all
             </button>
-            <span className="text-gray-300 dark:text-gray-700">|</span>
             <button
               type="button"
               onClick={handleClear}
-              className="text-gray-500 hover:text-gray-950 dark:hover:text-white underline cursor-pointer"
+              className="rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-1 text-gray-600 hover:bg-white hover:text-gray-950 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 dark:hover:text-white dark:hover:border-gray-700 cursor-pointer transition-colors"
             >
               Reset
             </button>

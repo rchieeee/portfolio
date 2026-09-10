@@ -279,18 +279,20 @@ export default function ClientSideOptimizerDemo() {
 
   return (
     <section id="compression-sandbox" className="py-14 sm:py-20">
-      <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
+      <div className="relative isolate rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-gray-100 pb-6 dark:border-gray-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-6 dark:border-gray-800/80">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
               How I Cut Cloud Storage Costs by 99%
             </h2>
           </div>
-          <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
-            Real Algorithm from PNP-CCACGI System
-          </span>
+          <div className="shrink-0">
+            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50/80 px-3 py-1 font-mono text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 whitespace-nowrap">
+              Algorithm from PNP-CCACGI System
+            </span>
+          </div>
         </div>
 
         {/* Story / Problem & Solution */}
