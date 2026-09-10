@@ -13,9 +13,10 @@ export const BASE_LEADERBOARD = [
 ]
 
 // Firebase Realtime Database URL
-// Configured via .env or direct URL
+// Configured via .env or direct URL fallback
 export const FIREBASE_DB_URL =
-  import.meta.env.VITE_FIREBASE_DB_URL || ''
+  import.meta.env.VITE_FIREBASE_DB_URL ||
+  'https://archie-portfolio-default-rtdb.asia-southeast1.firebasedatabase.app'
 
 /**
  * Get current stored player name
