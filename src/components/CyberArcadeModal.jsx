@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
-import { sounds } from '../utils/audio'
+import { SOUND_PROFILES, sounds } from '../utils/audio'
 import {
   getStoredPlayerName,
   savePlayerName,
@@ -27,7 +27,7 @@ const DIFFICULTIES = [
     aiReaction: 0.82,
     strikePower: 1.05,
     tag: 'Warm-Up',
-    desc: 'Relaxed speed & forgiving error margin. Great for casual fun.',
+    desc: 'Relaxed speed and wide reaction window. Perfect for a quick warm-up.',
   },
   {
     id: 'balanced',
@@ -36,7 +36,7 @@ const DIFFICULTIES = [
     aiReaction: 0.93,
     strikePower: 1.18,
     tag: 'Standard',
-    desc: 'Tactical defense, smart rebounds & sharp angle counter-strikes.',
+    desc: 'Tactical defense, smart rebounds & precision angle counter-strikes.',
   },
   {
     id: 'pro',
@@ -45,11 +45,20 @@ const DIFFICULTIES = [
     aiReaction: 0.98,
     strikePower: 1.28,
     tag: 'Championship',
-    desc: 'Predictive bank-shots, fast tracking & aggressive attacks.',
+    desc: 'Fast tracking, bank-shots & aggressive pursuit. Hardcore challenge.',
   },
 ]
 
-export default function CyberArcadeModal({ isOpen, onClose, theme }) {
+export default function CyberArcadeModal({
+  isOpen,
+  onClose,
+  onOpenTerminal,
+  theme,
+  onSetTheme,
+  themeCooldown = false,
+  soundEnabled = true,
+  onToggleSound,
+}) {
   const canvasRef = useRef(null)
   const nameInputRef = useRef(null)
 
@@ -71,6 +80,34 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] })
     return () => observer.disconnect()
   }, [theme])
+
+  // Audio Profile state
+  const [activeSoundProfile, setActiveSoundProfile] = useState(() => sounds.profile)
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent || '')
+  const modKey = isMac ? '⌘' : 'Alt'
+
+  const handleCycleSound = () => {
+    if (!soundEnabled) {
+      onToggleSound?.()
+      return
+    }
+    const currentIdx = SOUND_PROFILES.findIndex((p) => p.id === activeSoundProfile)
+    if (currentIdx === SOUND_PROFILES.length - 1) {
+      onToggleSound?.()
+    } else {
+      const nextIdx = currentIdx + 1
+      const nextProfile = SOUND_PROFILES[nextIdx].id
+      sounds.setProfile(nextProfile)
+      setActiveSoundProfile(nextProfile)
+    }
+  }
+
+  const currentSoundProfile = SOUND_PROFILES.find((p) => p.id === activeSoundProfile) || SOUND_PROFILES[0]
+
+  const handleToggleTheme = () => {
+    if (themeCooldown) return
+    onSetTheme?.(isDark ? 'light' : 'dark')
+  }
 
   // Player and Leaderboard State
   const [playerName, setPlayerName] = useState(() => getStoredPlayerName())
@@ -561,14 +598,14 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
       } else {
         const grad = ctx.createLinearGradient(0, 0, 0, TABLE_HEIGHT)
         grad.addColorStop(0, '#f8fafc')
-        grad.addColorStop(0.5, '#edf2f7')
+        grad.addColorStop(0.5, '#f1f5f9')
         grad.addColorStop(1, '#f8fafc')
         ctx.fillStyle = grad
       }
       ctx.fillRect(0, 0, TABLE_WIDTH, TABLE_HEIGHT)
 
       // Subtle Grid Markings
-      ctx.strokeStyle = currentDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.04)'
+      ctx.strokeStyle = currentDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(15, 23, 42, 0.035)'
       ctx.lineWidth = 1
       for (let x = 32; x < TABLE_WIDTH; x += 32) {
         ctx.beginPath()
@@ -584,7 +621,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
       }
 
       // Center Divider Line
-      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(5, 150, 105, 0.45)'
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.35)' : 'rgba(5, 150, 105, 0.35)'
       ctx.lineWidth = 2
       ctx.setLineDash([8, 6])
       ctx.beginPath()
@@ -594,35 +631,35 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
       ctx.setLineDash([])
 
       // Center Face-Off Circle
-      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.28)' : 'rgba(5, 150, 105, 0.35)'
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.28)' : 'rgba(5, 150, 105, 0.3)'
       ctx.lineWidth = 1.5
       ctx.beginPath()
       ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 54, 0, Math.PI * 2)
       ctx.stroke()
 
       // Center dot
-      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.5)' : 'rgba(5, 150, 105, 0.6)'
+      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.5)' : 'rgba(5, 150, 105, 0.5)'
       ctx.beginPath()
       ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT / 2, 4.5, 0, Math.PI * 2)
       ctx.fill()
 
       // Goal Lines & Arcs
       // AI Goal (Top)
-      ctx.strokeStyle = currentDark ? 'rgba(244, 63, 94, 0.45)' : 'rgba(225, 29, 72, 0.5)'
+      ctx.strokeStyle = currentDark ? 'rgba(244, 63, 94, 0.45)' : 'rgba(225, 29, 72, 0.4)'
       ctx.lineWidth = 2.5
       ctx.beginPath()
       ctx.arc(TABLE_WIDTH / 2, 0, 64, 0, Math.PI)
       ctx.stroke()
-      ctx.fillStyle = currentDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(225, 29, 72, 0.12)'
+      ctx.fillStyle = currentDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(225, 29, 72, 0.08)'
       ctx.fillRect(GOAL_LEFT, 0, GOAL_WIDTH, 9)
 
       // Player Goal (Bottom)
-      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.45)' : 'rgba(5, 150, 105, 0.5)'
+      ctx.strokeStyle = currentDark ? 'rgba(16, 185, 129, 0.45)' : 'rgba(5, 150, 105, 0.4)'
       ctx.lineWidth = 2.5
       ctx.beginPath()
       ctx.arc(TABLE_WIDTH / 2, TABLE_HEIGHT, 64, Math.PI, Math.PI * 2)
       ctx.stroke()
-      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 150, 105, 0.12)'
+      ctx.fillStyle = currentDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 150, 105, 0.08)'
       ctx.fillRect(GOAL_LEFT, TABLE_HEIGHT - 9, GOAL_WIDTH, 9)
 
       // Table Boundary Outer Border
@@ -646,7 +683,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
         const opacity = (1 - i / s.trail.length) * 0.28
         ctx.fillStyle = currentDark
           ? `rgba(56, 189, 248, ${opacity})`
-          : `rgba(2, 132, 199, ${opacity * 0.9})`
+          : `rgba(2, 132, 199, ${opacity * 0.85})`
         ctx.beginPath()
         ctx.arc(pt.x, pt.y, s.puck.r * (0.85 - i * 0.05), 0, Math.PI * 2)
         ctx.fill()
@@ -654,8 +691,8 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
 
       // Draw Puck
       ctx.save()
-      ctx.shadowColor = currentDark ? '#38bdf8' : '#0284c7'
-      ctx.shadowBlur = currentDark ? 10 : 6
+      ctx.shadowColor = currentDark ? '#38bdf8' : 'rgba(0, 0, 0, 0.25)'
+      ctx.shadowBlur = currentDark ? 10 : 5
       ctx.fillStyle = currentDark ? '#f8fafc' : '#0f172a'
       ctx.beginPath()
       ctx.arc(s.puck.x, s.puck.y, s.puck.r, 0, Math.PI * 2)
@@ -671,8 +708,8 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
 
       // Draw AI Mallet (Crimson / Coral)
       ctx.save()
-      ctx.shadowColor = currentDark ? '#f43f5e' : '#e11d48'
-      ctx.shadowBlur = currentDark ? 12 : 6
+      ctx.shadowColor = currentDark ? '#f43f5e' : 'rgba(225, 29, 72, 0.4)'
+      ctx.shadowBlur = currentDark ? 12 : 5
       ctx.fillStyle = currentDark ? '#f43f5e' : '#e11d48'
       ctx.beginPath()
       ctx.arc(s.ai.x, s.ai.y, s.ai.r, 0, Math.PI * 2)
@@ -691,8 +728,8 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
 
       // Draw Player Mallet (Emerald)
       ctx.save()
-      ctx.shadowColor = currentDark ? '#10b981' : '#059669'
-      ctx.shadowBlur = currentDark ? 12 : 6
+      ctx.shadowColor = currentDark ? '#10b981' : 'rgba(5, 150, 105, 0.4)'
+      ctx.shadowBlur = currentDark ? 12 : 5
       ctx.fillStyle = currentDark ? '#10b981' : '#059669'
       ctx.beginPath()
       ctx.arc(s.player.x, s.player.y, s.player.r, 0, Math.PI * 2)
@@ -733,6 +770,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
   const currentRank = sortedLeaderboard.findIndex((e) => e.isCurrent) + 1
   const prevRankPlayer = currentRank > 1 ? sortedLeaderboard[currentRank - 2] : null
   const winsToClimb = prevRankPlayer ? Math.max(1, prevRankPlayer.wins - playerWins + 1) : 0
+  const topPlayer = sortedLeaderboard.length > 0 && sortedLeaderboard[0].wins > 0 ? sortedLeaderboard[0] : null
 
   if (!isOpen) return null
 
@@ -744,28 +782,104 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 dark:bg-black/85 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/40 dark:bg-black/85 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
-      {/* Main Arcade Frame - Expanded width for immersive play */}
-      <div className="relative z-10 flex max-h-[95vh] w-full max-w-xl sm:max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl transition-colors dark:border-gray-800 dark:bg-[#0c0d12] text-gray-900 dark:text-gray-100">
-        {/* Top Control Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50/90 px-4 py-3 sm:px-6 transition-colors dark:border-gray-800/80 dark:bg-[#12141c]">
+      {/* Main Arcade Frame - Expanded modern console */}
+      <div className="relative z-10 flex max-h-[94vh] w-full max-w-xl sm:max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200/90 bg-[#fafafa] shadow-2xl transition-colors dark:border-gray-800 dark:bg-[#0c0d12] text-gray-900 dark:text-gray-100 ring-1 ring-black/5 dark:ring-white/5">
+        
+        {/* ── Top Header Bar with 3 Header Controls on Top Right ── */}
+        <div className="flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-2.5 sm:px-5 backdrop-blur-md transition-colors dark:border-gray-800/80 dark:bg-[#12141c]">
+          {/* Left: Branding & Status */}
           <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <div>
-              <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-gray-950 dark:text-white">
-                Cyber Air Hockey Arcade
-              </h2>
-              <p className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
-                vs Archie AI • First to {WINNING_SCORE} Points
-              </p>
+              <div className="flex items-center gap-2">
+                <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-gray-950 dark:text-white">
+                  Cyber Air Hockey
+                </h2>
+                <span className="hidden sm:inline-block rounded bg-gray-100 px-1.5 py-0.2 font-mono text-[9px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                  2D Arena
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Header Action Controls */}
-          <div className="flex items-center gap-2">
+          {/* Right: The 3 Requested Controls + Leaderboard + Close Button */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Control 1: Interactive Terminal Trigger Button ($ CLI) */}
+            <button
+              type="button"
+              onClick={() => {
+                sounds.play('chime')
+                onOpenTerminal?.()
+              }}
+              className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
+              title="Open Interactive CLI Terminal"
+            >
+              <span className="font-bold text-gray-950 dark:text-white">$</span>
+              <span className="hidden sm:inline font-semibold">CLI</span>
+              <kbd className="hidden rounded bg-gray-200 px-1 py-0.2 text-[9px] text-gray-600 sm:inline dark:bg-gray-800 dark:text-gray-300">
+                {modKey}+K
+              </kbd>
+            </button>
+
+            {/* Control 2: Tactile Theme Switcher (Sliding Thumb) */}
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              disabled={themeCooldown}
+              className="group relative flex h-6 w-11 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
+              aria-label="Toggle Theme Mode"
+            >
+              <span
+                className={`flex h-4.5 w-4.5 transform items-center justify-center rounded-full shadow-sm transition-transform duration-200 ease-out ${
+                  isDark
+                    ? 'translate-x-5 bg-white text-gray-950'
+                    : 'translate-x-0 bg-gray-900 text-white'
+                }`}
+              >
+                {isDark ? (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <path d="M20 13.6A8 8 0 1 1 10.4 4a6.2 6.2 0 0 0 9.6 9.6z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <circle cx="12" cy="12" r="3.5" stroke="currentColor" strokeWidth="2" />
+                    <path d="M12 2v1.5M12 20.5V22M2 12h1.5M20.5 12H22M4.9 4.9l1 1M18.1 18.1l1 1M19.1 4.9l-1 1M5.9 18.1l-1 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                )}
+              </span>
+            </button>
+
+            {/* Control 3: Tactile Audio Profile Controller (8-Bit / Mechanical / Muted) */}
+            <button
+              type="button"
+              onClick={handleCycleSound}
+              className={`h-6 items-center gap-1.5 rounded-full border px-2 font-mono text-[11px] transition-all cursor-pointer active:scale-95 inline-flex ${
+                soundEnabled
+                  ? 'border-gray-300 bg-gray-100 text-gray-900 dark:border-gray-700 dark:bg-[#181920] dark:text-white shadow-2xs'
+                  : 'border-gray-200 bg-gray-50 text-gray-400 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-500'
+              }`}
+              title={`Audio: ${soundEnabled ? currentSoundProfile.name : 'Muted'} (Click to cycle)`}
+            >
+              {soundEnabled ? (
+                <svg className="h-3 w-3 text-gray-700 dark:text-gray-300" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 9a4 4 0 010 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg className="h-3 w-3 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 10v4h3l4 3V7L8 10H5zM16 10l5 5M21 10l-5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
+              <span className="hidden sm:inline font-semibold">
+                {soundEnabled ? currentSoundProfile.name : 'Muted'}
+              </span>
+            </button>
+
+            {/* Leaderboard or Lobby View Toggle */}
             {gameState === 'leaderboard' ? (
               <button
                 type="button"
@@ -773,7 +887,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-1 font-mono text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white cursor-pointer"
+                className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 font-mono text-[11px] text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
               >
                 Lobby
               </button>
@@ -784,17 +898,18 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   sounds.play('tick')
                   setGameState('leaderboard')
                 }}
-                className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 font-mono text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 cursor-pointer"
-                title="View Arena Leaderboards"
+                className="rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 font-mono text-[11px] font-semibold text-gray-700 hover:bg-gray-200 dark:border-gray-800 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
+                title="View Arena Leaderboard"
               >
-                Leaderboard
+                Board
               </button>
             )}
 
+            {/* Close Button */}
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-200 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
+              className="rounded-lg p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
               aria-label="Close Arcade"
             >
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
@@ -804,38 +919,57 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
           </div>
         </div>
 
-        {/* ── 1. PRE-GAME LOBBY SCREEN ── */}
+        {/* ── 1. PRE-GAME LOBBY SCREEN (Clean, Modern, Hook for Visitors) ── */}
         {gameState === 'lobby' && (
-          <div className="flex flex-col p-5 sm:p-7 space-y-5 bg-white dark:bg-[#090a0f] min-h-[520px] justify-between overflow-y-auto">
-            <div className="space-y-5">
-              {/* Introduction Banner */}
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5 dark:border-gray-800 dark:bg-[#10121a]">
+          <div className="flex flex-col p-5 sm:p-6 space-y-4 bg-[#fafafa] dark:bg-[#090a0f] min-h-[480px] justify-between overflow-y-auto">
+            <div className="space-y-4">
+              
+              {/* Modern Minimalist Hero Card */}
+              <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-5 shadow-xs transition-colors dark:border-gray-800 dark:bg-[#12141d]">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                    Pre-Match Briefing
+                    Challenger Arena
                   </span>
-                  <span className="font-mono text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                    Your Record: <strong className="text-emerald-600 dark:text-emerald-400">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
+                  <span className="font-mono text-xs text-gray-500 dark:text-gray-400">
+                    Your Wins: <strong className="text-gray-950 dark:text-white">{playerWins}</strong>
                   </span>
                 </div>
-                <h3 className="mt-1 font-mono text-lg font-bold text-gray-950 dark:text-white">
-                  Can You Beat Archie AI?
+                <h3 className="mt-1.5 font-mono text-lg sm:text-xl font-bold tracking-tight text-gray-950 dark:text-white">
+                  Can You Score 5 Goals on Archie AI?
                 </h3>
                 <p className="mt-1 font-mono text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-                  Fast-paced 2D air hockey with responsive physics. Enter your name below, choose your AI difficulty, and score 5 points to record your win on the global leaderboard!
+                  Direct physical 2D puck simulation. Enter your name, select your difficulty, and strike the puck past the AI net to climb the global leaderboard.
                 </p>
+
+                {/* Competitive Hook Banner */}
+                <div className="mt-3.5 rounded-xl border border-gray-200 bg-gray-50/90 px-3.5 py-2 font-mono text-xs text-gray-700 dark:border-gray-800 dark:bg-[#171924] dark:text-gray-300">
+                  {topPlayer ? (
+                    <div className="flex items-center justify-between">
+                      <span>Current #1: <strong className="text-gray-950 dark:text-white">{topPlayer.name}</strong> ({topPlayer.wins} wins)</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Beat AI to take the lead</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span>Rank #1 is currently open!</span>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Be the first to claim it</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Player Name Input (Mandatory) */}
+              {/* Player Name Input (Streamlined, frictionless) */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide flex items-center gap-1.5">
-                    <span>Enter Your Name / Nickname</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-normal">• Required to Play</span>
+                  <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                    Your Challenger Name / Nickname
                   </label>
-                  {nameError && (
+                  {nameError ? (
                     <span className="font-mono text-[11px] font-bold text-rose-600 dark:text-rose-400">
                       Enter at least 2 letters
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] text-gray-400 dark:text-gray-500">
+                      Required to track rank
                     </span>
                   )}
                 </div>
@@ -851,32 +985,34 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                       }
                     }}
                     maxLength={18}
-                    placeholder="Type your name or player handle..."
-                    className={`w-full rounded-xl border px-4 py-3 font-mono text-sm transition-all focus:outline-none focus:ring-2 ${
+                    placeholder="Type your name or handle..."
+                    className={`w-full rounded-xl border px-3.5 py-2.5 font-mono text-xs transition-all focus:outline-none ${
                       nameError
-                        ? 'border-rose-500 bg-rose-50/50 text-rose-950 focus:ring-rose-500 dark:border-rose-500 dark:bg-rose-950/20 dark:text-white'
+                        ? 'border-rose-500 bg-rose-50/50 text-rose-950 dark:bg-rose-950/20 dark:text-white'
                         : isNameValid
-                        ? 'border-emerald-500/80 bg-white text-gray-900 focus:ring-emerald-500 dark:border-emerald-500/80 dark:bg-[#141622] dark:text-white'
-                        : 'border-gray-300 bg-white text-gray-900 placeholder-gray-400 focus:border-emerald-500 focus:ring-emerald-500 dark:border-gray-700 dark:bg-[#141622] dark:text-white dark:placeholder-gray-500'
+                        ? 'border-gray-300 bg-white text-gray-900 focus:border-gray-950 dark:border-gray-700 dark:bg-[#141622] dark:text-white dark:focus:border-gray-400'
+                        : 'border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:border-gray-900 dark:border-gray-700 dark:bg-[#141622] dark:text-white dark:placeholder-gray-500'
                     }`}
                   />
-                  <span className="absolute right-3.5 top-3 font-mono text-xs text-gray-400 dark:text-gray-500">
+                  <span className="absolute right-3 top-2.5 font-mono text-[10px] text-gray-400">
                     {playerName.length}/18
                   </span>
                 </div>
-                <p className="font-mono text-[11px] text-gray-500 dark:text-gray-400">
-                  {isNameValid
-                    ? `Registered as "${playerName.trim()}". Your wins will sync to the worldwide leaderboard.`
-                    : 'Input your name first so your rank and score are tracked among other visitors.'}
-                </p>
               </div>
 
-              {/* Difficulty Selection */}
-              <div className="space-y-2">
-                <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
-                  Select AI Difficulty
-                </label>
-                <div className="grid grid-cols-3 gap-2.5">
+              {/* Segmented Difficulty Selector */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-mono text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wide">
+                    AI Difficulty
+                  </label>
+                  <span className="font-mono text-[10px] text-gray-500 dark:text-gray-400">
+                    {DIFFICULTIES.find((d) => d.id === difficulty)?.tag} Mode
+                  </span>
+                </div>
+
+                {/* Sleek segmented pill bar */}
+                <div className="grid grid-cols-3 gap-1 rounded-xl border border-gray-200 bg-gray-100 p-1 dark:border-gray-800 dark:bg-[#12141e]">
                   {DIFFICULTIES.map((d) => {
                     const active = difficulty === d.id
                     return (
@@ -887,48 +1023,50 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                           sounds.play('tick')
                           setDifficulty(d.id)
                         }}
-                        className={`flex flex-col items-center justify-center rounded-xl border p-3 font-mono transition-all cursor-pointer ${
+                        className={`rounded-lg py-2 font-mono text-xs font-semibold transition-all cursor-pointer ${
                           active
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800 font-bold shadow-sm dark:bg-emerald-500/15 dark:text-emerald-400'
-                            : 'border-gray-200 bg-gray-50/80 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800 dark:bg-[#12141e] dark:text-gray-400 dark:hover:border-gray-700 dark:hover:text-gray-200'
+                            ? 'bg-white text-gray-950 shadow-xs dark:bg-gray-800 dark:text-white'
+                            : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
                         }`}
                       >
-                        <span className="text-xs sm:text-sm uppercase font-bold">{d.label}</span>
-                        <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{d.tag}</span>
+                        {d.label}
                       </button>
                     )
                   })}
                 </div>
-                <p className="font-mono text-xs text-gray-600 bg-gray-50 rounded-lg px-3.5 py-2 border border-gray-200 dark:bg-[#10121a] dark:text-gray-400 dark:border-gray-800/80">
+                <p className="font-mono text-[11px] text-gray-500 dark:text-gray-400 px-1">
                   {DIFFICULTIES.find((d) => d.id === difficulty)?.desc}
                 </p>
               </div>
 
-              {/* Controls Hint */}
-              <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-3.5 font-mono text-xs text-gray-600 space-y-1 dark:border-gray-800/80 dark:bg-[#0d0e14] dark:text-gray-400">
-                <div className="text-gray-800 dark:text-gray-200 font-bold text-[11px] uppercase tracking-wider">
-                  How to Play & Controls
-                </div>
-                <div>• Mouse: Move cursor anywhere on court to guide your mallet</div>
-                <div>• Touch: Drag finger directly on screen for instant response</div>
-                <div>• Keyboard: W, A, S, D or Arrow Keys</div>
+              {/* Minimalist Controls Legend */}
+              <div className="flex items-center justify-between rounded-xl border border-gray-200/80 bg-white px-3 py-2 font-mono text-[11px] text-gray-500 dark:border-gray-800/80 dark:bg-[#12141e] dark:text-gray-400">
+                <span className="font-semibold text-gray-800 dark:text-gray-300">Controls:</span>
+                <span>Mouse Glide</span>
+                <span>•</span>
+                <span>Touch Drag</span>
+                <span>•</span>
+                <span>WASD Keys</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-2.5 pt-3 border-t border-gray-200 dark:border-gray-800">
+            {/* Action Buttons: Modern, Gentle on the Eyes */}
+            <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-800">
               <button
                 type="button"
                 onClick={handleStartMatchClick}
-                className={`w-full rounded-xl py-3.5 font-mono text-sm font-bold transition-all cursor-pointer ${
+                className={`w-full rounded-xl py-3 font-mono text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
                   isNameValid
-                    ? 'bg-emerald-500 text-gray-950 hover:bg-emerald-400 active:scale-98 shadow-lg shadow-emerald-500/20'
-                    : 'bg-gray-200 text-gray-500 hover:bg-gray-300 dark:bg-gray-800/90 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-700'
+                    ? 'bg-gray-950 text-white hover:bg-gray-800 active:scale-98 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 shadow-sm'
+                    : 'bg-gray-200 text-gray-400 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isNameValid
-                  ? `Start Match as ${playerName.trim()} vs Archie AI`
-                  : 'Enter Your Name Above to Play'}
+                <span>▶</span>
+                <span>
+                  {isNameValid
+                    ? `Start Match as ${playerName.trim()} vs Archie AI`
+                    : 'Enter Your Name to Play'}
+                </span>
               </button>
 
               <button
@@ -937,9 +1075,9 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   sounds.play('tick')
                   setGameState('leaderboard')
                 }}
-                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#141620] dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-[#12141e] dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
               >
-                View Worldwide Leaderboard ({playerWins} Win{playerWins === 1 ? '' : 's'})
+                View Worldwide Leaderboard
               </button>
             </div>
           </div>
@@ -947,46 +1085,46 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
 
         {/* ── 2. LEADERBOARD SCREEN ── */}
         {gameState === 'leaderboard' && (
-          <div className="flex flex-col p-5 sm:p-7 space-y-4 bg-white dark:bg-[#090a0f] min-h-[520px] justify-between overflow-y-auto">
-            <div className="space-y-4">
+          <div className="flex flex-col p-5 sm:p-6 space-y-4 bg-[#fafafa] dark:bg-[#090a0f] min-h-[480px] justify-between overflow-y-auto">
+            <div className="space-y-3.5">
               {/* Leaderboard Header */}
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 sm:p-5 dark:border-gray-800 dark:bg-[#10121a]">
+              <div className="rounded-2xl border border-gray-200/80 bg-white p-4 sm:p-5 shadow-xs dark:border-gray-800 dark:bg-[#12141d]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
                       Worldwide Leaderboard
                     </span>
-                    <span className="rounded bg-emerald-500/20 px-2 py-0.5 font-mono text-[9px] font-bold text-emerald-700 border border-emerald-500/40 dark:text-emerald-400">
-                      Live Cloud Sync
+                    <span className="rounded bg-emerald-500/15 px-2 py-0.2 font-mono text-[9px] font-bold text-emerald-700 border border-emerald-500/30 dark:text-emerald-400">
+                      Live Firebase Sync
                     </span>
                   </div>
                   <span className="font-mono text-xs font-semibold text-gray-500 dark:text-gray-400">
-                    Your Wins: <strong className="text-emerald-600 dark:text-emerald-400">{playerWins}</strong>
+                    Your Record: <strong className="text-gray-950 dark:text-white">{playerWins}</strong> Win{playerWins === 1 ? '' : 's'}
                   </span>
                 </div>
-                <h3 className="mt-1 font-mono text-base sm:text-lg font-bold text-gray-950 dark:text-white">
+                <h3 className="mt-1.5 font-mono text-lg font-bold text-gray-950 dark:text-white">
                   Wins Against Archie AI
                 </h3>
                 <p className="mt-0.5 font-mono text-xs text-gray-600 dark:text-gray-400">
-                  Global standings for real visitors challenging Archie AI.
+                  Real visitor standings synchronized across all devices globally.
                 </p>
               </div>
 
               {/* Competitive Rank Status Callout */}
-              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 font-mono text-xs text-emerald-900 dark:text-emerald-300">
+              <div className="rounded-xl border border-gray-200 bg-white p-3 font-mono text-xs text-gray-700 dark:border-gray-800 dark:bg-[#141622] dark:text-gray-300">
                 {sortedLeaderboard.length === 0 || (sortedLeaderboard.length === 1 && playerWins === 0) ? (
                   <div>
-                    <strong>Be the First Champion!</strong> The leaderboard is fresh and awaiting its first winner. Defeat Archie AI to take Rank #1!
+                    <strong>Be the First Champion!</strong> No one has defeated Archie AI yet. Play a match to take Rank #1!
                   </div>
                 ) : currentRank === 1 && playerWins > 0 ? (
                   <div>
-                    <strong>Rank #1 Champion!</strong> You hold the top spot on the worldwide leaderboard. Keep winning to defend your crown!
+                    <strong>Rank #1 Champion!</strong> You hold the top spot on the worldwide leaderboard. Keep winning to stay ahead!
                   </div>
                 ) : (
                   <div>
                     You are currently <strong>Rank #{currentRank || 1}</strong> ({playerWins} win{playerWins === 1 ? '' : 's'}).
                     {prevRankPlayer && (
-                      <span className="block mt-1 text-[11px] text-emerald-800 dark:text-emerald-200">
+                      <span className="block mt-1 text-[11px] text-gray-500 dark:text-gray-400">
                         Win {winsToClimb} more match{winsToClimb === 1 ? '' : 'es'} to surpass {prevRankPlayer.name} and claim <strong>Rank #{currentRank - 1}</strong>!
                       </span>
                     )}
@@ -1018,7 +1156,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                           key={entry.id || idx}
                           className={`transition-colors ${
                             entry.isCurrent
-                              ? 'bg-emerald-500/15 font-bold text-emerald-900 dark:text-emerald-300'
+                              ? 'bg-gray-100/90 font-bold text-gray-950 dark:bg-gray-800/60 dark:text-white'
                               : 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/40'
                           }`}
                         >
@@ -1031,13 +1169,13 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                                 {entry.name || 'Anonymous'}
                               </span>
                               {entry.isCurrent && (
-                                <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.5 text-[9px] font-bold text-emerald-700 dark:text-emerald-400">
+                                <span className="rounded border border-emerald-500/40 bg-emerald-500/20 px-1 py-0.2 text-[9px] font-bold text-emerald-700 dark:text-emerald-400">
                                   YOU
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-2.5 px-2 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                          <td className="py-2.5 px-2 text-right font-bold text-gray-950 dark:text-white">
                             {entry.wins}
                           </td>
                           <td className="py-2.5 pr-3 pl-2 text-right text-[10px] text-gray-500 dark:text-gray-400">
@@ -1049,18 +1187,14 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   </tbody>
                 </table>
               </div>
-
-              <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-[11px] text-gray-500 dark:border-gray-800/60 dark:bg-[#10121a] dark:text-gray-400">
-                To reach Rank #1, accumulate more total wins against Archie AI than any other visitor.
-              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2.5 pt-3 border-t border-gray-200 dark:border-gray-800">
+            <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-800">
               <button
                 type="button"
                 onClick={handleStartMatchClick}
-                className="w-full rounded-xl bg-emerald-500 py-3.5 font-mono text-sm font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+                className="w-full rounded-xl bg-gray-950 text-white hover:bg-gray-800 py-3 font-mono text-xs font-bold transition-all cursor-pointer dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 shadow-sm"
               >
                 {isNameValid ? `Play Match as ${playerName.trim()}` : 'Enter Name & Play Match'}
               </button>
@@ -1071,7 +1205,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="w-full rounded-xl border border-gray-300 bg-white py-2.5 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-[#141620] dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
+                className="w-full rounded-xl border border-gray-200 bg-white py-2 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-[#12141e] dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
               >
                 Back to Pre-Match Lobby
               </button>
@@ -1083,7 +1217,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
         {(gameState === 'playing' || gameState === 'scored' || gameState === 'gameover') && (
           <>
             {/* Scoreboard & Match Info Ribbon */}
-            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-100/90 px-4 py-2.5 sm:px-6 transition-colors dark:border-gray-800/60 dark:bg-[#0e1017]">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-2.5 sm:px-6 transition-colors dark:border-gray-800/60 dark:bg-[#0e1017]">
               {/* Difficulty Switcher */}
               <div className="flex items-center gap-1.5">
                 {DIFFICULTIES.map((d) => {
@@ -1095,8 +1229,8 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                       onClick={() => startMatch(d.id)}
                       className={`rounded-lg px-2.5 py-1 font-mono text-[10px] uppercase tracking-wide transition-colors cursor-pointer ${
                         active
-                          ? 'bg-emerald-500/20 text-emerald-700 border border-emerald-500/50 font-bold dark:text-emerald-400'
-                          : 'text-gray-500 hover:text-gray-800 hover:bg-gray-200/60 border border-transparent dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800/40'
+                          ? 'bg-gray-900 text-white font-bold dark:bg-white dark:text-gray-950'
+                          : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800'
                       }`}
                     >
                       {d.label}
@@ -1108,10 +1242,10 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
               {/* Live Arcade Scoreboard HUD */}
               <div className="flex items-center gap-3 font-mono">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">AI</span>
+                  <span className="text-[10px] font-bold text-gray-400">AI</span>
                   <span className="text-base font-black text-rose-600 dark:text-rose-400">{aiScore}</span>
                 </div>
-                <span className="text-gray-400 dark:text-gray-600 font-bold">:</span>
+                <span className="text-gray-300 dark:text-gray-600 font-bold">:</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-base font-black text-emerald-600 dark:text-emerald-400">{playerScore}</span>
                   <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 truncate max-w-[80px] uppercase">
@@ -1120,7 +1254,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                 </div>
 
                 {rallyCount > 2 && (
-                  <span className="hidden sm:inline rounded bg-blue-500/15 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 dark:text-blue-400 border border-blue-500/30">
+                  <span className="hidden sm:inline rounded bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-500/15 dark:text-blue-400 dark:border-blue-500/30">
                     Rally: {rallyCount}
                   </span>
                 )}
@@ -1128,7 +1262,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
             </div>
 
             {/* Interactive Canvas Area */}
-            <div className="relative flex flex-1 items-center justify-center p-3 sm:p-5 bg-gray-100 dark:bg-[#08090d]">
+            <div className="relative flex flex-1 items-center justify-center p-3 sm:p-5 bg-gray-50 dark:bg-[#08090d]">
               <canvas
                 ref={canvasRef}
                 width={TABLE_WIDTH}
@@ -1144,24 +1278,24 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                     updatePlayerPointer(e.touches[0].clientX, e.touches[0].clientY)
                   }
                 }}
-                className="w-full max-w-[380px] sm:max-w-[440px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none border border-gray-300 dark:border-gray-800"
+                className="w-full max-w-[380px] sm:max-w-[440px] aspect-[7/10] rounded-xl shadow-inner cursor-crosshair touch-none select-none border border-gray-200 dark:border-gray-800"
               />
 
               {/* Scored Point Toast Banner */}
               {scoreBanner && gameState === 'scored' && (
-                <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-emerald-500/60 bg-white/95 dark:bg-black/90 px-5 py-4 text-center shadow-2xl backdrop-blur-md">
-                  <div className="font-mono text-base sm:text-lg font-black tracking-widest text-emerald-600 dark:text-emerald-400">
+                <div className="pointer-events-none absolute inset-x-8 top-1/2 -translate-y-1/2 transform rounded-xl border border-gray-200 bg-white/95 dark:border-gray-700 dark:bg-black/90 px-5 py-4 text-center shadow-2xl backdrop-blur-md">
+                  <div className="font-mono text-base sm:text-lg font-black tracking-widest text-gray-950 dark:text-white">
                     {scoreBanner}
                   </div>
                   <div className="mt-1 font-mono text-xs text-gray-500 dark:text-gray-400">
-                    Next serve ready in a second...
+                    Next serve in progress...
                   </div>
                 </div>
               )}
 
               {/* Game Over / Post-Match Overlay */}
               {gameState === 'gameover' && (
-                <div className="absolute inset-x-6 sm:inset-x-12 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-300 bg-white/95 p-6 text-center shadow-2xl backdrop-blur-xl dark:border-gray-700 dark:bg-[#0f111a]/95">
+                <div className="absolute inset-x-6 sm:inset-x-12 top-1/2 -translate-y-1/2 transform rounded-2xl border border-gray-200 bg-white/95 p-6 text-center shadow-2xl backdrop-blur-xl dark:border-gray-700 dark:bg-[#0f111a]/95">
                   <div className="font-mono text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400">
                     Match Completed
                   </div>
@@ -1179,20 +1313,20 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                   </div>
 
                   {winner === 'player' ? (
-                    <div className="mb-4 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2.5 font-mono text-xs text-emerald-800 dark:text-emerald-300">
-                      +1 Win synced to Firebase Leaderboard! Total Wins: <strong>{playerWins}</strong>
+                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 font-mono text-xs text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      +1 Win recorded on global leaderboard! Total Wins: <strong>{playerWins}</strong>
                     </div>
                   ) : (
                     <p className="font-mono text-xs text-gray-500 dark:text-gray-400 mb-4">
-                      Archie AI defended its net this round. Ready to strike back?
+                      Archie AI defended its net this round. Ready for revenge?
                     </p>
                   )}
 
-                  <div className="flex flex-col gap-2.5">
+                  <div className="flex flex-col gap-2">
                     <button
                       type="button"
                       onClick={() => startMatch()}
-                      className="w-full rounded-xl bg-emerald-500 py-3 font-mono text-xs font-bold text-gray-950 hover:bg-emerald-400 active:scale-98 transition-all cursor-pointer shadow-md shadow-emerald-500/20"
+                      className="w-full rounded-xl bg-gray-950 text-white hover:bg-gray-800 py-2.5 font-mono text-xs font-bold transition-all cursor-pointer dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 shadow-sm"
                     >
                       Play Again
                     </button>
@@ -1202,7 +1336,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                         sounds.play('tick')
                         setGameState('leaderboard')
                       }}
-                      className="w-full rounded-xl border border-emerald-500/40 bg-emerald-500/10 py-2.5 font-mono text-xs font-semibold text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400 cursor-pointer"
+                      className="w-full rounded-xl border border-gray-200 bg-white py-2 font-mono text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-[#141620] dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
                     >
                       View Worldwide Leaderboard
                     </button>
@@ -1212,7 +1346,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
                         sounds.play('tick')
                         setGameState('lobby')
                       }}
-                      className="w-full rounded-xl border border-gray-300 py-2 font-mono text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 cursor-pointer"
+                      className="w-full rounded-xl border border-gray-200 py-2 font-mono text-xs text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 cursor-pointer"
                     >
                       Return to Lobby
                     </button>
@@ -1222,7 +1356,7 @@ export default function CyberArcadeModal({ isOpen, onClose, theme }) {
             </div>
 
             {/* Tactile Controls Hint Footer */}
-            <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50/90 px-4 py-2.5 sm:px-6 font-mono text-[11px] text-gray-500 dark:border-gray-800/80 dark:bg-[#0e1017] dark:text-gray-400">
+            <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-2 font-mono text-[10px] text-gray-500 dark:border-gray-800/80 dark:bg-[#0e1017] dark:text-gray-400">
               <div className="flex items-center gap-2">
                 <span className="text-emerald-500 font-bold">●</span>
                 <span>Controls: Glide Mouse • Drag Touch • WASD Keys</span>
