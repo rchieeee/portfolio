@@ -1,13 +1,172 @@
 import { useEffect, useRef, useState } from 'react'
 import { sounds } from '../utils/audio'
 
+const FORMAT_CONFIGS = {
+  webp: {
+    label: 'WebP',
+    mime: 'image/webp',
+    quality: 0.65,
+    ext: 'webp',
+  },
+  jpeg: {
+    label: 'JPG',
+    mime: 'image/jpeg',
+    quality: 0.72,
+    ext: 'jpg',
+  },
+  png: {
+    label: 'PNG',
+    mime: 'image/png',
+    quality: undefined,
+    ext: 'png',
+  },
+}
+
 export default function ClientSideOptimizerDemo() {
   const [originalImage, setOriginalImage] = useState(null)
   const [compressedImage, setCompressedImage] = useState(null)
   const [stats, setStats] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [activeTab, setActiveTab] = useState('compressed')
+  const [exportFormat, setExportFormat] = useState('webp')
   const fileInputRef = useRef(null)
+  const activeCanvasRef = useRef(null)
+  const exportFormatRef = useRef(exportFormat)
+  const originalUrlRef = useRef(null)
+  const compressedUrlRef = useRef(null)
+
+  useEffect(() => {
+    exportFormatRef.current = exportFormat
+  }, [exportFormat])
+
+  const encodeCanvas = (
+    canvas,
+    formatKey,
+    originalSize,
+    naturalWidth,
+    naturalHeight,
+    providedStartTime = null
+  ) => {
+    const startTime = providedStartTime || performance.now()
+    const targetConfig = FORMAT_CONFIGS[formatKey] || FORMAT_CONFIGS.webp
+
+    canvas.toBlob(
+      (compressedBlob) => {
+        const endTime = performance.now()
+        const duration = Math.round(endTime - startTime)
+
+        if (!compressedBlob) {
+          setIsProcessing(false)
+          return
+        }
+
+        if (compressedUrlRef.current) {
+          URL.revokeObjectURL(compressedUrlRef.current)
+        }
+        const compressedUrl = URL.createObjectURL(compressedBlob)
+        compressedUrlRef.current = compressedUrl
+
+        const compressedSize = compressedBlob.size
+        const reductionPct = (
+          ((originalSize - compressedSize) / originalSize) *
+          100
+        ).toFixed(1)
+
+        setCompressedImage({
+          url: compressedUrl,
+          width: canvas.width,
+          height: canvas.height,
+          sizeBytes: compressedSize,
+        })
+
+        setStats({
+          originalKb: (originalSize / 1024).toFixed(1),
+          compressedKb: (compressedSize / 1024).toFixed(1),
+          reductionPct,
+          durationMs: Math.max(duration, 16),
+          originalWidth: naturalWidth,
+          originalHeight: naturalHeight,
+          compressedWidth: canvas.width,
+          compressedHeight: canvas.height,
+          format: targetConfig.label,
+        })
+
+        setIsProcessing(false)
+        setActiveTab('compressed')
+      },
+      targetConfig.mime,
+      targetConfig.quality
+    )
+  }
+
+  const compressImage = (sourceBlob, reportedOriginalSize, chosenFormat = exportFormatRef.current) => {
+    const startTime = performance.now()
+    const img = new Image()
+    const objectUrl = URL.createObjectURL(sourceBlob)
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      const maxDimension = 1200
+      let { naturalWidth: width, naturalHeight: height } = img
+
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round((height * maxDimension) / width)
+          width = maxDimension
+        } else {
+          width = Math.round((width * maxDimension) / height)
+          height = maxDimension
+        }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+
+      // Bicubic-like smooth rendering
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+      ctx.drawImage(img, 0, 0, width, height)
+
+      activeCanvasRef.current = {
+        canvas,
+        originalSize: reportedOriginalSize,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+      }
+
+      encodeCanvas(
+        canvas,
+        chosenFormat,
+        reportedOriginalSize,
+        img.naturalWidth,
+        img.naturalHeight,
+        startTime
+      )
+      sounds.play('success')
+    }
+
+    img.src = objectUrl
+  }
+
+  const handleFormatChange = (newFormat) => {
+    if (newFormat === exportFormat) return
+    sounds.play('tick')
+    setExportFormat(newFormat)
+    exportFormatRef.current = newFormat
+
+    if (activeCanvasRef.current) {
+      setIsProcessing(true)
+      encodeCanvas(
+        activeCanvasRef.current.canvas,
+        newFormat,
+        activeCanvasRef.current.originalSize,
+        activeCanvasRef.current.naturalWidth,
+        activeCanvasRef.current.naturalHeight
+      )
+    }
+  }
 
   // Generate a high-detail procedural canvas test asset (simulating high-res camera capture)
   const generateSampleImage = () => {
@@ -57,9 +216,11 @@ export default function ClientSideOptimizerDemo() {
         (blob) => {
           if (!blob) return
           const fakeHeavyBlob = new Blob([blob], { type: 'image/png' })
-          // Multiply apparent size to simulate standard 4.8MB camera RAW payload
           const simulatedSize = 4860000 + Math.floor(Math.random() * 250000)
+
+          if (originalUrlRef.current) URL.revokeObjectURL(originalUrlRef.current)
           const url = URL.createObjectURL(fakeHeavyBlob)
+          originalUrlRef.current = url
 
           setOriginalImage({
             url,
@@ -69,7 +230,7 @@ export default function ClientSideOptimizerDemo() {
             name: 'sample_raw_field_capture.png',
           })
 
-          compressImage(fakeHeavyBlob, simulatedSize)
+          compressImage(fakeHeavyBlob, simulatedSize, exportFormatRef.current)
         },
         'image/png',
         1.0
@@ -84,7 +245,10 @@ export default function ClientSideOptimizerDemo() {
     sounds.play('press')
     setIsProcessing(true)
 
+    if (originalUrlRef.current) URL.revokeObjectURL(originalUrlRef.current)
     const url = URL.createObjectURL(file)
+    originalUrlRef.current = url
+
     const img = new Image()
     img.onload = () => {
       setOriginalImage({
@@ -94,101 +258,10 @@ export default function ClientSideOptimizerDemo() {
         sizeBytes: file.size,
         name: file.name,
       })
-      compressImage(file, file.size)
+      compressImage(file, file.size, exportFormatRef.current)
     }
     img.src = url
   }
-
-  const compressImage = (sourceBlob, reportedOriginalSize) => {
-    const startTime = performance.now()
-    const img = new Image()
-    const objectUrl = URL.createObjectURL(sourceBlob)
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl)
-      const maxDimension = 1200
-      let { naturalWidth: width, naturalHeight: height } = img
-
-      if (width > maxDimension || height > maxDimension) {
-        if (width > height) {
-          height = Math.round((height * maxDimension) / width)
-          width = maxDimension
-        } else {
-          width = Math.round((width * maxDimension) / height)
-          height = maxDimension
-        }
-      }
-
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-      const ctx = canvas.getContext('2d')
-
-      // Bicubic-like smooth rendering
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-      ctx.drawImage(img, 0, 0, width, height)
-
-      // Compress to WebP (quality: 0.62)
-      canvas.toBlob(
-        (compressedBlob) => {
-          const endTime = performance.now()
-          const duration = Math.round(endTime - startTime)
-
-          if (!compressedBlob) {
-            setIsProcessing(false)
-            return
-          }
-
-          const compressedUrl = URL.createObjectURL(compressedBlob)
-          const compressedSize = compressedBlob.size
-          const originalSize = reportedOriginalSize
-          const reductionPct = (
-            ((originalSize - compressedSize) / originalSize) *
-            100
-          ).toFixed(1)
-
-          setCompressedImage({
-            url: compressedUrl,
-            width,
-            height,
-            sizeBytes: compressedSize,
-          })
-
-          setStats({
-            originalKb: (originalSize / 1024).toFixed(1),
-            compressedKb: (compressedSize / 1024).toFixed(1),
-            reductionPct,
-            durationMs: Math.max(duration, 16),
-            originalWidth: img.naturalWidth,
-            originalHeight: img.naturalHeight,
-            compressedWidth: width,
-            compressedHeight: height,
-          })
-
-          setIsProcessing(false)
-          setActiveTab('compressed')
-          sounds.play('success')
-        },
-        'image/webp',
-        0.62
-      )
-    }
-
-    img.src = objectUrl
-  }
-
-  const originalUrlRef = useRef(null)
-  const compressedUrlRef = useRef(null)
-
-  // Track URLs for cleanup
-  useEffect(() => {
-    originalUrlRef.current = originalImage?.url
-  }, [originalImage?.url])
-
-  useEffect(() => {
-    compressedUrlRef.current = compressedImage?.url
-  }, [compressedImage?.url])
 
   // Load sample asset automatically on initial mount
   useEffect(() => {
@@ -199,9 +272,10 @@ export default function ClientSideOptimizerDemo() {
     }
   }, [])
 
+  const activeExt = FORMAT_CONFIGS[exportFormat]?.ext || 'webp'
   const downloadFileName = originalImage?.name
-    ? `${originalImage.name.replace(/\.[^/.]+$/, '')}_optimized.webp`
-    : 'optimized_field_capture.webp'
+    ? `${originalImage.name.replace(/\.[^/.]+$/, '')}_optimized.${activeExt}`
+    : `optimized_field_capture.${activeExt}`
 
   return (
     <section id="compression-sandbox" className="py-14 sm:py-20">
@@ -210,13 +284,7 @@ export default function ClientSideOptimizerDemo() {
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2 border-b border-gray-100 pb-6 dark:border-gray-800/80">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                Live Feature Demo · Performance Engineering
-              </span>
-            </div>
-            <h2 className="mt-1 text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
               How I Cut Cloud Storage Costs by 99%
             </h2>
           </div>
@@ -274,15 +342,40 @@ export default function ClientSideOptimizerDemo() {
             <span>Upload Your Own Picture</span>
           </button>
 
+          {/* Format Selector Pills */}
+          <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50/80 p-1 dark:border-gray-800 dark:bg-gray-900/60">
+            <span className="px-2 font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold">
+              Format
+            </span>
+            {Object.entries(FORMAT_CONFIGS).map(([key, cfg]) => {
+              const isSelected = exportFormat === key
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleFormatChange(key)}
+                  disabled={isProcessing}
+                  className={`rounded-lg px-2.5 py-1 font-mono text-xs font-semibold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-white text-gray-950 shadow-xs dark:bg-gray-800 dark:text-white'
+                      : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
+                  }`}
+                >
+                  {cfg.label}
+                </button>
+              )
+            })}
+          </div>
+
           {compressedImage && stats && (
             <a
               href={compressedImage.url}
               download={downloadFileName}
               onClick={() => sounds.play('success')}
               className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors cursor-pointer"
-              title="Download optimized WebP file directly to your computer"
+              title={`Download optimized ${FORMAT_CONFIGS[exportFormat]?.label} file directly to your computer`}
             >
-              <span>Download Compressed WebP ({stats.compressedKb} KB) ↓</span>
+              <span>Download {FORMAT_CONFIGS[exportFormat]?.label} ({stats.compressedKb} KB) ↓</span>
             </a>
           )}
 
@@ -318,7 +411,7 @@ export default function ClientSideOptimizerDemo() {
                 {stats.compressedKb} KB
               </div>
               <div className="text-[11px] font-mono text-gray-500 dark:text-gray-400 mt-0.5">
-                Clean WebP format
+                {FORMAT_CONFIGS[exportFormat]?.label} format
               </div>
             </div>
 
@@ -366,7 +459,7 @@ export default function ClientSideOptimizerDemo() {
                       : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  Compressed Photo ({stats?.compressedKb} KB)
+                  Compressed Photo ({stats?.compressedKb} KB · {FORMAT_CONFIGS[exportFormat]?.label})
                 </button>
                 <button
                   type="button"
@@ -386,7 +479,7 @@ export default function ClientSideOptimizerDemo() {
 
               <div className="flex items-center gap-3">
                 <span className="hidden sm:inline text-gray-500">
-                  {activeTab === 'compressed' ? '99% smaller with sharp quality' : 'Heavy uncompressed file'}
+                  {activeTab === 'compressed' ? `${stats?.reductionPct}% smaller with sharp quality` : 'Heavy uncompressed file'}
                 </span>
                 {compressedImage && (
                   <a
@@ -394,7 +487,7 @@ export default function ClientSideOptimizerDemo() {
                     download={downloadFileName}
                     onClick={() => sounds.play('success')}
                     className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors cursor-pointer"
-                    title="Download compressed WebP"
+                    title={`Download compressed ${FORMAT_CONFIGS[exportFormat]?.label}`}
                   >
                     <span>Download Output ↓</span>
                   </a>
@@ -411,7 +504,7 @@ export default function ClientSideOptimizerDemo() {
               />
               <div className="absolute bottom-3 left-3 rounded-lg bg-black/75 px-3 py-1 font-mono text-[11px] text-white backdrop-blur-md">
                 {activeTab === 'compressed'
-                  ? `Optimized Output: ${compressedImage.width}×${compressedImage.height}px · WebP`
+                  ? `Optimized Output: ${compressedImage.width}×${compressedImage.height}px · ${FORMAT_CONFIGS[exportFormat]?.label}`
                   : `Original Source: ${originalImage.width}×${originalImage.height}px · Raw`}
               </div>
             </div>
