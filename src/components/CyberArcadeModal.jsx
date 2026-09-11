@@ -150,6 +150,9 @@ export default function CyberArcadeModal({
     shakeAmount: 0,
     rally: 0,
     freezeTimer: 0,
+    aiRetreatTimer: 0,
+    rapidHitCount: 0,
+    lastPaddleHitTime: 0,
     isOver: false,
   })
 
@@ -169,6 +172,9 @@ export default function CyberArcadeModal({
     const s = sim.current
     s.isOver = false
     s.freezeTimer = 0
+    s.aiRetreatTimer = 0
+    s.rapidHitCount = 0
+    s.lastPaddleHitTime = 0
     s.rally = 0
     s.shakeAmount = 0
     s.trail = []
@@ -361,14 +367,35 @@ export default function CyberArcadeModal({
         let aiTargetX = TABLE_WIDTH / 2
         let aiTargetY = 85
 
-        if (s.puck.y < TABLE_HEIGHT / 2 + 120) {
-          aiTargetX = s.puck.x
-          if (s.puck.y < TABLE_HEIGHT / 2 - 15) {
-            aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(45, s.puck.y - 25))
+        // AI Anti-Trap & Tactical Positioning
+        if (s.aiRetreatTimer > 0) {
+          s.aiRetreatTimer -= 1
+          aiTargetX = TABLE_WIDTH / 2
+          aiTargetY = 70
+        } else if (s.puck.y < TABLE_HEIGHT / 2 + 120) {
+          // If puck is trapped in the defensive corners, do NOT wedge into the corner behind it!
+          // Instead, hold a defensive angle at the corner exit to meet the rebound.
+          if (s.puck.y < 100 && s.puck.x < 95) {
+            aiTargetX = Math.max(115, s.puck.x + 55)
+            aiTargetY = Math.max(75, s.puck.y + 45)
+          } else if (s.puck.y < 100 && s.puck.x > TABLE_WIDTH - 95) {
+            aiTargetX = Math.min(TABLE_WIDTH - 115, s.puck.x - 55)
+            aiTargetY = Math.max(75, s.puck.y + 45)
+          } else if (s.puck.y < s.ai.y + 12) {
+            // Puck got behind AI: step back toward goal center to defend!
+            aiTargetX = TABLE_WIDTH / 2 + (s.puck.x - TABLE_WIDTH / 2) * 0.45
+            aiTargetY = 65
           } else {
-            aiTargetY = 95
+            // Active offensive / defensive tracking
+            aiTargetX = s.puck.x
+            if (s.puck.y < TABLE_HEIGHT / 2 - 15) {
+              aiTargetY = Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 8, Math.max(50, s.puck.y - 18))
+            } else {
+              aiTargetY = 95
+            }
           }
         } else {
+          // Puck is on player half
           aiTargetX = TABLE_WIDTH / 2 + (s.puck.x - TABLE_WIDTH / 2) * 0.35
           aiTargetY = 75
         }
@@ -385,8 +412,9 @@ export default function CyberArcadeModal({
           s.ai.y += (dy / dist) * step
         }
 
-        s.ai.x = Math.max(PADDLE_RADIUS, Math.min(TABLE_WIDTH - PADDLE_RADIUS, s.ai.x))
-        s.ai.y = Math.max(PADDLE_RADIUS + 4, Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 6, s.ai.y))
+        // Prevent AI paddle from physically wedging into deep corners
+        s.ai.x = Math.max(PADDLE_RADIUS + 16, Math.min(TABLE_WIDTH - PADDLE_RADIUS - 16, s.ai.x))
+        s.ai.y = Math.max(PADDLE_RADIUS + 8, Math.min(TABLE_HEIGHT / 2 - PADDLE_RADIUS - 6, s.ai.y))
         s.ai.vx = s.ai.x - prevAiX
         s.ai.vy = s.ai.y - prevAiY
 
@@ -400,7 +428,48 @@ export default function CyberArcadeModal({
         s.trail.unshift({ x: s.puck.x, y: s.puck.y })
         if (s.trail.length > 9) s.trail.pop()
 
-        // --- Wall Collisions ---
+        // --- 45-Degree Corner Deflectors (Physical Table Chamfers) ---
+        // Prevents puck from ever becoming trapped in any 90-degree corner
+        const CORNER_CUT = 38
+        if (s.puck.x + s.puck.y < CORNER_CUT) {
+          // Top-Left Corner
+          const depth = CORNER_CUT - (s.puck.x + s.puck.y)
+          s.puck.x += depth * 0.7071
+          s.puck.y += depth * 0.7071
+          s.puck.vx = Math.max(5.5, Math.abs(s.puck.vx))
+          s.puck.vy = Math.max(5.5, Math.abs(s.puck.vy))
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
+        } else if ((TABLE_WIDTH - s.puck.x) + s.puck.y < CORNER_CUT) {
+          // Top-Right Corner
+          const depth = CORNER_CUT - ((TABLE_WIDTH - s.puck.x) + s.puck.y)
+          s.puck.x -= depth * 0.7071
+          s.puck.y += depth * 0.7071
+          s.puck.vx = -Math.max(5.5, Math.abs(s.puck.vx))
+          s.puck.vy = Math.max(5.5, Math.abs(s.puck.vy))
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
+        } else if (s.puck.x + (TABLE_HEIGHT - s.puck.y) < CORNER_CUT) {
+          // Bottom-Left Corner
+          const depth = CORNER_CUT - (s.puck.x + (TABLE_HEIGHT - s.puck.y))
+          s.puck.x += depth * 0.7071
+          s.puck.y -= depth * 0.7071
+          s.puck.vx = Math.max(5.5, Math.abs(s.puck.vx))
+          s.puck.vy = -Math.max(5.5, Math.abs(s.puck.vy))
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
+        } else if ((TABLE_WIDTH - s.puck.x) + (TABLE_HEIGHT - s.puck.y) < CORNER_CUT) {
+          // Bottom-Right Corner
+          const depth = CORNER_CUT - ((TABLE_WIDTH - s.puck.x) + (TABLE_HEIGHT - s.puck.y))
+          s.puck.x -= depth * 0.7071
+          s.puck.y -= depth * 0.7071
+          s.puck.vx = -Math.max(5.5, Math.abs(s.puck.vx))
+          s.puck.vy = -Math.max(5.5, Math.abs(s.puck.vy))
+          sounds.play('tick')
+          spawnSparks(s.puck.x, s.puck.y, currentDark ? '#38bdf8' : '#0284c7', 6)
+        }
+
+        // --- Side Wall Collisions ---
         if (s.puck.x - s.puck.r <= 0) {
           s.puck.x = s.puck.r
           s.puck.vx = -s.puck.vx * 0.96
@@ -483,6 +552,27 @@ export default function CyberArcadeModal({
           const minDist = s.puck.r + paddle.r
 
           if (dist < minDist && dist > 0.001) {
+            // Anti-Stuck Circuit Breaker: detect rapid successive micro-collisions
+            const now = performance.now()
+            if (now - (s.lastPaddleHitTime || 0) < 130) {
+              s.rapidHitCount = (s.rapidHitCount || 0) + 1
+            } else {
+              s.rapidHitCount = 0
+            }
+            s.lastPaddleHitTime = now
+
+            if (s.rapidHitCount >= 3) {
+              // Break infinite trapped rally! Eject puck outward with strong impulse
+              s.puck.vx = s.puck.x < TABLE_WIDTH / 2 ? 6.5 : -6.5
+              s.puck.vy = isAI ? 7.5 : -7.5
+              s.puck.x = Math.max(45, Math.min(TABLE_WIDTH - 45, s.puck.x + s.puck.vx))
+              s.puck.y = Math.max(55, Math.min(TABLE_HEIGHT - 55, s.puck.y + s.puck.vy))
+              if (isAI) s.aiRetreatTimer = 35
+              s.rapidHitCount = 0
+              sounds.play('press')
+              return
+            }
+
             const nx = dx / dist
             const ny = dy / dist
 
@@ -630,6 +720,25 @@ export default function CyberArcadeModal({
       ctx.strokeStyle = currentDark ? '#1e293b' : '#cbd5e1'
       ctx.lineWidth = 3
       ctx.strokeRect(1.5, 1.5, TABLE_WIDTH - 3, TABLE_HEIGHT - 3)
+
+      // 4 Corner Bevel Deflectors (Visual physical bumpers)
+      const CORNER_CUT = 38
+      ctx.strokeStyle = currentDark ? 'rgba(56, 189, 248, 0.45)' : 'rgba(2, 132, 199, 0.45)'
+      ctx.lineWidth = 2
+      // Top-Left
+      ctx.beginPath(); ctx.moveTo(0, CORNER_CUT); ctx.lineTo(CORNER_CUT, 0); ctx.stroke()
+      // Top-Right
+      ctx.beginPath(); ctx.moveTo(TABLE_WIDTH - CORNER_CUT, 0); ctx.lineTo(TABLE_WIDTH, CORNER_CUT); ctx.stroke()
+      // Bottom-Left
+      ctx.beginPath(); ctx.moveTo(0, TABLE_HEIGHT - CORNER_CUT); ctx.lineTo(CORNER_CUT, TABLE_HEIGHT); ctx.stroke()
+      // Bottom-Right
+      ctx.beginPath(); ctx.moveTo(TABLE_WIDTH - CORNER_CUT, TABLE_HEIGHT); ctx.lineTo(TABLE_WIDTH, TABLE_HEIGHT - CORNER_CUT); ctx.stroke()
+
+      ctx.fillStyle = currentDark ? 'rgba(56, 189, 248, 0.08)' : 'rgba(2, 132, 199, 0.06)'
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(CORNER_CUT, 0); ctx.lineTo(0, CORNER_CUT); ctx.closePath(); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(TABLE_WIDTH, 0); ctx.lineTo(TABLE_WIDTH - CORNER_CUT, 0); ctx.lineTo(TABLE_WIDTH, CORNER_CUT); ctx.closePath(); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(0, TABLE_HEIGHT); ctx.lineTo(CORNER_CUT, TABLE_HEIGHT); ctx.lineTo(0, TABLE_HEIGHT - CORNER_CUT); ctx.closePath(); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(TABLE_WIDTH, TABLE_HEIGHT); ctx.lineTo(TABLE_WIDTH - CORNER_CUT, TABLE_HEIGHT); ctx.lineTo(TABLE_WIDTH, TABLE_HEIGHT - CORNER_CUT); ctx.closePath(); ctx.fill()
 
       // Draw Particles
       for (const p of s.particles) {
