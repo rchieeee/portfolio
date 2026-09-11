@@ -772,23 +772,64 @@ export const experience = [
 export const techCategories = [
   {
     name: 'Frontend Engineering',
-    items: ['React 19', 'Next.js (App Router)', 'TypeScript', 'JavaScript (ES6+)', 'Tailwind CSS', 'HTML5 / CSS3', 'Vite'],
+    items: [
+      { name: 'React 19', role: 'Server Components & Actions', badge: 'Core', iconId: 'react' },
+      { name: 'Next.js (App Router)', role: 'SSR, Edge Middleware & Streaming', badge: 'Core', iconId: 'nextjs' },
+      { name: 'TypeScript', role: 'Strict Type-Safety & Schemas', badge: 'Production', iconId: 'typescript' },
+      { name: 'Tailwind CSS', role: 'Design Systems & Fluid Layouts', badge: 'Daily Driver', iconId: 'tailwind' },
+      { name: 'JavaScript (ES6+)', role: 'Modern Async/Await & Web APIs', badge: 'Production', iconId: 'javascript' },
+      { name: 'Vite', role: 'Sub-second HMR & Rollup Bundles', badge: 'Tooling', iconId: 'vite' },
+      { name: 'HTML5 / CSS3', role: 'Semantic Architecture & Layouts', badge: 'Standard', iconId: 'html' },
+      { name: 'Zustand & Cache', role: 'Global State & Optimistic UI', badge: 'Daily Driver', iconId: 'state' },
+    ],
   },
   {
     name: 'Backend & APIs',
-    items: ['Node.js', 'Express.js', 'Python', 'FastAPI', 'REST APIs', 'GraphQL', 'Authentication (JWT/OAuth)'],
+    items: [
+      { name: 'Node.js', role: 'Event-Driven Runtime & Services', badge: 'Core', iconId: 'node' },
+      { name: 'Express.js', role: 'REST Routing, Middlewares & Controllers', badge: 'Core', iconId: 'express' },
+      { name: 'Python', role: 'Data Pipelines & Computer Vision', badge: 'Production', iconId: 'python' },
+      { name: 'FastAPI / Flask', role: 'Asynchronous Python Web APIs', badge: 'Production', iconId: 'fastapi' },
+      { name: 'RESTful APIs', role: 'Stateless Endpoint Architecture', badge: 'Standard', iconId: 'api' },
+      { name: 'GraphQL', role: 'Typed Queries & Resolvers', badge: 'Advanced', iconId: 'graphql' },
+      { name: 'WebSockets & Sync', role: 'Bidirectional Live Event Broadcast', badge: 'Realtime', iconId: 'websocket' },
+      { name: 'Auth (JWT / OAuth / 3FA)', role: 'Secure Sessions & Multi-Factor', badge: 'Security', iconId: 'auth' },
+    ],
   },
   {
     name: 'Databases & Cloud',
-    items: ['PostgreSQL', 'Supabase', 'Prisma ORM', 'Redis', 'Docker', 'Vercel', 'Git & GitHub CI/CD'],
+    items: [
+      { name: 'PostgreSQL', role: 'Relational Schemas & Indexing', badge: 'Core', iconId: 'postgres' },
+      { name: 'Supabase', role: 'Postgres BaaS, RLS & Realtime', badge: 'Daily Driver', iconId: 'supabase' },
+      { name: 'Google Firestore', role: 'NoSQL Document Store & Offline Sync', badge: 'Production', iconId: 'firebase' },
+      { name: 'Redis', role: 'In-Memory Caching & Rate-Limiting', badge: 'Performance', iconId: 'redis' },
+      { name: 'Prisma ORM', role: 'Type-Safe DB Client & Migrations', badge: 'Daily Driver', iconId: 'prisma' },
+      { name: 'Docker', role: 'Containerization & Isolated Envs', badge: 'DevOps', iconId: 'docker' },
+      { name: 'Vercel / Cloudflare', role: 'Edge CDN, Serverless & DNS', badge: 'Production', iconId: 'vercel' },
+      { name: 'Git & GitHub CI/CD', role: 'Branch Strategies & Workflows', badge: 'Standard', iconId: 'git' },
+    ],
   },
   {
     name: 'CMS & Web Platforms',
-    items: ['WordPress (Custom Themes / Elementor)', 'WooCommerce', 'PHP / MySQL', 'Advanced Custom Fields (ACF)', 'WordPress REST API', 'Headless CMS Architecture'],
+    items: [
+      { name: 'WordPress', role: 'Custom Themes, Custom Hooks & Loops', badge: 'Core', iconId: 'wordpress' },
+      { name: 'WooCommerce', role: 'E-Commerce Storefronts & Checkout', badge: 'E-Commerce', iconId: 'woocommerce' },
+      { name: 'PHP / MySQL', role: 'Backend Scripting & Relational DB', badge: 'Production', iconId: 'php' },
+      { name: 'Advanced Custom Fields', role: 'ACF Pro Dynamic Meta Architecture', badge: 'Advanced', iconId: 'acf' },
+      { name: 'Headless WP & REST', role: 'Decoupled React & Next.js Frontends', badge: 'Modern', iconId: 'headless' },
+      { name: 'Speed & Web Vitals', role: 'Asset Minification, SEO & Caching', badge: 'Performance', iconId: 'speed' },
+    ],
   },
   {
     name: 'AI Engineering & Tooling',
-    items: ['Claude API / Anthropic', 'OpenAI API', 'Prompt Engineering', 'AI Guardrails & Harnesses', 'RAG Pipelines'],
+    items: [
+      { name: 'Anthropic Claude API', role: 'Autonomous Reasoning & Coding Agents', badge: 'Daily Driver', iconId: 'claude' },
+      { name: 'OpenAI (GPT-4o)', role: 'Function Calling & Structured Output', badge: 'Production', iconId: 'openai' },
+      { name: 'Prompt Engineering', role: 'System Instructions, Few-Shot & Chains', badge: 'Specialized', iconId: 'prompt' },
+      { name: 'AI Guardrails & Harnesses', role: 'Schema Assertions & Reliability', badge: 'Production', iconId: 'guardrail' },
+      { name: 'RAG & Vector Search', role: 'Document Embeddings & Retrieval', badge: 'Advanced', iconId: 'rag' },
+      { name: 'ArcFace Biometrics', role: 'Facial Vectors & FAISS Similarity', badge: 'Specialized', iconId: 'biometrics' },
+    ],
   },
 ]
 
