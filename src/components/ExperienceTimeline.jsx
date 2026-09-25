@@ -16,11 +16,8 @@ export default function ExperienceTimeline() {
         {experience.map((item, idx) => (
           <div
             key={idx}
-            className="ios-glass-card rounded-2xl p-6 sm:p-7 shadow-md overflow-hidden"
+            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-2xs transition-all hover:border-gray-400 dark:border-gray-800 dark:bg-[#121216] dark:hover:border-gray-700"
           >
-            {/* Apple iOS Physical Specular Top Rim */}
-            <div className="specular-rim" />
-
             <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-950 dark:text-white">
@@ -40,11 +37,11 @@ export default function ExperienceTimeline() {
               {item.description}
             </p>
 
-            <div className="mt-4 flex flex-wrap gap-1.5 border-t border-white/60 pt-3 dark:border-white/10">
+            <div className="mt-4 flex flex-wrap gap-1.5 border-t border-gray-100 pt-3 dark:border-gray-800">
               {item.skills.map((skill) => (
                 <span
                   key={skill}
-                  className="ios-glass-pill rounded-md px-2 py-0.5 font-mono text-[10.5px] text-gray-700 dark:text-gray-300"
+                  className="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 font-mono text-[10.5px] text-gray-700 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300"
                 >
                   {skill}
                 </span>

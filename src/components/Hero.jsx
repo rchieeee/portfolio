@@ -1,24 +1,26 @@
 import { keyMetrics, profile, socials } from '../portfolioData'
 import { sounds } from '../utils/audio'
 import InteractiveAvatar from './InteractiveAvatar'
+import InteractiveHeroCanvas from './InteractiveHeroCanvas'
 import ScrambleHeadlineText from './ScrambleHeadlineText'
 import SpotlightCard from './SpotlightCard'
 
-export default function Hero({ onOpenTerminal, theme: _theme }) {
+export default function Hero({ onOpenTerminal, theme }) {
   return (
     <section id="top" className="relative pt-12 pb-16 sm:pt-20 sm:pb-24">
-      {/* ── Interactive 3D Avatar & Clean Location Status with Frosted Glass Pill ── */}
-      <div className="reveal d1 relative z-10 mb-6 flex items-center">
-        <div className="ios-glass-pill inline-flex items-center gap-3.5 rounded-2xl px-3.5 py-2 shadow-sm">
-          <InteractiveAvatar />
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2 font-mono text-xs text-gray-600 dark:text-gray-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{profile.location} · UTC+8</span>
-            </div>
-            <div className="font-mono text-xs text-gray-400 dark:text-gray-500">
-              {profile.role}
-            </div>
+      {/* ── Interactive Particle Constellation Canvas ── */}
+      <InteractiveHeroCanvas theme={theme} />
+
+      {/* ── Interactive 3D Avatar & Clean Location Status ── */}
+      <div className="reveal d1 relative z-10 mb-6 flex items-center gap-4">
+        <InteractiveAvatar />
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2 font-mono text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-gray-300 dark:text-gray-700">|</span>
+            <span>{profile.location} · UTC+8</span>
+          </div>
+          <div className="font-mono text-xs text-gray-400 dark:text-gray-500">
+            {profile.role}
           </div>
         </div>
       </div>
@@ -56,7 +58,7 @@ export default function Hero({ onOpenTerminal, theme: _theme }) {
         <a
           href="#projects"
           onClick={() => sounds.play('press')}
-          className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-5 py-3 font-mono text-[13px] font-semibold text-white shadow-lg hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 active:scale-95 transition-all"
+          className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-3 font-mono text-[13px] font-medium text-white shadow-sm hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 active:scale-95"
         >
           <span>explore projects</span>
           <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
@@ -70,7 +72,7 @@ export default function Hero({ onOpenTerminal, theme: _theme }) {
             sounds.play('chime')
             onOpenTerminal()
           }}
-          className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-5 py-3 font-mono text-[13px] font-semibold text-gray-900 dark:text-white"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white/90 px-5 py-3 font-mono text-[13px] font-medium text-gray-900 shadow-2xs hover:bg-gray-50 dark:border-gray-700 dark:bg-[#141418]/90 dark:text-white dark:hover:bg-gray-800 backdrop-blur-md active:scale-95"
         >
           <span className="font-bold text-gray-950 dark:text-white">$</span>
           <span>Open Interactive CLI</span>

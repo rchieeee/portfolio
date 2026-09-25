@@ -106,15 +106,15 @@ export default function GithubActivityCard() {
 
   return (
     <section className="my-10 sm:my-16">
-      <SpotlightCard className="p-6 sm:p-8" tilt={false}>
+      <SpotlightCard className="p-6 sm:p-8 border border-gray-200/80 bg-white/60 dark:border-gray-800/80 dark:bg-[#0f1015]/80 backdrop-blur-xl" tilt={false}>
         {/* Top Header */}
-        <div className="flex items-center justify-end pb-4 border-b border-white/60 dark:border-white/10">
+        <div className="flex items-center justify-end pb-4 border-b border-gray-200 dark:border-gray-800/80">
           <a
             href="https://github.com/rchieeee"
             target="_blank"
             rel="noreferrer"
             onClick={() => sounds.play('tick')}
-            className="ios-glass-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-xs text-gray-700 hover:text-gray-950 dark:text-gray-300 dark:hover:text-white cursor-pointer"
+            className="inline-flex items-center gap-1.5 font-mono text-xs text-gray-500 hover:text-gray-950 underline underline-offset-4 dark:text-gray-400 dark:hover:text-white cursor-pointer"
           >
             <span>github.com/rchieeee</span>
             <span className="text-[10px]">↗</span>
@@ -175,7 +175,7 @@ export default function GithubActivityCard() {
           </div>
 
           {/* Footer Intensity Legend with requested typography */}
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/60 pt-4 font-mono text-[11px] text-gray-500 dark:border-white/10 dark:text-gray-400">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-gray-200/80 pt-4 font-mono text-[11px] text-gray-500 dark:border-gray-800/80 dark:text-gray-400">
             <span>{totalCount.toLocaleString()} contributions in the last year.</span>
 
             <div className="flex items-center gap-2 text-[11px]">

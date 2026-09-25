@@ -187,12 +187,10 @@ export default function TechStackFitChecker() {
 
   return (
     <section id="stack-fit" className="py-14 sm:py-20">
-      <div className="relative isolate rounded-3xl ios-glass-card p-6 sm:p-10 shadow-xl overflow-hidden">
-        {/* Apple iOS Physical Specular Top Rim */}
-        <div className="specular-rim" />
+      <div className="relative isolate rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/60 pb-6 dark:border-white/10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-6 dark:border-gray-800/80">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
               Can I Build Your Project?
@@ -205,14 +203,14 @@ export default function TechStackFitChecker() {
             <button
               type="button"
               onClick={handleSelectAll}
-              className="ios-glass-pill rounded-lg px-3 py-1 text-gray-700 dark:text-gray-300 cursor-pointer"
+              className="rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-1 text-gray-600 hover:bg-white hover:text-gray-950 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 dark:hover:text-white dark:hover:border-gray-700 cursor-pointer transition-colors"
             >
               Select all
             </button>
             <button
               type="button"
               onClick={handleClear}
-              className="ios-glass-pill rounded-lg px-3 py-1 text-gray-700 dark:text-gray-300 cursor-pointer"
+              className="rounded-lg border border-gray-200 bg-gray-50/80 px-3 py-1 text-gray-600 hover:bg-white hover:text-gray-950 hover:border-gray-300 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 dark:hover:text-white dark:hover:border-gray-700 cursor-pointer transition-colors"
             >
               Reset
             </button>
@@ -234,7 +232,7 @@ export default function TechStackFitChecker() {
               key={preset.label}
               type="button"
               onClick={() => applyPreset(preset.techs)}
-              className="ios-glass-pill rounded-lg px-2.5 py-1 font-mono text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+              className="rounded-lg border border-gray-200 bg-gray-50/80 px-2.5 py-1 font-mono text-xs font-medium text-gray-700 hover:border-gray-400 hover:bg-white dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer transition-colors"
             >
               {preset.label}
             </button>
@@ -246,9 +244,9 @@ export default function TechStackFitChecker() {
           {TECH_CATEGORIES.map((group) => (
             <div
               key={group.category}
-              className="ios-glass rounded-2xl p-4 sm:p-5 shadow-xs"
+              className="rounded-2xl border border-gray-200 bg-gray-50/50 p-4 sm:p-5 dark:border-gray-800/80 dark:bg-[#15161d]"
             >
-              <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 {group.category}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -259,10 +257,10 @@ export default function TechStackFitChecker() {
                       key={tech.id}
                       type="button"
                       onClick={() => toggleTech(tech.id)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-xs font-medium transition-all cursor-pointer ${
+                      className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 font-mono text-xs font-medium transition-all cursor-pointer ${
                         isChecked
-                          ? 'border border-gray-950 bg-gray-950 text-white shadow-xs dark:border-white/40 dark:bg-white dark:text-gray-950 scale-[1.02]'
-                          : 'ios-glass-pill text-gray-700 dark:text-gray-300'
+                          ? 'border-gray-950 bg-gray-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-gray-950'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900/80 dark:text-gray-300 dark:hover:border-gray-700'
                       }`}
                     >
                       <span className="text-[10px]">
@@ -278,8 +276,8 @@ export default function TechStackFitChecker() {
         </div>
 
         {/* Dynamic Analysis Panel */}
-        <div className="ios-glass-card mt-8 rounded-2xl p-6 shadow-md border-emerald-500/40">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/60 pb-5 dark:border-white/10">
+        <div className={`mt-8 rounded-2xl border ${analysis.borderColor} bg-gray-50/70 p-6 dark:bg-[#151720]`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200/80 pb-5 dark:border-gray-800">
             <div>
               <div className="font-mono text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Project Match Rating
@@ -316,7 +314,7 @@ export default function TechStackFitChecker() {
                   {analysis.verifiedProjects.map((project) => (
                     <div
                       key={project.name}
-                      className="ios-glass rounded-xl p-3 shadow-2xs"
+                      className="rounded-xl border border-gray-200/80 bg-white p-3 dark:border-gray-800 dark:bg-[#111216]"
                     >
                       <div>
                         <span className="font-mono text-xs font-bold text-gray-900 dark:text-white">
@@ -337,13 +335,13 @@ export default function TechStackFitChecker() {
           </div>
 
           {/* Action CTA */}
-          <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-white/60 dark:border-white/10">
+          <div className="mt-6 flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200/80 dark:border-gray-800">
             <a
               href={inquiryUrl}
               target="_blank"
               rel="noreferrer"
               onClick={() => sounds.play('press')}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-5 py-3 font-mono text-xs font-semibold text-white shadow-md hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 cursor-pointer active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-5 py-3 font-mono text-xs font-semibold text-white shadow-sm hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 cursor-pointer"
             >
               <span>Discuss Your Project ({analysis.score}% Match) →</span>
             </a>

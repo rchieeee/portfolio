@@ -16,13 +16,10 @@ export default function TestimonialsSection() {
         {testimonials.map((item, idx) => (
           <div
             key={idx}
-            className="ios-glass-card flex flex-col justify-between rounded-2xl p-6 sm:p-7 shadow-md overflow-hidden"
+            className="flex flex-col justify-between rounded-2xl border border-gray-200 bg-white p-6 shadow-2xs dark:border-gray-800 dark:bg-[#121216]"
           >
-            {/* Apple iOS Physical Specular Top Rim */}
-            <div className="specular-rim" />
-
             <div>
-              <span className="font-serif text-3xl text-gray-400 dark:text-gray-500 leading-none">
+              <span className="font-serif text-3xl text-gray-400 dark:text-gray-600 leading-none">
                 &ldquo;
               </span>
               <p className="font-serif text-[14.5px] leading-relaxed text-gray-700 dark:text-gray-300">
@@ -30,8 +27,8 @@ export default function TestimonialsSection() {
               </p>
             </div>
 
-            <div className="mt-6 flex items-center gap-3 border-t border-white/60 pt-4 dark:border-white/10">
-              <div className="ios-glass flex h-9 w-9 items-center justify-center rounded-full font-mono text-xs font-bold text-gray-950 dark:text-white shadow-xs">
+            <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-50 font-mono text-xs font-bold text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
                 {item.initials}
               </div>
               <div className="min-w-0">

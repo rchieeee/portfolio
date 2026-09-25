@@ -62,19 +62,17 @@ export default function CaseStudyModal({ slug, onClose }) {
     >
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/75 backdrop-blur-xl transition-opacity"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Main Modal Card */}
-      <div className="relative z-10 flex flex-col max-h-[90vh] w-full max-w-3xl rounded-3xl ios-glass-card shadow-2xl text-gray-900 dark:text-gray-100 overflow-hidden">
-        {/* Apple iOS Physical Specular Top Rim */}
-        <div className="specular-rim" />
+      <div className="relative z-10 flex flex-col max-h-[90vh] w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-[#0e0f14] text-gray-900 dark:text-gray-100 overflow-hidden">
         
         {/* ── Top Header ── */}
-        <div className="flex items-center justify-between border-b border-white/60 px-6 py-4 dark:border-white/10">
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800/80">
           <div className="space-y-0.5">
-            <div className="font-mono text-[11px] text-gray-500 dark:text-gray-400">
+            <div className="font-mono text-[11px] text-gray-400 dark:text-gray-500">
               case study / {project.year} · {project.category}
             </div>
             <h2 className="text-xl font-bold tracking-tight text-gray-950 dark:text-white">
@@ -89,7 +87,7 @@ export default function CaseStudyModal({ slug, onClose }) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => sounds.play('tick')}
-                className="ios-glass-pill px-3 py-1 rounded-lg text-gray-950 dark:text-white font-semibold"
+                className="text-gray-950 hover:underline dark:text-white font-medium"
               >
                 Live app ↗
               </a>
@@ -99,7 +97,7 @@ export default function CaseStudyModal({ slug, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="ios-glass-pill rounded-lg p-1.5 text-gray-600 dark:text-gray-300 cursor-pointer"
+              className="rounded-lg border border-gray-200 p-1.5 text-gray-400 hover:border-gray-300 hover:text-gray-700 dark:border-gray-800 dark:text-gray-500 dark:hover:border-gray-700 dark:hover:text-gray-300 cursor-pointer"
               title="Close modal"
             >
               <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">

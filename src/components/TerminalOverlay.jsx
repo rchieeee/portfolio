@@ -73,32 +73,29 @@ export default function TerminalOverlay({ isOpen, onClose, onLaunchGame }) {
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-xl transition-opacity"
+        className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
 
       {/* Terminal Window Frame (Mobile Responsive max-h) */}
-      <div className="relative z-10 flex h-[480px] max-h-[85vh] w-full max-w-2xl flex-col rounded-3xl ios-glass-card p-5 text-gray-200 shadow-2xl overflow-hidden">
-        {/* Apple iOS Physical Specular Top Rim */}
-        <div className="specular-rim" />
-
+      <div className="relative z-10 flex h-[480px] max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-gray-800 bg-[#09090b] p-4 text-gray-200 shadow-2xl">
         {/* Top bar */}
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-white/40 cursor-pointer hover:bg-white transition-colors" onClick={onClose} title="Close" />
-            <span className="ml-2 font-mono text-xs text-gray-300">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/40 cursor-pointer hover:bg-white" onClick={onClose} />
+            <span className="ml-2 font-mono text-xs text-gray-400">
               archie@lupon-davao: ~ (cli)
             </span>
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-[11px] text-gray-400">
+          <div className="flex items-center gap-3 font-mono text-[11px] text-gray-500">
             <button
               type="button"
               onClick={() => {
                 sounds.play('chime')
                 onLaunchGame?.()
               }}
-              className="ios-glass-pill rounded-lg px-2.5 py-1 text-emerald-400 hover:text-emerald-300 font-semibold cursor-pointer"
+              className="rounded border border-emerald-800 bg-emerald-950/60 px-2 py-0.5 text-emerald-400 hover:bg-emerald-900/60 hover:text-emerald-300"
             >
               ▶ play arcade
             </button>

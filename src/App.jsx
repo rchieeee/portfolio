@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import AmbientLiquidMesh from './components/AmbientLiquidMesh'
 import BentoGrid from './components/BentoGrid'
 import CaseStudyModal from './components/CaseStudyModal'
 import ClientSideOptimizerDemo from './components/ClientSideOptimizerDemo'
@@ -159,10 +158,7 @@ export default function App() {
   }, [])
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc]/90 text-gray-950 transition-colors duration-200 dark:bg-[#090a0f] dark:text-[#f5f5f7]">
-      {/* ── Ambient Liquid Aurora Mesh (Underlying Glass Refraction Source) ── */}
-      <AmbientLiquidMesh />
-
+    <div className="relative min-h-screen bg-white text-gray-950 transition-colors duration-200 dark:bg-[#0c0d0e] dark:text-[#f5f5f7]">
       {/* ── Global Interactive Magnetic Particle Canvas ── */}
       <InteractiveHeroCanvas theme={theme} />
 

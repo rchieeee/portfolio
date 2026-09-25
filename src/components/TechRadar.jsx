@@ -381,16 +381,16 @@ export default function TechRadar() {
                 }}
                 className={`group flex items-center justify-between rounded-xl px-4 py-3 text-left font-mono text-xs transition-all cursor-pointer select-none lg:w-full shrink-0 ${
                   isActive
-                    ? 'ios-glass border-white/90 bg-white/95 text-gray-950 font-bold shadow-md dark:border-white/25 dark:bg-white/20 dark:text-white backdrop-blur-xl scale-[1.01]'
-                    : 'ios-glass text-gray-700 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white'
+                    ? 'border border-gray-950 bg-gray-950 text-white shadow-xs dark:border-white dark:bg-white dark:text-gray-950 font-semibold'
+                    : 'border border-gray-200/90 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-950 dark:border-gray-800/90 dark:bg-[#111217] dark:text-gray-400 dark:hover:border-gray-700 dark:hover:bg-[#161822] dark:hover:text-white'
                 }`}
               >
                 <span className="truncate pr-2">{cat.name}</span>
                 <span
                   className={`rounded-md px-1.5 py-0.5 text-[10px] font-mono transition-colors shrink-0 ${
                     isActive
-                      ? 'bg-black/10 text-gray-950 dark:bg-white/20 dark:text-white font-bold'
-                      : 'bg-black/5 text-gray-500 dark:bg-white/10 dark:text-gray-400'
+                      ? 'bg-white/20 text-white dark:bg-gray-900/20 dark:text-gray-950'
+                      : 'bg-gray-100 text-gray-500 group-hover:text-gray-950 dark:bg-gray-800/80 dark:text-gray-400 dark:group-hover:text-white'
                   }`}
                 >
                   {cat.items.length}
@@ -401,12 +401,9 @@ export default function TechRadar() {
         </div>
 
         {/* Active Category Cards Grid */}
-        <div className="ios-glass-card rounded-3xl p-5 sm:p-7 shadow-lg lg:col-span-8 overflow-hidden">
-          {/* Specular top rim */}
-          <div className="specular-rim" />
-
+        <div className="rounded-2xl border border-gray-200/90 bg-white/80 p-5 sm:p-6 shadow-sm backdrop-blur-md transition-colors lg:col-span-8 dark:border-gray-800/90 dark:bg-[#111217]/80">
           {/* Top Info Bar */}
-          <div className="mb-4 flex items-center justify-between border-b border-white/60 pb-3 dark:border-white/10">
+          <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800/70">
             <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-gray-950 dark:text-white">
               {currentCategory.name}
             </h3>
@@ -427,11 +424,11 @@ export default function TechRadar() {
               return (
                 <div
                   key={item.name}
-                  className="ios-glass-pill group flex items-center gap-3 rounded-xl px-3.5 py-3 transition-all duration-200 hover:scale-[1.015] cursor-default"
+                  className="group flex items-center gap-3 rounded-xl border border-gray-200/80 bg-gray-50/50 px-3.5 py-3 transition-all duration-200 hover:border-gray-400 hover:bg-white hover:shadow-xs dark:border-gray-800/80 dark:bg-[#14151e]/50 dark:hover:border-gray-700 dark:hover:bg-[#181a26]"
                 >
                   {/* Cool Tech Icon with Ambient Glow on Hover */}
                   <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ios-glass text-gray-800 shadow-sm transition-all duration-200 group-hover:scale-110 dark:text-gray-200 ${glowClass}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200/90 bg-white text-gray-700 shadow-2xs transition-all duration-200 group-hover:scale-105 dark:border-gray-800/90 dark:bg-[#0d0e14] dark:text-gray-300 ${glowClass}`}
                   >
                     <TechIcon iconId={item.iconId} />
                   </div>
