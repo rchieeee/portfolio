@@ -50,7 +50,10 @@ export default function ContactSection() {
 
   return (
     <section id="contact" className="pt-6 pb-20 sm:pt-10">
-      <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-2xs sm:p-12 dark:border-gray-800 dark:bg-[#121216]">
+      <div className="ios-glass-card rounded-3xl p-8 sm:p-12 shadow-2xl overflow-hidden">
+        {/* Apple iOS Physical Specular Top Rim */}
+        <div className="specular-rim" />
+
         <div className="max-w-2xl">
           <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
             get in touch
@@ -68,7 +71,7 @@ export default function ContactSection() {
               target="_blank"
               rel="noreferrer"
               onClick={() => sounds.play('press')}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-6 py-3.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200"
+              className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-6 py-3.5 font-mono text-xs font-semibold text-white shadow-md hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 active:scale-95 transition-all"
             >
               <span>send an email (Gmail) ↗</span>
             </a>
@@ -78,7 +81,7 @@ export default function ContactSection() {
               target="_blank"
               rel="noreferrer"
               onClick={() => sounds.play('press')}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+              className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 dark:text-white cursor-pointer"
               title="View Archie's CV on Google Docs"
             >
               <span>view CV / resume ↗</span>
@@ -87,7 +90,7 @@ export default function ContactSection() {
             <button
               type="button"
               onClick={handleCopyEmail}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer"
+              className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 dark:text-white cursor-pointer"
             >
               <span>{copied ? '✓ Email Copied' : 'copy email address'}</span>
             </button>
@@ -95,7 +98,7 @@ export default function ContactSection() {
             <button
               type="button"
               onClick={handleCopyGcash}
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer"
+              className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-5 py-3.5 font-mono text-xs font-semibold text-gray-900 dark:text-white cursor-pointer"
               title="Copy GCash Number: +639635272862"
             >
               <span>{gcashCopied ? '✓ GCash Copied (+639635272862)' : '☕ Pang-Token Fund (GCash)'}</span>
@@ -104,7 +107,7 @@ export default function ContactSection() {
         </div>
 
         {/* Subtle Bottom Footer */}
-        <div className="mt-16 flex flex-col gap-6 border-t border-gray-200 pt-8 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800">
+        <div className="mt-16 flex flex-col gap-6 border-t border-white/60 pt-8 sm:flex-row sm:items-center sm:justify-between dark:border-white/10">
           <div className="space-y-1">
             <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Did you have fun? Feel free to reach out at{' '}

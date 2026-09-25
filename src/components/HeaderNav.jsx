@@ -62,7 +62,10 @@ export default function HeaderNav({
     <>
       {/* ── Main Navigation Island (Sticky, Centered) ── */}
       <header className="sticky top-4 z-40 mx-auto max-w-fit px-4 pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3 rounded-2xl border border-gray-200/90 bg-white/90 px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90">
+        <div className="pointer-events-auto relative flex items-center gap-2 sm:gap-3 rounded-2xl ios-glass px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-lg overflow-hidden">
+          {/* Specular top rim */}
+          <div className="specular-rim" />
+
           {/* Brand Logo */}
           <a
             href="#top"
@@ -83,10 +86,10 @@ export default function HeaderNav({
                   key={link.id}
                   href={`#${link.id}`}
                   onClick={() => sounds.play('tick')}
-                  className={`rounded-lg px-2.5 py-1 font-mono text-[12px] transition-colors ${
+                  className={`rounded-lg px-2.5 py-1 font-mono text-[12px] transition-all ${
                     isActive
-                      ? 'bg-gray-100 font-semibold text-gray-950 dark:bg-gray-800 dark:text-white'
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white'
+                      ? 'bg-white/80 font-semibold text-gray-950 shadow-xs border border-white/70 dark:border-white/10 dark:bg-white/15 dark:text-white backdrop-blur-md'
+                      : 'text-gray-600 hover:bg-white/50 hover:text-gray-950 dark:text-gray-400 dark:hover:bg-white/10 dark:hover:text-white'
                   }`}
                 >
                   {link.label}
@@ -97,14 +100,14 @@ export default function HeaderNav({
 
           {/* Action Area */}
           <div className="flex items-center gap-2">
-            {/* Cyber Air Hockey 'play' Trigger (No green dot, clean text) */}
+            {/* Cyber Air Hockey 'play' Trigger */}
             <button
               type="button"
               onClick={() => {
                 sounds.play('chime')
                 onOpenArcade?.()
               }}
-              className="flex items-center rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+              className="ios-glass-pill flex items-center rounded-lg px-2.5 py-1 font-mono text-[11px] font-semibold text-gray-800 dark:text-gray-200 cursor-pointer"
               title="Play Cyber Air Hockey"
             >
               play
@@ -115,7 +118,7 @@ export default function HeaderNav({
               type="button"
               onClick={toggleThemeMode}
               disabled={themeCooldown}
-              className="group relative flex h-6 w-11 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95 md:hidden"
+              className="group relative flex h-6 w-11 items-center rounded-full border border-white/60 bg-black/5 p-0.5 shadow-inner transition-colors dark:border-white/15 dark:bg-white/10 cursor-pointer active:scale-95 md:hidden"
               title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
               aria-label="Toggle Theme Mode"
             >
@@ -146,7 +149,7 @@ export default function HeaderNav({
                 sounds.play('toggle')
                 setMobileMenuOpen(!mobileMenuOpen)
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 md:hidden dark:text-gray-300 dark:hover:bg-gray-800"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-700 hover:bg-white/60 md:hidden dark:text-gray-300 dark:hover:bg-white/10"
               aria-label="Toggle menu"
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -160,8 +163,11 @@ export default function HeaderNav({
       {/* ── Top-Right Screen Controls: Positioned on Top Right of the Screen ── */}
       <aside
         aria-label="Screen utility controls"
-        className="fixed top-4 right-4 sm:right-6 z-40 hidden md:flex items-center gap-1.5 sm:gap-2 rounded-2xl border border-gray-200/90 bg-white/90 p-1.5 sm:px-2.5 sm:py-2 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90"
+        className="fixed top-4 right-4 sm:right-6 z-40 hidden md:flex items-center gap-1.5 sm:gap-2 rounded-2xl ios-glass p-1.5 sm:px-2.5 sm:py-2 shadow-lg overflow-hidden"
       >
+        {/* Specular top rim */}
+        <div className="specular-rim" />
+
         {/* Interactive Terminal Trigger Button ($ CLI) */}
         <button
           type="button"
@@ -169,12 +175,12 @@ export default function HeaderNav({
             sounds.play('chime')
             onOpenTerminal()
           }}
-          className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 font-mono text-[11px] text-gray-700 hover:border-gray-400 hover:bg-white hover:text-gray-950 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-800 cursor-pointer"
+          className="ios-glass-pill flex items-center gap-1.5 rounded-lg px-2.5 py-1 font-mono text-[11px] text-gray-800 dark:text-gray-200 cursor-pointer"
           title="Open Interactive CLI Terminal"
         >
           <span className="font-bold text-gray-950 dark:text-white">$</span>
           <span className="hidden lg:inline font-semibold">CLI</span>
-          <kbd className="hidden xl:inline rounded bg-gray-200 px-1 py-0.5 text-[9px] text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          <kbd className="hidden xl:inline rounded bg-black/5 px-1 py-0.5 text-[9px] text-gray-600 dark:bg-white/15 dark:text-gray-300">
             {modKey}+K
           </kbd>
         </button>
@@ -184,7 +190,7 @@ export default function HeaderNav({
           type="button"
           onClick={toggleThemeMode}
           disabled={themeCooldown}
-          className="group relative flex h-6.5 w-12 items-center rounded-full border border-gray-300 bg-gray-100 p-0.5 shadow-inner transition-colors hover:border-gray-400 dark:border-gray-700 dark:bg-[#0c0d12] dark:hover:border-gray-600 cursor-pointer active:scale-95"
+          className="group relative flex h-6.5 w-12 items-center rounded-full border border-white/60 bg-black/5 p-0.5 shadow-inner transition-colors dark:border-white/15 dark:bg-white/10 cursor-pointer active:scale-95"
           title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
           aria-label="Toggle Theme Mode"
         >
@@ -212,10 +218,10 @@ export default function HeaderNav({
         <button
           type="button"
           onClick={handleCycleSoundProfile}
-          className={`h-6.5 items-center gap-1.5 rounded-full border px-2.5 font-mono text-[11px] transition-all cursor-pointer active:scale-95 inline-flex ${
+          className={`ios-glass-pill h-6.5 items-center gap-1.5 rounded-full px-2.5 font-mono text-[11px] cursor-pointer active:scale-95 inline-flex ${
             soundEnabled
-              ? 'border-gray-300 bg-gray-100/90 text-gray-900 dark:border-gray-700 dark:bg-[#181920] dark:text-white shadow-2xs'
-              : 'border-gray-200 bg-gray-50/60 text-gray-400 dark:border-gray-800 dark:bg-[#0c0d12] dark:text-gray-500'
+              ? 'text-gray-900 dark:text-white'
+              : 'text-gray-400 dark:text-gray-500 opacity-70'
           }`}
           title={`Audio: ${soundEnabled ? currentSoundProfile.name : 'Muted'} (Click to cycle profile or mute)`}
         >
@@ -236,16 +242,16 @@ export default function HeaderNav({
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-between bg-white p-6 md:hidden dark:bg-[#090a0f]">
+        <div className="fixed inset-0 z-50 flex flex-col justify-between ios-glass p-6 md:hidden shadow-2xl backdrop-blur-3xl">
           <div>
-            <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-800">
+            <div className="flex items-center justify-between border-b border-white/60 pb-4 dark:border-white/10">
               <span className="font-mono text-base font-bold text-gray-950 dark:text-white">
                 {profile.brand}
               </span>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="rounded-lg p-1.5 text-gray-600 dark:text-gray-300"
+                className="ios-glass-pill rounded-lg p-2 text-gray-700 dark:text-gray-200"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none">
                   <path d="M5 5l14 14M19 5L5 19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -259,7 +265,7 @@ export default function HeaderNav({
                   key={link.id}
                   type="button"
                   onClick={() => handleNavClick(link.id)}
-                  className="rounded-xl px-4 py-3 text-left text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                  className="rounded-xl px-4 py-3 text-left text-gray-800 hover:bg-white/60 dark:text-gray-200 dark:hover:bg-white/10 transition-colors"
                 >
                   {link.label}
                 </button>
@@ -267,7 +273,7 @@ export default function HeaderNav({
             </nav>
           </div>
 
-          <div className="space-y-3 border-t border-gray-200 pt-5 font-mono text-sm dark:border-gray-800">
+          <div className="space-y-3 border-t border-white/60 pt-5 font-mono text-sm dark:border-white/10">
             <button
               type="button"
               onClick={() => {
@@ -275,7 +281,7 @@ export default function HeaderNav({
                 sounds.play('chime')
                 onOpenArcade?.()
               }}
-              className="flex w-full items-center justify-center rounded-xl border border-gray-200 bg-gray-50 py-2.5 font-mono text-sm text-gray-900 hover:bg-white dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-100 dark:hover:bg-gray-800 font-semibold cursor-pointer transition-colors"
+              className="ios-glass-button flex w-full items-center justify-center rounded-xl py-2.5 font-mono text-sm font-semibold text-gray-900 dark:text-white cursor-pointer"
             >
               play
             </button>
@@ -286,7 +292,7 @@ export default function HeaderNav({
                 setMobileMenuOpen(false)
                 onOpenTerminal()
               }}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-2.5 text-white dark:bg-white dark:text-gray-950 font-semibold"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 py-2.5 text-white dark:bg-white dark:text-gray-950 font-semibold shadow-md active:scale-95"
             >
               <span>$ Open CLI Terminal</span>
             </button>

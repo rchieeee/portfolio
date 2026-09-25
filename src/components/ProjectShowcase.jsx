@@ -8,7 +8,7 @@ function ProjectCoverImage({ image, title, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="relative overflow-hidden border-b border-gray-200/80 bg-[#06070a] h-44 sm:h-48 cursor-pointer dark:border-gray-800 select-none"
+      className="relative overflow-hidden border-b border-white/60 bg-[#06070a] h-44 sm:h-48 cursor-pointer dark:border-white/10 select-none"
     >
       {/* Ambient blurred backdrop glow */}
       <img
@@ -93,7 +93,7 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
                   {project.tools.slice(0, 4).map((tool) => (
                     <span
                       key={tool}
-                      className="rounded border border-gray-200 bg-gray-50 px-2 py-0.5 text-gray-700 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-300"
+                      className="ios-glass-pill rounded-md px-2 py-0.5 text-gray-700 dark:text-gray-300"
                     >
                       {tool}
                     </span>
@@ -103,14 +103,14 @@ export default function ProjectShowcase({ onOpenCaseStudy }) {
             </div>
 
             {/* Action Buttons Footer */}
-            <div className="mx-6 sm:mx-7 mb-6 flex items-center justify-between border-t border-gray-200 pt-4 dark:border-gray-800 font-mono text-xs">
+            <div className="mx-6 sm:mx-7 mb-6 flex items-center justify-between border-t border-white/60 pt-4 dark:border-white/10 font-mono text-xs">
               <button
                 type="button"
                 onClick={() => {
                   sounds.play('tick')
                   onOpenCaseStudy(project.slug)
                 }}
-                className="inline-flex items-center gap-1.5 font-semibold text-gray-950 hover:underline dark:text-white cursor-pointer"
+                className="ios-glass-pill inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-gray-950 hover:bg-white dark:text-white dark:hover:bg-white/20 cursor-pointer"
               >
                 <span>Read case study</span>
                 <span className="text-[10px]">↗</span>

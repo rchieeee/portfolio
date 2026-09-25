@@ -855,15 +855,17 @@ export default function CyberArcadeModal({
     >
       {/* Blurred Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 dark:bg-black/85 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-black/40 dark:bg-black/80 backdrop-blur-xl transition-opacity"
         onClick={onClose}
       />
 
       {/* Main Arcade Frame - Expanded modern console */}
-      <div className="relative z-10 flex max-h-[94vh] w-full max-w-xl sm:max-w-2xl flex-col overflow-hidden rounded-2xl border border-gray-200/90 bg-[#fafafa] shadow-2xl transition-colors dark:border-gray-800 dark:bg-[#0c0d12] text-gray-900 dark:text-gray-100 ring-1 ring-black/5 dark:ring-white/5">
+      <div className="relative z-10 flex max-h-[94vh] w-full max-w-xl sm:max-w-2xl flex-col overflow-hidden rounded-3xl ios-glass-card shadow-2xl transition-colors text-gray-900 dark:text-gray-100">
+        {/* Apple iOS Physical Specular Top Rim */}
+        <div className="specular-rim" />
         
         {/* ── Top Header Bar with 3 Header Controls on Top Right ── */}
-        <div className="flex items-center justify-between border-b border-gray-200 bg-white/80 px-4 py-2.5 sm:px-5 backdrop-blur-md transition-colors dark:border-gray-800/80 dark:bg-[#12141c]">
+        <div className="flex items-center justify-between border-b border-white/60 px-4 py-2.5 sm:px-5 backdrop-blur-md transition-colors dark:border-white/10">
           {/* Left: Branding & Status */}
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -872,7 +874,7 @@ export default function CyberArcadeModal({
                 <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-gray-950 dark:text-white">
                   Cyber Air Hockey
                 </h2>
-                <span className="hidden sm:inline-block rounded bg-gray-100 px-1.5 py-0.2 font-mono text-[9px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                <span className="ios-glass-pill hidden sm:inline-block rounded px-1.5 py-0.2 font-mono text-[9px] font-semibold text-gray-600 dark:text-gray-300">
                   2D Arena
                 </span>
               </div>
@@ -889,7 +891,7 @@ export default function CyberArcadeModal({
                   sounds.play('tick')
                   setGameState('lobby')
                 }}
-                className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 font-mono text-[11px] text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer"
+                className="ios-glass-pill rounded-lg px-2.5 py-1 font-mono text-[11px] text-gray-800 dark:text-gray-200 cursor-pointer"
               >
                 Lobby
               </button>

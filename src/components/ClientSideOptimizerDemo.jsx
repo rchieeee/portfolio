@@ -279,17 +279,19 @@ export default function ClientSideOptimizerDemo() {
 
   return (
     <section id="compression-sandbox" className="py-14 sm:py-20">
-      <div className="relative isolate rounded-3xl border border-gray-200 bg-white p-6 sm:p-10 shadow-2xs dark:border-gray-800 dark:bg-[#111216]">
+      <div className="relative isolate rounded-3xl ios-glass-card p-6 sm:p-10 shadow-xl overflow-hidden">
+        {/* Apple iOS Physical Specular Top Rim */}
+        <div className="specular-rim" />
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-6 dark:border-gray-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/60 pb-6 dark:border-white/10">
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl dark:text-white">
               How I Cut Cloud Storage Costs by 99%
             </h2>
           </div>
           <div className="shrink-0">
-            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50/80 px-3 py-1 font-mono text-xs text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400 whitespace-nowrap">
+            <span className="ios-glass-pill inline-flex items-center rounded-full px-3 py-1 font-mono text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">
               Algorithm from PNP-CCACGI System
             </span>
           </div>
@@ -319,7 +321,7 @@ export default function ClientSideOptimizerDemo() {
             type="button"
             onClick={generateSampleImage}
             disabled={isProcessing}
-            className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2.5 font-mono text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-md hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-100 cursor-pointer disabled:opacity-50 active:scale-95 transition-all"
           >
             <span>{isProcessing ? 'Compressing...' : 'Test Sample 4.8MB Photo'}</span>
           </button>
@@ -339,13 +341,13 @@ export default function ClientSideOptimizerDemo() {
               fileInputRef.current?.click()
             }}
             disabled={isProcessing}
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-4 py-2.5 font-mono text-xs font-semibold text-gray-900 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 cursor-pointer disabled:opacity-50"
+            className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-4 py-2.5 font-mono text-xs font-semibold text-gray-900 dark:text-white cursor-pointer disabled:opacity-50"
           >
             <span>Upload Your Own Picture</span>
           </button>
 
           {/* Format Selector Pills */}
-          <div className="inline-flex items-center rounded-xl border border-gray-200 bg-gray-50/80 p-1 dark:border-gray-800 dark:bg-gray-900/60">
+          <div className="ios-glass-inset inline-flex items-center rounded-xl p-1">
             <span className="px-2 font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500 font-semibold">
               Format
             </span>
@@ -359,7 +361,7 @@ export default function ClientSideOptimizerDemo() {
                   disabled={isProcessing}
                   className={`rounded-lg px-2.5 py-1 font-mono text-xs font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-white text-gray-950 shadow-xs dark:bg-gray-800 dark:text-white'
+                      ? 'bg-white/90 text-gray-950 shadow-xs border border-white/80 dark:border-white/15 dark:bg-white/20 dark:text-white backdrop-blur-md'
                       : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                   }`}
                 >
@@ -374,7 +376,7 @@ export default function ClientSideOptimizerDemo() {
               href={compressedImage.url}
               download={downloadFileName}
               onClick={() => sounds.play('success')}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 font-mono text-xs font-semibold text-white shadow-md hover:bg-emerald-500 transition-colors cursor-pointer"
               title={`Download optimized ${FORMAT_CONFIGS[exportFormat]?.label} file directly to your computer`}
             >
               <span>Download {FORMAT_CONFIGS[exportFormat]?.label} ({stats.compressedKb} KB) ↓</span>
@@ -391,7 +393,7 @@ export default function ClientSideOptimizerDemo() {
         {/* Real-time Statistics Cards */}
         {stats && (
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
+            <div className="ios-glass rounded-xl p-3.5 shadow-sm">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 Original Photo Size
               </div>
@@ -405,7 +407,7 @@ export default function ClientSideOptimizerDemo() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3.5 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+            <div className="ios-glass rounded-xl border-emerald-500/40 p-3.5 shadow-sm">
               <div className="font-mono text-[11px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold">
                 After Compression
               </div>
@@ -417,7 +419,7 @@ export default function ClientSideOptimizerDemo() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
+            <div className="ios-glass rounded-xl p-3.5 shadow-sm">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 Storage Saved
               </div>
@@ -429,7 +431,7 @@ export default function ClientSideOptimizerDemo() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-gray-50/70 p-3.5 dark:border-gray-800 dark:bg-[#171821]">
+            <div className="ios-glass rounded-xl p-3.5 shadow-sm">
               <div className="font-mono text-[11px] uppercase tracking-wider text-gray-400 dark:text-gray-500">
                 Execution Time
               </div>
@@ -445,11 +447,11 @@ export default function ClientSideOptimizerDemo() {
 
         {/* Visual Inspection Viewport */}
         {originalImage && compressedImage && (
-          <div className="mt-6 rounded-2xl border border-gray-200 overflow-hidden bg-gray-950 dark:border-gray-800 shadow-sm">
+          <div className="ios-glass-card mt-6 rounded-2xl overflow-hidden shadow-lg p-0">
             {/* Viewport Toolbar */}
-            <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-gray-800 bg-[#0c0d12] px-3 sm:px-4 py-2 font-mono text-xs">
+            <div className="flex items-center justify-between gap-2 sm:gap-3 border-b border-white/60 bg-black/5 dark:border-white/10 dark:bg-black/40 px-3 sm:px-4 py-2 font-mono text-xs">
               {/* Segmented View Toggle */}
-              <div className="inline-flex items-center rounded-lg bg-gray-900/90 p-0.5 border border-gray-800">
+              <div className="ios-glass-inset inline-flex items-center rounded-lg p-0.5">
                 <button
                   type="button"
                   onClick={() => {

@@ -3,8 +3,8 @@ import { useRef, useState } from 'react'
 export default function SpotlightCard({
   children,
   className = '',
-  spotlightColor = 'rgba(255, 255, 255, 0.08)',
-  spotlightColorLight = 'rgba(0, 0, 0, 0.04)',
+  spotlightColor = 'rgba(255, 255, 255, 0.14)',
+  spotlightColorLight = 'rgba(255, 255, 255, 0.65)',
   tilt = true,
   ...props
 }) {
@@ -44,24 +44,27 @@ export default function SpotlightCard({
       onMouseLeave={handleMouseLeave}
       style={{
         transform: transform,
-        transition: 'transform 0.2s cubic-bezier(0.2, 0, 0, 1), border-color 0.2s ease',
+        transition: 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease',
       }}
-      className={`relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xs dark:border-gray-800 dark:bg-[#121318] ${className}`}
+      className={`relative overflow-hidden rounded-2xl ios-glass-card ${className}`}
       {...props}
     >
-      {/* ── Dynamic Mouse Cursor Spotlight Overlay ── */}
+      {/* ── Apple iOS Physical Specular Top Rim ── */}
+      <div className="specular-rim" />
+
+      {/* ── Dynamic Mouse Cursor Liquid Spotlight Overlay ── */}
       <div
         className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 dark:hidden"
         style={{
           opacity,
-          background: `radial-gradient(350px circle at ${position.x}px ${position.y}px, ${spotlightColorLight}, transparent 70%)`,
+          background: `radial-gradient(380px circle at ${position.x}px ${position.y}px, ${spotlightColorLight}, transparent 70%)`,
         }}
       />
       <div
         className="pointer-events-none absolute -inset-px rounded-2xl opacity-0 transition-opacity duration-300 hidden dark:block"
         style={{
           opacity,
-          background: `radial-gradient(350px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 70%)`,
+          background: `radial-gradient(380px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 70%)`,
         }}
       />
 

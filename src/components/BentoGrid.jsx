@@ -72,15 +72,15 @@ export default function BentoGrid() {
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* Bento 1: Interactive Code Inspector (8 cols) */}
-        <SpotlightCard className="flex flex-col justify-between p-5 lg:col-span-8">
+        <SpotlightCard className="flex flex-col justify-between p-5 sm:p-6 lg:col-span-8">
           {/* Header & Tabs */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-3 dark:border-gray-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/60 pb-3 dark:border-white/10">
             <div className="flex items-center gap-2 font-mono text-xs text-gray-600 dark:text-gray-400">
               <span className="font-semibold text-gray-950 dark:text-white">Code Inspector</span>
             </div>
 
             {/* Code Tabs */}
-            <div className="flex rounded-lg border border-gray-200 p-0.5 font-mono text-[11px] dark:border-gray-800">
+            <div className="ios-glass-inset flex rounded-xl p-1 font-mono text-[11px]">
               {[
                 { id: 'frontend', label: 'Frontend' },
                 { id: 'backend', label: 'Backend API' },
@@ -93,9 +93,9 @@ export default function BentoGrid() {
                     sounds.play('tick')
                     setActiveTab(tab.id)
                   }}
-                  className={`rounded-md px-2.5 py-1 transition-all ${
+                  className={`rounded-lg px-2.5 py-1 transition-all cursor-pointer ${
                     activeTab === tab.id
-                      ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-950 font-semibold'
+                      ? 'bg-white/90 text-gray-950 dark:bg-white/20 dark:text-white font-semibold shadow-xs border border-white/80 dark:border-white/15 backdrop-blur-md'
                       : 'text-gray-600 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white'
                   }`}
                 >
@@ -106,19 +106,19 @@ export default function BentoGrid() {
           </div>
 
           {/* Code Viewer Body */}
-          <div className="relative my-4 overflow-x-auto rounded-lg bg-gray-50 p-4 font-mono text-[12px] leading-relaxed text-gray-900 dark:bg-[#0c0d12] dark:text-gray-200 border border-gray-200 dark:border-gray-800/80 transition-all duration-200">
+          <div className="ios-glass-inset relative my-4 overflow-x-auto rounded-xl p-4 font-mono text-[12px] leading-relaxed text-gray-900 dark:text-gray-200 transition-all duration-200">
             <pre>
               <code>{codeSnippets[activeTab]}</code>
             </pre>
           </div>
 
           {/* Footer with copy button */}
-          <div className="flex items-center justify-between border-t border-gray-200 pt-3 font-mono text-[11px] text-gray-500 dark:border-gray-800 dark:text-gray-400">
+          <div className="flex items-center justify-between border-t border-white/60 pt-3 font-mono text-[11px] text-gray-500 dark:border-white/10 dark:text-gray-400">
             <span>Production snippet</span>
             <button
               type="button"
               onClick={handleCopyCode}
-              className="text-gray-950 hover:underline dark:text-white font-medium cursor-pointer"
+              className="text-gray-950 hover:underline dark:text-white font-semibold cursor-pointer"
             >
               {copied ? '✓ Copied' : 'Copy Code'}
             </button>
@@ -126,13 +126,14 @@ export default function BentoGrid() {
         </SpotlightCard>
 
         {/* Bento 2: Manila Live Node Status (4 cols) */}
-        <SpotlightCard className="flex flex-col justify-between p-5 lg:col-span-4">
+        <SpotlightCard className="flex flex-col justify-between p-5 sm:p-6 lg:col-span-4">
           <div>
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Live Node Status
               </span>
-              <span className="rounded-full border border-gray-300 bg-gray-100 px-2 py-0.5 font-mono text-[10px] font-medium text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+              <span className="ios-glass-pill inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Active
               </span>
             </div>
@@ -146,7 +147,7 @@ export default function BentoGrid() {
               </p>
             </div>
 
-            <div className="mt-6 space-y-2 border-t border-gray-200 pt-4 font-mono text-[11.5px] dark:border-gray-800">
+            <div className="mt-6 space-y-2 border-t border-white/60 pt-4 font-mono text-[11.5px] dark:border-white/10">
               <div className="flex items-center justify-between text-gray-600 dark:text-gray-400">
                 <span>Location:</span>
                 <span className="font-semibold text-gray-950 dark:text-white">Lupon, Davao Oriental</span>
@@ -162,13 +163,13 @@ export default function BentoGrid() {
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-3 text-center font-mono text-[11px] text-gray-600 dark:border-gray-800 dark:bg-gray-900/60 dark:text-gray-400">
-            Open for remote !full-stack roles worldwide.
+          <div className="ios-glass-inset mt-6 rounded-xl p-3 text-center font-mono text-[11px] text-gray-600 dark:text-gray-400">
+            Open for remote full-stack roles worldwide.
           </div>
         </SpotlightCard>
 
         {/* Bento 3: Interactive AI Harness Visualizer (12 cols) */}
-        <SpotlightCard className="p-6 lg:col-span-12" tilt={false}>
+        <SpotlightCard className="p-6 sm:p-7 lg:col-span-12" tilt={false}>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="font-mono text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -182,7 +183,7 @@ export default function BentoGrid() {
             <button
               type="button"
               onClick={handleSimulateHarness}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 font-mono text-xs font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-950 dark:hover:bg-gray-200 active:scale-95 transition-transform"
+              className="ios-glass-button inline-flex items-center gap-2 rounded-xl px-4 py-2 font-mono text-xs font-semibold text-gray-900 dark:text-white"
             >
               <span>{runningStage !== null ? '● Running Pipeline...' : '▶ Simulate Harness Run'}</span>
             </button>
@@ -197,12 +198,12 @@ export default function BentoGrid() {
               return (
                 <div
                   key={stage.step}
-                  className={`relative rounded-xl border p-4 transition-all duration-300 ${
+                  className={`relative rounded-xl p-4 transition-all duration-300 ${
                     isCurrent
-                      ? 'border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-950 shadow-md scale-[1.02]'
+                      ? 'ios-glass-card border-gray-900 bg-white dark:border-white/40 dark:bg-white/15 text-gray-950 dark:text-white shadow-lg scale-[1.02]'
                       : isPast
-                      ? 'border-gray-400 bg-gray-100 dark:border-gray-600 dark:bg-gray-800'
-                      : 'border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/40'
+                      ? 'ios-glass border-emerald-500/40 text-gray-900 dark:text-white'
+                      : 'ios-glass text-gray-800 dark:text-gray-200'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -210,12 +211,12 @@ export default function BentoGrid() {
                       STAGE {stage.step}
                     </span>
                     <span
-                      className={`rounded-md px-2 py-0.5 font-mono text-[9.5px] uppercase font-semibold ${
+                      className={`ios-glass-pill rounded-md px-2 py-0.5 font-mono text-[9.5px] uppercase font-semibold ${
                         isCurrent
-                          ? 'border border-current'
+                          ? 'border border-current font-bold'
                           : isPast
-                          ? 'border border-current'
-                          : 'bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                          ? 'border border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                          : 'text-gray-600 dark:text-gray-400'
                       }`}
                     >
                       {stage.badge}

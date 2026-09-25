@@ -135,3 +135,202 @@ button, a {
     transform: none !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   APPLE iOS LIQUID GLASS & GLASSMORPHISM DESIGN SYSTEM
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Ambient Liquid Aurora Drift Keyframes ── */
+@keyframes liquidDrift1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(60px, 40px, 0) scale(1.08); }
+  100% { transform: translate3d(-30px, 80px, 0) scale(0.95); }
+}
+
+@keyframes liquidDrift2 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-50px, -60px, 0) scale(1.1); }
+  100% { transform: translate3d(40px, -30px, 0) scale(0.92); }
+}
+
+@keyframes liquidDrift3 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(40px, -50px, 0) scale(1.06); }
+  100% { transform: translate3d(-60px, 30px, 0) scale(0.97); }
+}
+
+.liquid-blob {
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* ── Core iOS Liquid Glass Container ── */
+.ios-glass {
+  background-color: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 8px 32px -4px rgba(0, 0, 0, 0.05),
+    0 2px 6px 0 rgba(0, 0, 0, 0.02),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95);
+}
+
+html.dark .ios-glass,
+:root[data-theme='dark'] .ios-glass {
+  background-color: rgba(18, 20, 28, 0.65);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 16px 40px -8px rgba(0, 0, 0, 0.5),
+    0 2px 6px 0 rgba(0, 0, 0, 0.25),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+/* ── Enhanced iOS Liquid Glass Card with Specular Depth ── */
+.ios-glass-card {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.74);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 45%, rgba(255, 255, 255, 0.22) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 12px 36px -6px rgba(0, 0, 0, 0.06),
+    0 2px 8px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+}
+
+html.dark .ios-glass-card,
+:root[data-theme='dark'] .ios-glass-card {
+  background-color: rgba(18, 20, 28, 0.65);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.01) 45%, rgba(255, 255, 255, 0.05) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 18px 48px -8px rgba(0, 0, 0, 0.55),
+    0 4px 12px -2px rgba(0, 0, 0, 0.35),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.ios-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.98);
+  box-shadow: 
+    0 20px 48px -6px rgba(0, 0, 0, 0.09),
+    0 4px 12px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 1);
+}
+
+html.dark .ios-glass-card:hover,
+:root[data-theme='dark'] .ios-glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 
+    0 24px 60px -8px rgba(0, 0, 0, 0.72),
+    0 6px 16px -2px rgba(0, 0, 0, 0.45),
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.32);
+}
+
+/* ── iOS Tactile Liquid Glass Button ── */
+.ios-glass-button {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.ios-glass-button:hover {
+  background-color: rgba(255, 255, 255, 0.92);
+  border-color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -2px rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 #ffffff;
+}
+
+.ios-glass-button:active {
+  transform: scale(0.97);
+}
+
+html.dark .ios-glass-button,
+:root[data-theme='dark'] .ios-glass-button {
+  background-color: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.4), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+html.dark .ios-glass-button:hover,
+:root[data-theme='dark'] .ios-glass-button:hover {
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.55), inset 0 1px 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+/* ── iOS Liquid Glass Pill (Tags, Badges, Tabs) ── */
+.ios-glass-pill {
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 0.95);
+  transition: all 0.2s ease;
+}
+
+html.dark .ios-glass-pill,
+:root[data-theme='dark'] .ios-glass-pill {
+  background-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.ios-glass-pill:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-color: #ffffff;
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 #ffffff;
+}
+
+html.dark .ios-glass-pill:hover,
+:root[data-theme='dark'] .ios-glass-pill:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* ── iOS Inset Glass Surface (Code Viewers, Inset Wells) ── */
+.ios-glass-inset {
+  background-color: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: inset 0 2px 5px 0 rgba(0, 0, 0, 0.03);
+}
+
+html.dark .ios-glass-inset,
+:root[data-theme='dark'] .ios-glass-inset {
+  background-color: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 8px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* ── Specular Top Rim Micro-Highlight (The physical glass edge in iOS) ── */
+.specular-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.85) 50%, transparent 100%);
+  pointer-events: none;
+}
+
+html.dark .specular-rim,
+:root[data-theme='dark'] .specular-rim {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.35) 50%, transparent 100%);
+}
