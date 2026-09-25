@@ -6,6 +6,7 @@ export default function HeaderNav({
   activeSection,
   onOpenTerminal,
   onOpenArcade,
+  onReplayIntro,
   theme,
   onSetTheme,
   themeCooldown = false,
@@ -63,16 +64,21 @@ export default function HeaderNav({
       {/* ── Main Navigation Island (Sticky, Centered) ── */}
       <header className="sticky top-4 z-40 mx-auto max-w-fit px-4 pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-2 sm:gap-3 rounded-2xl border border-gray-200/90 bg-white/90 px-3.5 py-2 sm:px-4 sm:py-2.5 shadow-sm backdrop-blur-xl transition-colors dark:border-gray-800/90 dark:bg-[#121318]/90">
-          {/* Brand Logo */}
-          <a
-            href="#top"
-            onClick={() => sounds.play('tick')}
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-gray-950 dark:text-white pr-1"
+          {/* Brand Logo (Scroll to top and replay intro sequence) */}
+          <button
+            type="button"
+            onClick={() => {
+              sounds.play('tick')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              onReplayIntro?.()
+            }}
+            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-gray-950 dark:text-white pr-1 cursor-pointer"
+            title="Replay intro sequence"
           >
-            <span className="font-mono font-bold text-[14px]">
+            <span className="font-sans font-extrabold text-[15px] tracking-tight">
               {profile.brand}
             </span>
-          </a>
+          </button>
 
           {/* Desktop Navigation Links */}
           <nav className="hidden items-center gap-1 md:flex">
@@ -239,7 +245,7 @@ export default function HeaderNav({
         <div className="fixed inset-0 z-50 flex flex-col justify-between bg-white p-6 md:hidden dark:bg-[#090a0f]">
           <div>
             <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-gray-800">
-              <span className="font-mono text-base font-bold text-gray-950 dark:text-white">
+              <span className="font-sans text-lg font-extrabold tracking-tight text-gray-950 dark:text-white">
                 {profile.brand}
               </span>
               <button

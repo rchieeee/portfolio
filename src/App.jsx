@@ -15,6 +15,7 @@ import TechRadar from './components/TechRadar'
 import TechStackFitChecker from './components/TechStackFitChecker'
 import TerminalOverlay from './components/TerminalOverlay'
 import TestimonialsSection from './components/TestimonialsSection'
+import SplashIntro from './components/SplashIntro'
 import { sounds } from './utils/audio'
 
 export default function App() {
@@ -31,6 +32,42 @@ export default function App() {
   const [terminalOpen, setTerminalOpen] = useState(false)
   const [isArcadeOpen, setIsArcadeOpen] = useState(false)
   const [caseStudySlug, setCaseStudySlug] = useState(null)
+
+  // Preloader Splash Sequence: "archie" -> "rche" dissolves -> "ai" turns to "AI" -> glides into hero headline
+  const [showIntro, setShowIntro] = useState(() => {
+    try {
+      return !sessionStorage.getItem('archie_intro_played')
+    } catch {
+      return true
+    }
+  })
+  const [isIntroGliding, setIsIntroGliding] = useState(false)
+  const [isIntroDone, setIsIntroDone] = useState(() => {
+    try {
+      return !!sessionStorage.getItem('archie_intro_played')
+    } catch {
+      return false
+    }
+  })
+
+  const handleGlideStart = () => {
+    setIsIntroGliding(true)
+  }
+
+  const handleIntroComplete = () => {
+    setIsIntroGliding(false)
+    setIsIntroDone(true)
+    setShowIntro(false)
+    try {
+      sessionStorage.setItem('archie_intro_played', 'true')
+    } catch {}
+  }
+
+  const handleReplayIntro = () => {
+    setIsIntroDone(false)
+    setIsIntroGliding(false)
+    setShowIntro(true)
+  }
 
   // Theme calculation
   const isDarkMode = (themeValue) => {
@@ -159,14 +196,23 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen bg-white text-gray-950 transition-colors duration-200 dark:bg-[#0c0d0e] dark:text-[#f5f5f7]">
-      {/* ── Global Interactive Magnetic Particle Canvas ── */}
-      <InteractiveHeroCanvas theme={theme} />
+      {/* ── Cinematic Splash Intro Animation ("archie" -> "rche" dissolves -> "ai" morphs into "AI" -> glides into hero headline) ── */}
+      {showIntro && (
+        <SplashIntro
+          onGlideStart={handleGlideStart}
+          onComplete={handleIntroComplete}
+        />
+      )}
+
+      {/* ── Global Interactive Magnetic Particle Canvas (Deferred during intro for silky 120fps performance) ── */}
+      {(!showIntro || isIntroGliding || isIntroDone) && <InteractiveHeroCanvas theme={theme} />}
 
       {/* Floating Top Navigation */}
       <HeaderNav
         activeSection={activeSection}
         onOpenTerminal={() => setTerminalOpen(true)}
         onOpenArcade={() => setIsArcadeOpen(true)}
+        onReplayIntro={handleReplayIntro}
         theme={theme}
         onSetTheme={handleSetTheme}
         themeCooldown={themeCooldown}
@@ -176,7 +222,11 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="main-container relative z-10">
-        <Hero onOpenTerminal={() => setTerminalOpen(true)} theme={theme} />
+        <Hero
+          onOpenTerminal={() => setTerminalOpen(true)}
+          isIntroGliding={isIntroGliding}
+          isIntroDone={isIntroDone}
+        />
         <BentoGrid />
         <ProjectShowcase onOpenCaseStudy={(slug) => setCaseStudySlug(slug)} />
         <TechRadar />
@@ -199,6 +249,7 @@ export default function App() {
           setTerminalOpen(false)
           setIsArcadeOpen(true)
         }}
+        onReplayIntro={handleReplayIntro}
       />
 
       {/* Real-time Multiplayer Cyber Arcade Modal */}

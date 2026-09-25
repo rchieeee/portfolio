@@ -4,14 +4,14 @@ import { sounds } from '../utils/audio'
 const TARGET_TEXT = 'generative AI projects.'
 const CHARS = '!<>-_/[]{}—=+*^?#abcdefghijklmnopqrstuvwxyz0123456789'
 
-export default function ScrambleHeadlineText() {
+export default function ScrambleHeadlineText({ isIntroGliding = false, isIntroDone = true }) {
   const [displayText, setDisplayText] = useState(TARGET_TEXT)
   const [isHovered, setIsHovered] = useState(false)
   const rafRef = useRef(null)
   const frameCountRef = useRef(0)
 
   useEffect(() => {
-    if (isHovered) {
+    if (isHovered && isIntroDone) {
       // High-speed 60fps hacker scramble loop
       const runScramble = () => {
         const textArr = TARGET_TEXT.split('')
@@ -51,7 +51,7 @@ export default function ScrambleHeadlineText() {
         rafRef.current = null
       }
     }
-  }, [isHovered])
+  }, [isHovered, isIntroDone])
 
   return (
     <span
@@ -59,10 +59,35 @@ export default function ScrambleHeadlineText() {
       onMouseLeave={() => setIsHovered(false)}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className="inline-block cursor-pointer font-mono text-gray-950 decoration-gray-300 transition-colors select-none hover:decoration-gray-900 dark:text-white dark:decoration-gray-700 dark:hover:decoration-white"
+      className="inline-block cursor-pointer font-sans font-extrabold tracking-tight text-gray-950 decoration-gray-300 transition-colors select-none hover:decoration-gray-900 dark:text-white dark:decoration-gray-700 dark:hover:decoration-white"
       title="Hover over me!"
     >
-      {displayText}
+      {!isIntroDone ? (
+        <span className="inline-flex items-baseline">
+          <span
+            className={`transition-all duration-700 ease-out ${
+              isIntroGliding ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-3'
+            }`}
+          >
+            generative&nbsp;
+          </span>
+          <span
+            id="hero-ai-target"
+            className="inline-block font-extrabold opacity-0"
+          >
+            AI
+          </span>
+          <span
+            className={`transition-all duration-700 ease-out ${
+              isIntroGliding ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-3'
+            }`}
+          >
+            &nbsp;projects.
+          </span>
+        </span>
+      ) : (
+        displayText
+      )}
     </span>
   )
 }

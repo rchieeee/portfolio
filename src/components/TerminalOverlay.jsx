@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { terminalCommands } from '../portfolioData'
 import { sounds } from '../utils/audio'
 
-export default function TerminalOverlay({ isOpen, onClose, onLaunchGame }) {
+export default function TerminalOverlay({ isOpen, onClose, onLaunchGame, onReplayIntro }) {
   const [input, setInput] = useState('')
   const [history, setHistory] = useState([
     { type: 'system', text: 'Archie Dev Terminal [v2.5.0]' },
@@ -46,6 +46,21 @@ export default function TerminalOverlay({ isOpen, onClose, onLaunchGame }) {
       setTimeout(() => {
         onLaunchGame?.()
       }, 600)
+      return
+    }
+
+    if (trimmed === 'intro' || trimmed === 'splash' || trimmed === 'replay') {
+      newHistory.push({
+        type: 'output',
+        text: '[System] Replaying cinematic intro animation...',
+      })
+      sounds.play('chime')
+      setHistory(newHistory)
+      setInput('')
+      setTimeout(() => {
+        onClose()
+        onReplayIntro?.()
+      }, 400)
       return
     }
 

@@ -865,6 +865,7 @@ export const terminalCommands = {
   • checkpoint  - Inspect Checkpoint AI Biometric Campus Attendance System
   • cv          - View Archie's verified CV / Resume (Google Docs)
   • play        - Launch Cyber Air Hockey 2D arcade game
+  • intro       - Replay cinematic preloader sequence ("archie" -> "AI")
   • coffee      - Pang-kape & OpenAI Token Fund (GCash)
   • about       - View Archie's engineering bio & philosophy
   • projects    - List featured full-stack & AI projects
@@ -873,6 +874,7 @@ export const terminalCommands = {
   • contact     - Get direct communication links
   • time        - Check live Manila timezone & node status
   • clear       - Clear terminal history`,
+  intro: '✨ Replaying cinematic intro sequence ("archie" -> "AI" -> "generative AI projects")...',
   cv: `📄 Archie S. Boiser — Curriculum Vitae (CV) / Resume:
 • Format: Google Docs (Online Verified Document)
 • Link: https://docs.google.com/document/d/1jFywIG1bQW2eeNL0IP0srp_0gHVeRuuFc7xlvTqq0vE/edit?tab=t.0

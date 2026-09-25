@@ -1,16 +1,12 @@
 import { keyMetrics, profile, socials } from '../portfolioData'
 import { sounds } from '../utils/audio'
 import InteractiveAvatar from './InteractiveAvatar'
-import InteractiveHeroCanvas from './InteractiveHeroCanvas'
 import ScrambleHeadlineText from './ScrambleHeadlineText'
 import SpotlightCard from './SpotlightCard'
 
-export default function Hero({ onOpenTerminal, theme }) {
+export default function Hero({ onOpenTerminal, isIntroGliding = false, isIntroDone = true }) {
   return (
     <section id="top" className="relative pt-12 pb-16 sm:pt-20 sm:pb-24">
-      {/* ── Interactive Particle Constellation Canvas ── */}
-      <InteractiveHeroCanvas theme={theme} />
-
       {/* ── Interactive 3D Avatar & Clean Location Status ── */}
       <div className="reveal d1 relative z-10 mb-6 flex items-center gap-4">
         <InteractiveAvatar />
@@ -28,7 +24,7 @@ export default function Hero({ onOpenTerminal, theme }) {
       {/* Main Headline (Moves ONLY while hovering, 100% static when not hovered) */}
       <div className="reveal d2 relative z-10 max-w-3xl">
         <h1 className="text-3xl font-extrabold tracking-tight text-gray-950 sm:text-5xl sm:leading-[1.15] dark:text-white">
-          building cool web apps &amp; <ScrambleHeadlineText />
+          building cool web apps &amp; <ScrambleHeadlineText isIntroGliding={isIntroGliding} isIntroDone={isIntroDone} />
         </h1>
       </div>
 
